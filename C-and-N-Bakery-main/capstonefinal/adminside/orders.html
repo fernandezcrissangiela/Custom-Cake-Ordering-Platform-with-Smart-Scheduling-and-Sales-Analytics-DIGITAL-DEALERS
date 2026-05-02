@@ -682,7 +682,9 @@
         </div>`;
     }
 
-    if (!isCompleted && !isCancelled) {
+    const isCODOrder = (order.paymentMethod || '').toLowerCase() === 'cod';
+    const showPaymentUpdate = !isCompleted && !isCancelled && (!isCODOrder || hasCustom);
+    if (showPaymentUpdate) {
       html += `
         <div class="section-label"><i class="fas fa-credit-card" style="margin-right:4px;"></i>Update Payment</div>
         <div class="payment-btns">

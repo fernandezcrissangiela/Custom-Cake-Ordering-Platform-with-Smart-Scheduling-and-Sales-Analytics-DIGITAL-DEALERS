@@ -575,6 +575,21 @@
 
     const isActive = ['pending','confirmed','downpayment-received','preparing','baking','packing','delivery'].includes(order.status);
 
+    const fulfillmentType = order.fulfillmentType || order.deliveryType || order.orderType || null;
+    const isDelivery = fulfillmentType ? fulfillmentType.toLowerCase().includes('delivery') : null;
+    const fulfillmentHTML = fulfillmentType ? `
+        <div class="meta-item meta-item--full">
+          <div class="meta-label">Fulfillment</div>
+          <div class="meta-val">
+            <span class="badge badge-fulfillment ${isDelivery ? 'badge-fulfillment--delivery' : 'badge-fulfillment--pickup'}">
+              <i class="fas ${isDelivery ? 'fa-truck' : 'fa-store'}"></i>
+              ${isDelivery ? 'Delivery' : 'Pickup'}
+            </span>
+            ${!isDelivery && order.pickupNote ? `<span class="meta-note">${order.pickupNote}</span>` : ''}
+            ${isDelivery && order.deliveryAddress ? `<span class="meta-note"><i class="fas fa-location-dot"></i> ${order.deliveryAddress}</span>` : ''}
+          </div>
+        </div>` : '';
+
     document.getElementById('modal-body').innerHTML = `
       <div class="modal-section-title">Order Info</div>
       <div class="modal-meta-grid">
@@ -586,6 +601,7 @@
           <div class="meta-label">Payment</div>
           <div class="meta-val"><span class="badge badge-pay-${payStatus}">${payLabel}</span></div>
         </div>
+        ${fulfillmentHTML}
       </div>
       <div class="modal-section-title modal-section-title--items">Items Ordered</div>
       <div class="modal-items-box">

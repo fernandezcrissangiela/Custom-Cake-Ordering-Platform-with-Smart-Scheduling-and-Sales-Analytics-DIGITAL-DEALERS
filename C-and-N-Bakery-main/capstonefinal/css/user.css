@@ -1557,6 +1557,52 @@ section h2 i {
     color: var(--brown);
 }
 
+/* Fulfillment row — spans full grid width */
+.meta-item--full {
+    grid-column: 1 / -1;
+}
+
+.meta-item--full .meta-val {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* Fulfillment badge */
+.badge-fulfillment {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.badge-fulfillment--delivery {
+    background: #EAF4FF;
+    color: #1A6FB5;
+    border: 1px solid #B3D8F5;
+}
+
+.badge-fulfillment--pickup {
+    background: #F0FAF0;
+    color: #2E7D32;
+    border: 1px solid #A5D6A7;
+}
+
+/* Optional address / note under the badge */
+.meta-note {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
 .modal-items-box {
     background: var(--cream);
     border: 1px solid var(--beige);

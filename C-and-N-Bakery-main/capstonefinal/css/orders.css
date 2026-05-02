@@ -253,7 +253,16 @@ h2.active-orders-title {
 
 /* For pending panels with only 2 buttons (confirm + cancel) */
 .order-actions:has(.btn-confirm) {
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.order-actions:has(.btn-confirm) .btn-action {
+  width: auto;
+  padding: 8px 18px;
+  flex: 0 0 auto;
 }
 
 .btn-action {
