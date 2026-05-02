@@ -122,6 +122,20 @@ nav a.active {
     cursor: pointer;
 }
 
+.nav-icons i {
+    cursor: pointer;
+    color: var(--text);
+    transition: var(--transition);
+}
+
+.nav-icons i:hover {
+    color: var(--primary);
+}
+
+.nav-user-icon {
+    color: var(--text);
+}
+
 #cart-count-header {
     position: absolute;
     top: -10px;
@@ -371,10 +385,34 @@ nav a.active {
 
 /* PRODUCT GRID */
 .product-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 30px;
     margin-bottom: 80px;
+}
+
+.cake-item {
+    width: calc(33.333% - 20px);
+    max-width: 360px;
+    min-width: 260px;
+}
+
+@media (max-width: 992px) {
+    .cake-item {
+        width: calc(50% - 15px);
+    }
+}
+
+@media (max-width: 580px) {
+    .product-grid {
+        gap: 16px;
+    }
+
+    .cake-item {
+        width: calc(50% - 8px);
+        min-width: 0;
+    }
 }
 
 .cake-item {
@@ -385,39 +423,60 @@ nav a.active {
     transition: var(--transition);
     cursor: pointer;
     text-align: center;
+    display: flex;
+    flex-direction: column;
 }
 
 .cake-item:hover {
-    transform: translateY(-10px);
+    transform: translateY(-8px);
     box-shadow: var(--shadow);
 }
 
-.cake-item img {
+/* Fixed-size image container — keeps all cards uniform regardless of image dimensions */
+.card-img-wrap {
     width: 100%;
-    height: 260px;
+    height: 240px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--cream);
+}
+
+.card-img-wrap img {
+    width: 100%;
+    height: 100%;
     object-fit: cover;
+    display: block;
     transition: transform 0.5s ease;
 }
 
-.cake-item:hover img {
-    transform: scale(1.05);
+.cake-item:hover .card-img-wrap img {
+    transform: scale(1.06);
+}
+
+/* Card body fills remaining height so button always sits at bottom */
+.card-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 0 0 24px;
 }
 
 .cake-item h3 {
-    font-size: 1.35rem;
-    margin: 18px 15px 10px;
+    font-size: 1.2rem;
+    margin: 16px 16px 8px;
     color: var(--brown);
 }
 
 .cake-item .price {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
     font-weight: 700;
     color: var(--primary-dark);
-    margin-bottom: 18px;
+    margin: 0 16px 12px;
 }
 
+/* Push button to bottom */
 .cake-item .btn-primary {
-    margin: 0 20px 24px;
+    margin: auto 20px 0;
     width: calc(100% - 40px);
 }
 
@@ -631,11 +690,12 @@ nav a.active {
 .card-desc {
     font-size: 0.82rem;
     color: #888;
-    margin: 4px 16px 8px;
-    line-height: 1.45;
+    margin: 0 16px 10px;
+    line-height: 1.5;
     display: -webkit-box;
-    --webkit-line-clamp: 2;
+    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex-shrink: 0;
 }

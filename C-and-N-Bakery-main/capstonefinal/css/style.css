@@ -113,6 +113,16 @@ nav a:hover {
     font-size: 1.4rem;
 }
 
+.nav-icons i {
+    cursor: pointer;
+    color: var(--text);
+    transition: var(--transition);
+}
+
+.nav-icons i:hover {
+    color: var(--primary);
+}
+
 .cart-wrapper {
     position: relative;
     display: inline-flex;

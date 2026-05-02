@@ -123,7 +123,7 @@
               <span id="cart-count">0</span>
             </div>
             <div class="user-wrapper">
-              <i class="fas fa-user-circle" title="Account" onclick="checkAuth(event)"></i>
+              <i class="fas fa-user nav-user-icon" title="Account" onclick="checkAuth(event)"></i>
             </div>
           </div>
           <span id="user-name-display"></span>
@@ -329,7 +329,7 @@
       if (!isLoggedIn) { openModal(); return; }
       const target = event.currentTarget;
       if (target.classList.contains('fa-shopping-cart'))  window.location.href = 'cart.html';
-      else if (target.classList.contains('fa-user-circle')) window.location.href = 'user.html';
+      else if (target.classList.contains('fa-user')) window.location.href = 'user.html';
       else window.location.href = 'cus.html';
     };
 

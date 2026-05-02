@@ -8,632 +8,6 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="../css/user.css">
-
-  <style>
-    :root {
-      --primary: #825A3C;
-      --primary-dark: #674831;
-      --beige: #EDE0D4;
-      --cream: #F8F1EA;
-      --brown: #704233;
-      --text: #3F2A1F;
-      --text-light: #5F4635;
-    }
-
-    .main-content {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    /* ── Welcome Banner ── */
-    .welcome-header {
-      text-align: center;
-      margin-bottom: 30px;
-      padding: 40px 36px;
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      border-radius: 24px;
-      color: white;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 16px 48px rgba(103, 72, 49, 0.25);
-    }
-    .welcome-header::before {
-      content: '🧁';
-      position: absolute;
-      right: 40px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 7rem;
-      opacity: 0.15;
-      pointer-events: none;
-    }
-    .welcome-header h1 { font-size: 2.3rem; margin-bottom: 10px; font-weight: 700; }
-    .welcome-header p { opacity: 0.9; font-size: 1.02rem; }
-
-    /* ── Quick Stats Row ── */
-    .stats-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-bottom: 30px;
-    }
-    .stat-card {
-      background: white;
-      border-radius: 18px;
-      padding: 22px 20px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      border: 1px solid var(--beige);
-      box-shadow: 0 4px 16px rgba(103,72,49,0.07);
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(103,72,49,0.12); }
-    .stat-icon {
-      width: 50px; height: 50px;
-      border-radius: 14px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.3rem;
-    }
-    .stat-icon.orange { background: #FFF0E6; color: var(--primary); }
-    .stat-icon.green  { background: #E6F7EE; color: #2e7d52; }
-    .stat-icon.blue   { background: #E6F0FF; color: #2456c8; }
-    .stat-label { font-size: 0.78rem; color: var(--text-light); font-weight: 500; margin-bottom: 2px; }
-    .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--brown); line-height: 1; }
-
-    /* ── Section Cards ── */
-    .section-card {
-      background: white;
-      border-radius: 24px;
-      box-shadow: 0 10px 30px rgba(103,72,49,0.08);
-      margin-bottom: 24px;
-      overflow: hidden;
-      border: 1px solid var(--beige);
-    }
-    .section-header {
-      padding: 20px 28px;
-      background: var(--cream);
-      border-bottom: 1px solid var(--beige);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .section-header h2 { margin: 0; font-size: 1.2rem; color: var(--brown); font-weight: 700; }
-
-    /* ── Active Order Tracker ── */
-    .order-tracker { padding: 28px 32px; }
-    .status-stepper {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 30px;
-      position: relative;
-      padding: 0 10px;
-    }
-    .status-stepper::before {
-      content: '';
-      position: absolute;
-      top: 21px; left: 0; right: 0;
-      height: 4px;
-      background: var(--beige);
-      z-index: 1;
-    }
-    .step { text-align: center; z-index: 2; flex: 1; }
-    .step-icon {
-      width: 48px; height: 48px;
-      background: #d5c4b8;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 12px;
-      font-size: 1.2rem;
-      color: white;
-      transition: all 0.3s ease;
-    }
-    .step.completed .step-icon { background: linear-gradient(135deg, #5da86a, #3e8c4e); }
-    .step.active .step-icon {
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      transform: scale(1.12);
-      box-shadow: 0 0 20px rgba(130,90,60,0.4);
-    }
-    .step-text { font-size: 0.78rem; font-weight: 600; color: #b09880; }
-    .step.active .step-text  { color: var(--primary-dark); }
-    .step.completed .step-text { color: #3e8c4e; }
-
-    /* ── Order History Section ── */
-    .history-section-header { justify-content: space-between; }
-
-    /* The BIG clickable order history button */
-    .history-toggle-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 18px 28px;
-      background: white;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: background 0.2s, border-color 0.2s;
-      user-select: none;
-    }
-    .history-toggle-bar:hover {
-      background: var(--cream);
-      border-bottom-color: var(--beige);
-    }
-    .history-toggle-bar.open {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-      border-bottom-color: transparent;
-    }
-    .history-toggle-bar.open .htb-left h3,
-    .history-toggle-bar.open .htb-left p { color: white !important; }
-    .history-toggle-bar.open .htb-icon  { background: rgba(255,255,255,0.2); color: white; }
-    .history-toggle-bar.open .htb-arrow { color: white; }
-
-    .htb-left { display: flex; align-items: center; gap: 16px; }
-    .htb-icon {
-      width: 48px; height: 48px;
-      background: var(--cream);
-      border-radius: 14px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.2rem;
-      color: var(--primary);
-      transition: all 0.3s;
-    }
-    .htb-left h3 { margin: 0 0 2px; font-size: 1rem; font-weight: 700; color: var(--brown); }
-    .htb-left p  { margin: 0; font-size: 0.8rem; color: var(--text-light); }
-    .htb-right { display: flex; align-items: center; gap: 12px; }
-    .htb-count {
-      background: var(--primary);
-      color: white;
-      font-size: 0.75rem;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 20px;
-      min-width: 28px;
-      text-align: center;
-    }
-    .history-toggle-bar.open .htb-count { background: rgba(255,255,255,0.25); }
-    .htb-arrow {
-      color: var(--text-light);
-      font-size: 1rem;
-      transition: transform 0.35s cubic-bezier(0.22,1,0.36,1);
-    }
-    .history-toggle-bar.open .htb-arrow { transform: rotate(180deg); }
-
-    /* Panel animation */
-    .history-panel {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.45s cubic-bezier(0.22,1,0.36,1);
-    }
-    .history-panel.open {
-      max-height: 1200px;
-    }
-
-    /* ── Filter chips (inside history panel) ── */
-    .filter-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 16px 20px 12px;
-      flex-wrap: wrap;
-      border-bottom: 1px solid var(--beige);
-      background: var(--cream);
-    }
-    .filter-label { font-size: 0.78rem; font-weight: 600; color: var(--text-light); margin-right: 4px; }
-    .chip {
-      padding: 5px 14px;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      cursor: pointer;
-      border: 1.5px solid var(--beige);
-      background: white;
-      color: var(--text-light);
-      transition: all 0.2s;
-    }
-    .chip:hover, .chip.active {
-      background: var(--primary);
-      color: white;
-      border-color: var(--primary);
-    }
-
-    /* ── History Cards (list view) ── */
-    .history-cards-list { padding: 16px 20px 20px; }
-    .history-card {
-      background: white;
-      border: 1.5px solid var(--beige);
-      border-radius: 18px;
-      margin-bottom: 14px;
-      overflow: hidden;
-      transition: box-shadow 0.2s, transform 0.2s;
-    }
-    .history-card:hover { box-shadow: 0 8px 24px rgba(103,72,49,0.1); transform: translateY(-1px); }
-    .hc-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 20px 12px;
-      gap: 12px;
-    }
-    .hc-top-left { flex: 1; min-width: 0; }
-    .hc-order-name { font-weight: 700; font-size: 0.95rem; color: var(--brown); margin: 0 0 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .hc-date { font-size: 0.76rem; color: var(--text-light); }
-    .hc-badges { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-    .hc-divider { border: none; border-top: 1px dashed var(--beige); margin: 0 20px; }
-    .hc-bottom {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 20px 14px;
-      gap: 12px;
-    }
-    .hc-total { font-size: 0.85rem; color: var(--text-light); }
-    .hc-total strong { color: var(--brown); font-size: 1rem; }
-    .hc-actions { display: flex; gap: 8px; }
-
-    /* ── Badges ── */
-    .badge {
-      padding: 4px 12px;
-      border-radius: 30px;
-      font-size: 0.72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-      white-space: nowrap;
-    }
-
-    /* ── Action Buttons ── */
-    .view-btn, .track-btn {
-      padding: 7px 16px;
-      border-radius: 30px;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 0.8rem;
-      transition: all 0.25s;
-      font-family: 'Poppins', sans-serif;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      white-space: nowrap;
-    }
-    .view-btn {
-      background: transparent;
-      border: 1.5px solid var(--primary);
-      color: var(--primary);
-    }
-    .view-btn:hover { background: var(--primary); color: white; transform: translateY(-1px); }
-    .track-btn {
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: white;
-      border: none;
-    }
-    .track-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(130,90,60,0.3); }
-
-    /* ── Active Orders Table ── */
-    .table-responsive-wrapper {
-      overflow-x: auto;
-      scrollbar-width: thin;
-      scrollbar-color: var(--primary) var(--beige);
-    }
-    .table-responsive-wrapper::-webkit-scrollbar { height: 6px; }
-    .table-responsive-wrapper::-webkit-scrollbar-track { background: var(--beige); }
-    .table-responsive-wrapper::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 6px; }
-
-    .history-table {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
-      min-width: 560px;
-    }
-    .history-table th {
-      background: var(--cream);
-      padding: 14px 16px;
-      text-align: left;
-      font-weight: 700;
-      color: var(--brown);
-      font-size: 0.78rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    .history-table td {
-      padding: 15px 16px;
-      border-bottom: 1px solid var(--cream);
-      font-size: 0.88rem;
-      vertical-align: middle;
-    }
-    .history-table tr:last-child td { border-bottom: none; }
-    .history-table tr:hover td { background: var(--cream); }
-
-    /* Column widths */
-    .history-table th:nth-child(1),
-    .history-table td:nth-child(1) { width: 120px; }
-
-    .history-table th:nth-child(2),
-    .history-table td:nth-child(2) { width: auto; }
-
-    .history-table th:nth-child(3),
-    .history-table td:nth-child(3) { width: 130px; }
-
-    .history-table th:nth-child(4),
-    .history-table td:nth-child(4) { width: 110px; }
-
-    /* Action column — fixed, sticky, wide enough for both buttons */
-    .history-table th:nth-child(5),
-    .history-table td:nth-child(5) {
-      width: 200px;
-      text-align: center;
-      white-space: nowrap;
-      position: sticky;
-      right: 0;
-      background: var(--cream);
-      z-index: 5;
-      box-shadow: -2px 0 6px rgba(103,72,49,0.06);
-    }
-    .history-table td:nth-child(5) {
-      background: white;
-    }
-    .history-table tr:hover td:nth-child(5) {
-      background: var(--cream);
-    }
-
-    .empty-table-state { text-align: center; padding: 50px 20px; color: var(--text-light); }
-    .empty-table-state i { font-size: 2.8rem; opacity: 0.25; margin-bottom: 14px; display: block; }
-    .empty-table-state p { font-size: 0.9rem; }
-
-    /* ── Modal ── */
-    .modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(63,42,31,0.6);
-      backdrop-filter: blur(6px);
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-      padding: 16px;
-    }
-    .modal[style*="flex"] { display: flex; }
-    .modal-content {
-      background: white;
-      border-radius: 24px;
-      width: 100%;
-      max-width: 520px;
-      max-height: 92vh;
-      overflow-y: auto;
-      box-shadow: 0 20px 60px rgba(103,72,49,0.28);
-      animation: modalIn 0.35s cubic-bezier(0.22,1,0.36,1);
-    }
-    @keyframes modalIn {
-      from { opacity:0; transform: translateY(28px) scale(0.96); }
-      to   { opacity:1; transform: translateY(0) scale(1); }
-    }
-    .modal-header {
-      padding: 22px 28px 18px;
-      border-bottom: 1px solid var(--beige);
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      position: sticky;
-      top: 0;
-      background: white;
-      z-index: 2;
-    }
-    .modal-header-title { font-size: 1.15rem; font-weight: 700; color: var(--brown); margin: 0 0 4px; }
-    .modal-header-sub   { font-size: 0.78rem; color: var(--text-light); margin: 0; }
-    .close-modal {
-      width: 34px; height: 34px;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.4rem;
-      cursor: pointer;
-      color: #999;
-      transition: background 0.2s, color 0.2s;
-      flex-shrink: 0;
-    }
-    .close-modal:hover { background: var(--cream); color: var(--brown); }
-    .modal-body { padding: 24px 28px 28px; }
-    .modal-section-title {
-      font-size: 0.72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--text-light);
-      margin: 18px 0 10px;
-    }
-    .modal-meta-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 4px;
-    }
-    .meta-item {
-      background: var(--cream);
-      border: 1px solid var(--beige);
-      border-radius: 12px;
-      padding: 12px 14px;
-    }
-    .meta-item .meta-label { font-size: 0.7rem; color: var(--text-light); margin-bottom: 4px; font-weight: 500; }
-    .meta-item .meta-val   { font-size: 0.88rem; font-weight: 700; color: var(--brown); }
-    .modal-items-box {
-      background: var(--cream);
-      border: 1px solid var(--beige);
-      border-radius: 14px;
-      padding: 16px;
-      margin-top: 4px;
-    }
-    .modal-item-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 9px 0;
-      border-bottom: 1px dashed var(--beige);
-      font-size: 0.88rem;
-    }
-    .modal-item-row:last-of-type { border-bottom: none; }
-    .modal-item-name { color: var(--text); }
-    .modal-item-qty  { color: var(--text-light); font-size: 0.78rem; }
-    .modal-item-price { font-weight: 600; color: var(--brown); }
-    .modal-total {
-      font-weight: 700;
-      font-size: 1rem;
-      margin-top: 14px;
-      padding-top: 12px;
-      border-top: 2px solid var(--primary);
-      display: flex;
-      justify-content: space-between;
-      color: var(--brown);
-    }
-    .modal-total .total-amt { color: var(--primary); font-size: 1.1rem; }
-    .modal-actions { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
-    .modal-btn-primary {
-      width: 100%;
-      padding: 13px 24px;
-      border-radius: 50px;
-      border: none;
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: white;
-      font-weight: 700;
-      font-size: 0.95rem;
-      cursor: pointer;
-      font-family: 'Poppins', sans-serif;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      transition: all 0.3s;
-      box-shadow: 0 6px 20px rgba(103,72,49,0.25);
-    }
-    .modal-btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(103,72,49,0.38); }
-
-    /* ── Order Received Button ── */
-    .order-received-wrap {
-      margin-top: 28px;
-      padding: 20px 24px;
-      background: linear-gradient(135deg, #e8f5ee, #d4eddb);
-      border: 1.5px dashed #5da86a;
-      border-radius: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    .order-received-wrap .or-text {
-      flex: 1;
-    }
-    .order-received-wrap .or-text p {
-      margin: 0 0 2px;
-      font-weight: 700;
-      font-size: 0.9rem;
-      color: #2e7d52;
-    }
-    .order-received-wrap .or-text span {
-      font-size: 0.78rem;
-      color: #4a9a66;
-    }
-    .btn-order-received {
-      padding: 11px 22px;
-      border-radius: 50px;
-      border: none;
-      background: linear-gradient(135deg, #5da86a, #3e8c4e);
-      color: white;
-      font-weight: 700;
-      font-size: 0.88rem;
-      cursor: pointer;
-      font-family: 'Poppins', sans-serif;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.3s;
-      box-shadow: 0 6px 18px rgba(62,140,78,0.3);
-      white-space: nowrap;
-    }
-    .btn-order-received:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 26px rgba(62,140,78,0.4);
-    }
-    .btn-order-received:active { transform: scale(0.97); }
-
-    /* ── Confirm Received Modal ── */
-    .confirm-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(63,42,31,0.6);
-      backdrop-filter: blur(6px);
-      align-items: center;
-      justify-content: center;
-      z-index: 3000;
-      padding: 16px;
-    }
-    .confirm-modal[style*="flex"] { display: flex; }
-    .confirm-modal-box {
-      background: white;
-      border-radius: 24px;
-      width: 100%;
-      max-width: 420px;
-      padding: 36px 32px;
-      text-align: center;
-      box-shadow: 0 20px 60px rgba(103,72,49,0.28);
-      animation: modalIn 0.35s cubic-bezier(0.22,1,0.36,1);
-    }
-    .confirm-modal-icon {
-      font-size: 4rem;
-      margin-bottom: 16px;
-      display: block;
-    }
-    .confirm-modal-box h3 {
-      font-size: 1.3rem;
-      color: var(--brown);
-      margin: 0 0 10px;
-    }
-    .confirm-modal-box p {
-      font-size: 0.88rem;
-      color: var(--text-light);
-      margin: 0 0 28px;
-      line-height: 1.6;
-    }
-    .confirm-modal-btns {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-    }
-    .confirm-btn-yes {
-      padding: 12px 28px;
-      border-radius: 50px;
-      border: none;
-      background: linear-gradient(135deg, #5da86a, #3e8c4e);
-      color: white;
-      font-weight: 700;
-      font-size: 0.9rem;
-      cursor: pointer;
-      font-family: 'Poppins', sans-serif;
-      transition: all 0.3s;
-      box-shadow: 0 6px 18px rgba(62,140,78,0.3);
-    }
-    .confirm-btn-yes:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(62,140,78,0.4); }
-    .confirm-btn-no {
-      padding: 12px 28px;
-      border-radius: 50px;
-      border: 1.5px solid var(--beige);
-      background: white;
-      color: var(--text-light);
-      font-weight: 600;
-      font-size: 0.9rem;
-      cursor: pointer;
-      font-family: 'Poppins', sans-serif;
-      transition: all 0.2s;
-    }
-    .confirm-btn-no:hover { background: var(--cream); border-color: var(--primary); color: var(--primary); }
-
-    /* ── Responsive ── */
-    @media (max-width: 700px) {
-      .stats-row { grid-template-columns: 1fr 1fr; }
-      .stats-row .stat-card:last-child { grid-column: 1/-1; }
-      .modal-meta-grid { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 480px) {
-      .hc-top { flex-direction: column; align-items: flex-start; }
-      .history-toggle-bar { padding: 14px 16px; }
-      .htb-left p { display: none; }
-    }
-  </style>
 </head>
 <body>
 
@@ -656,11 +30,14 @@
         <div class="nav-icons">
           <div class="cart-wrapper" onclick="location.href='cart.html'">
             <i class="fas fa-shopping-cart"></i>
-            <span id="cart-count-header" style="display:none;">0</span>
+            <span id="cart-count-header">0</span>
           </div>
           <div class="user-wrapper" onclick="location.href='user.html'">
-            <i class="fas fa-user" style="color: var(--primary);"></i>
+            <i class="fas fa-user nav-user-icon"></i>
           </div>
+          <button class="settings-trigger-btn" onclick="openSettingsDrawer()" title="Account Settings" aria-label="Account Settings">
+            <i class="fas fa-gear"></i>
+          </button>
         </div>
         <span id="user-name-display"></span>
         <button class="btn-outline" onclick="handleLogout()">Logout</button>
@@ -705,36 +82,36 @@
   <!-- Active Order Tracking -->
   <div class="section-card">
     <div class="section-header">
-      <i class="fas fa-motorcycle" style="font-size:1.4rem; color:var(--primary);"></i>
+      <i class="fas fa-motorcycle section-header-icon"></i>
       <h2>Track Your Order</h2>
     </div>
     <div class="order-tracker" id="order-container">
       <!-- Empty State -->
       <div id="no-active-order">
-        <p style="text-align:center; color:#777; padding:40px 20px; font-size:1rem;">
-          <i class="fas fa-box-open" style="font-size:3rem; margin-bottom:16px; display:block; opacity:0.25;"></i>
+        <p>
+          <i class="fas fa-box-open empty-icon"></i>
           You don't have any ongoing orders right now.
         </p>
-        <div style="text-align:center; padding-bottom: 10px;">
+        <div class="shop-cta">
           <button class="btn-outline" onclick="location.href='menu.html'">
             <i class="fas fa-shopping-bag"></i> Start Shopping
           </button>
         </div>
       </div>
       <!-- Pending -->
-      <div id="status-pending" class="hidden" style="text-align:center; padding:46px 20px;">
-        <div style="font-size:3.5rem; margin-bottom:14px;">⏳</div>
+      <div id="status-pending" class="hidden">
+        <div class="pending-emoji">⏳</div>
         <h3>Order Received!</h3>
-        <p style="color:var(--text-light); margin-top:8px; font-size:0.95rem;">We're reviewing your order. You'll be notified once it's confirmed.</p>
+        <p>We're reviewing your order. You'll be notified once it's confirmed.</p>
       </div>
       <!-- Active Tracking -->
       <div id="status-tracking" class="hidden">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px; margin-bottom:28px;">
-          <div>
-            <h3 id="active-order-id" style="margin:0 0 5px 0;">Order #12345</h3>
-            <p id="active-order-items" style="margin:0; color:var(--text-light); font-size:0.88rem;"></p>
+        <div class="tracking-header">
+          <div class="tracking-header-left">
+            <h3 id="active-order-id">Order #12345</h3>
+            <p id="active-order-items"></p>
           </div>
-          <div style="text-align:right;">
+          <div class="tracking-header-right">
             <span id="active-status-badge" class="badge badge-pending">Processing</span><br><br>
             <span id="active-payment-badge" class="badge badge-pay-unpaid">⬤ UNPAID</span>
           </div>
@@ -758,43 +135,21 @@
           </div>
         </div>
 
-        <!-- Order Received Button (shown only when status = delivery) -->
-        <div id="order-received-wrap" class="order-received-wrap" style="display:none;">
-          <div class="or-text">
-            <p>🧡 Your order is on its way to you!</p>
-          </div>
-          <button class="btn-order-received" onclick="promptOrderReceived()">
-            <i class="fas fa-box-check"></i> Order Received
-          </button>
-        </div>
 
       </div>
     </div>
   </div>
 
-  <!-- Active Orders Table -->
+  <!-- Active Orders -->
   <div class="section-card">
     <div class="section-header">
-      <i class="fas fa-clock" style="font-size:1.4rem; color:var(--primary);"></i>
+      <i class="fas fa-clock section-header-icon"></i>
       <h2>Active Orders</h2>
     </div>
-    <div class="table-responsive-wrapper">
-      <table class="history-table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Order</th>
-            <th>Status</th>
-            <th>Payment</th>
-            <th style="text-align:center;"></th>
-          </tr>
-        </thead>
-        <tbody id="active-orders-list"></tbody>
-      </table>
-      <div id="no-active-orders-msg" class="empty-table-state hidden">
-        <i class="fas fa-box-open"></i>
-        <p>No active orders at the moment.</p>
-      </div>
+    <div class="ao-list" id="active-orders-list"></div>
+    <div id="no-active-orders-msg" class="empty-table-state hidden">
+      <i class="fas fa-box-open"></i>
+      <p>No active orders at the moment.</p>
     </div>
   </div>
 
@@ -832,7 +187,7 @@
         <!-- Filled dynamically -->
       </div>
 
-      <div id="no-history-msg" class="empty-table-state hidden" style="padding:40px 20px;">
+      <div id="no-history-msg" class="empty-table-state no-history-padded hidden">
         <i class="fas fa-receipt"></i>
         <p>No completed or cancelled orders yet.</p>
       </div>
@@ -871,9 +226,106 @@
   </div>
 </div>
 
+
+<!-- ── Settings Overlay ── -->
+<div class="settings-overlay" id="settings-overlay" onclick="closeSettingsDrawer()"></div>
+
+<!-- ── Account Settings Drawer ── -->
+<div class="settings-drawer" id="settings-drawer" role="dialog" aria-label="Account Settings">
+
+  <div class="drawer-header">
+    <div class="drawer-header-left">
+      <div class="drawer-avatar"><i class="fas fa-user"></i></div>
+      <div>
+        <p class="drawer-header-name" id="drawer-user-name">My Account</p>
+        <p class="drawer-header-email" id="drawer-user-email"></p>
+      </div>
+    </div>
+    <button class="drawer-close-btn" onclick="closeSettingsDrawer()" aria-label="Close settings">
+      <i class="fas fa-xmark"></i>
+    </button>
+  </div>
+
+  <div class="drawer-body">
+
+    <!-- Change Email -->
+    <p class="settings-section-label"><i class="fas fa-envelope"></i> Change Email</p>
+    <div class="settings-grid">
+      <div class="settings-group">
+        <label>Current Email</label>
+        <div class="settings-input-wrap">
+          <i class="fas fa-envelope input-icon"></i>
+          <input type="email" class="settings-input" id="current-email-display" disabled placeholder="Loading...">
+        </div>
+      </div>
+      <div class="settings-group">
+        <label>New Email Address</label>
+        <div class="settings-input-wrap">
+          <i class="fas fa-at input-icon"></i>
+          <input type="email" class="settings-input" id="new-email-input" placeholder="Enter new email">
+        </div>
+      </div>
+      <div class="settings-group">
+        <label>Current Password <span class="settings-group-note">(required to change email)</span></label>
+        <div class="settings-input-wrap">
+          <i class="fas fa-lock input-icon"></i>
+          <input type="password" class="settings-input" id="email-change-password" placeholder="Enter your current password">
+          <button type="button" class="toggle-pw-btn" onclick="togglePw('email-change-password', this)"><i class="fas fa-eye"></i></button>
+        </div>
+      </div>
+    </div>
+    <div class="settings-actions">
+      <button class="settings-btn-save" id="btn-save-email" onclick="saveEmail()">
+        <i class="fas fa-floppy-disk"></i> Update Email
+      </button>
+      <button class="settings-btn-cancel" onclick="clearEmailForm()">Cancel</button>
+    </div>
+    <div class="settings-alert" id="email-alert"></div>
+
+    <hr class="settings-divider">
+
+    <!-- Change Password -->
+    <p class="settings-section-label"><i class="fas fa-lock"></i> Change Password</p>
+    <div class="settings-grid">
+      <div class="settings-group">
+        <label>Current Password</label>
+        <div class="settings-input-wrap">
+          <i class="fas fa-lock input-icon"></i>
+          <input type="password" class="settings-input" id="current-password" placeholder="Enter current password">
+          <button type="button" class="toggle-pw-btn" onclick="togglePw('current-password', this)"><i class="fas fa-eye"></i></button>
+        </div>
+      </div>
+      <div class="settings-group">
+        <label>New Password</label>
+        <div class="settings-input-wrap">
+          <i class="fas fa-key input-icon"></i>
+          <input type="password" class="settings-input" id="new-password" placeholder="Min. 6 characters">
+          <button type="button" class="toggle-pw-btn" onclick="togglePw('new-password', this)"><i class="fas fa-eye"></i></button>
+        </div>
+      </div>
+      <div class="settings-group">
+        <label>Confirm New Password</label>
+        <div class="settings-input-wrap">
+          <i class="fas fa-key input-icon"></i>
+          <input type="password" class="settings-input" id="confirm-password" placeholder="Re-enter new password">
+          <button type="button" class="toggle-pw-btn" onclick="togglePw('confirm-password', this)"><i class="fas fa-eye"></i></button>
+        </div>
+      </div>
+    </div>
+    <div class="settings-actions">
+      <button class="settings-btn-save" id="btn-save-password" onclick="savePassword()">
+        <i class="fas fa-floppy-disk"></i> Update Password
+      </button>
+      <button class="settings-btn-cancel" onclick="clearPasswordForm()">Cancel</button>
+    </div>
+    <div class="settings-alert" id="password-alert"></div>
+
+  </div>
+</div>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getAuth, onAuthStateChanged, signOut, EmailAuthProvider, reauthenticateWithCredential, updateEmail, updatePassword } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
   import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 
   const firebaseConfig = {
@@ -888,16 +340,24 @@
   const db = getDatabase(app);
 
   let allHistoryCards = [];
-  let activeOrderId = null; // tracks the currently displayed active order
+  let activeOrderId = null;
+  let currentUser = null;
 
   onAuthStateChanged(auth, async (user) => {
     if (user) {
+      currentUser = user;
       get(ref(db, 'users/' + user.uid)).then(snap => {
         if (snap.exists()) {
           document.getElementById('user-name-display').textContent = "Hi, " + snap.val().name;
           document.getElementById('display-name').textContent = snap.val().name;
+          document.getElementById('drawer-user-name').textContent = snap.val().name;
         }
       });
+
+      // Show current email in settings
+      document.getElementById('current-email-display').value = user.email || '';
+      const drawerEmail = document.getElementById('drawer-user-email');
+      if (drawerEmail) drawerEmail.textContent = user.email || '';
 
       onValue(ref(db, `orders/${user.uid}/latest`), async (snapshot) => {
         const latest = snapshot.val();
@@ -948,18 +408,42 @@
           totalCount++;
 
           if (isActive) {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-              <td>${data.date || '—'}</td>
-              <td><strong>${data.orderName || (data.items?.[0]?.name + ' Order') || 'Bakery Order'}</strong></td>
-              <td><span class="badge badge-${data.status}">${data.status}</span></td>
-              <td><span class="badge badge-pay-${payStatus}">${payLabel}</span></td>
-              <td>
-                <button class="view-btn" onclick="viewOrderDetails('${id}')"><i class="fas fa-eye"></i> View</button>
-                ${data.status !== 'pending' ? `<button class="track-btn" style="margin-left:6px;" onclick="trackThisOrder('${id}')"><i class="fas fa-location-dot"></i> Track</button>` : ''}
-                ${data.status === 'delivery' ? `<button class="btn-order-received" style="margin-left:6px; padding:7px 14px; font-size:0.78rem;" onclick="activeOrderId='${id}'; promptOrderReceived();"><i class="fas fa-box-check"></i> Received</button>` : ''}
-              </td>`;
-            activeBody.appendChild(row);
+            const card = document.createElement('div');
+            card.className = 'ao-card' + (data.status === 'delivery' ? ' ao-card--delivery' : '');
+            const orderTitle = data.orderName || (data.items?.[0]?.name + ' Order') || 'Bakery Order';
+            const itemCount  = data.items ? data.items.length : 0;
+            const totalAmt   = data.totalAmount ? '₱' + data.totalAmount : '';
+            card.innerHTML = `
+              <div class="ao-card-main">
+                <div class="ao-card-info">
+                  <p class="ao-card-title">${orderTitle}</p>
+                  <p class="ao-card-meta">
+                    <i class="fas fa-calendar-alt cal-icon"></i>${data.date || '—'}
+                    ${itemCount ? ` &nbsp;·&nbsp; <i class="fas fa-box cal-icon"></i>${itemCount} item${itemCount > 1 ? 's' : ''}` : ''}
+                    ${totalAmt ? ` &nbsp;·&nbsp; <strong>${totalAmt}</strong>` : ''}
+                  </p>
+                </div>
+                <div class="ao-card-badges">
+                  <span class="badge badge-${data.status}">${data.status}</span>
+                  <span class="badge badge-pay-${payStatus}">${payLabel}</span>
+                </div>
+                <div class="ao-card-actions">
+                  <button class="view-btn" onclick="viewOrderDetails('${id}')"><i class="fas fa-eye"></i> View</button>
+                  ${data.status !== 'pending' ? `<button class="track-btn" onclick="trackThisOrder('${id}')"><i class="fas fa-location-dot"></i> Track</button>` : ''}
+                </div>
+              </div>
+              ${data.status === 'delivery' ? `
+              <div class="ao-received-bar">
+                <div class="ao-received-bar-text">
+                  <i class="fas fa-truck-fast"></i>
+                  <span>Your order is out for delivery!</span>
+                </div>
+                <button class="ao-received-btn" onclick="activeOrderId='${id}'; promptOrderReceived();">
+                  <i class="fas fa-box-check"></i> Order Received
+                </button>
+              </div>` : ''}
+            `;
+            activeBody.appendChild(card);
             activeCount++;
           }
 
@@ -972,7 +456,7 @@
               <div class="hc-top">
                 <div class="hc-top-left">
                   <p class="hc-order-name">${data.orderName || (data.items?.[0]?.name + ' Order') || 'Bakery Order'}</p>
-                  <p class="hc-date"><i class="fas fa-calendar-alt" style="margin-right:4px; opacity:0.6;"></i>${data.date || '—'}</p>
+                  <p class="hc-date"><i class="fas fa-calendar-alt cal-icon"></i>${data.date || '—'}</p>
                 </div>
                 <div class="hc-badges">
                   <span class="badge badge-${data.status}">${data.status}</span>
@@ -1032,10 +516,6 @@
     const payLabels = { paid: 'PAID', partial: 'DOWNPAYMENT', cod: 'COD', unpaid: 'UNPAID' };
     payBadge.textContent = `⬤ ${payLabels[payStatus]}`;
     payBadge.className = `badge badge-pay-${payStatus}`;
-
-    // Show "Order Received" button only when status is delivery
-    const receivedWrap = document.getElementById('order-received-wrap');
-    receivedWrap.style.display = (order.status === 'delivery') ? 'flex' : 'none';
 
     if (order.status === 'pending') {
       document.getElementById('status-pending').classList.remove('hidden');
@@ -1108,7 +588,7 @@
           <div class="meta-val"><span class="badge badge-pay-${payStatus}">${payLabel}</span></div>
         </div>
       </div>
-      <div class="modal-section-title" style="margin-top:20px;">Items Ordered</div>
+      <div class="modal-section-title modal-section-title--items">Items Ordered</div>
       <div class="modal-items-box">
         ${itemsHTML}
         <div class="modal-total">
@@ -1122,7 +602,7 @@
             <i class="fas fa-location-dot"></i> Track This Order
           </button>` : ''}
         ${order.status === 'delivery' ? `
-          <button class="modal-btn-primary" style="background: linear-gradient(135deg,#5da86a,#3e8c4e); box-shadow: 0 6px 20px rgba(62,140,78,0.3);"
+          <button class="modal-btn-primary modal-btn-green"
             onclick="activeOrderId='${id}'; closeModal(); setTimeout(promptOrderReceived, 200);">
             <i class="fas fa-box-check"></i> Order Received
           </button>` : ''}
@@ -1179,12 +659,7 @@
         receivedAt: new Date().toISOString()
       });
       closeConfirmModal();
-
-      // Hide the Order Received button and show empty state after a short delay
-      document.getElementById('order-received-wrap').style.display = 'none';
       showEmptyState();
-
-      // Auto-open Order History so user sees their completed order
       const panel = document.getElementById('history-panel');
       const toggleBtn = document.getElementById('history-toggle-btn');
       if (!panel.classList.contains('open')) {
@@ -1207,6 +682,136 @@
 
   window.handleLogout = () => {
     signOut(auth).then(() => window.location.href = "index.html");
+  };
+
+  // ── Settings Drawer ──
+  window.openSettingsDrawer = () => {
+    document.getElementById('settings-drawer').classList.add('open');
+    document.getElementById('settings-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closeSettingsDrawer = () => {
+    document.getElementById('settings-drawer').classList.remove('open');
+    document.getElementById('settings-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  };
+
+  // Close drawer with Escape key
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeSettingsDrawer();
+  });
+
+  // ── Account Settings Functions ──
+
+  window.togglePw = (inputId, btn) => {
+    const input = document.getElementById(inputId);
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.className = 'fas fa-eye-slash';
+    } else {
+      input.type = 'password';
+      icon.className = 'fas fa-eye';
+    }
+  };
+
+  function showAlert(alertId, type, message) {
+    const el = document.getElementById(alertId);
+    el.className = `settings-alert ${type}`;
+    el.innerHTML = `<i class="fas fa-${type === 'success' ? 'circle-check' : 'circle-exclamation'}"></i> ${message}`;
+    el.style.display = 'flex';
+    setTimeout(() => { el.style.display = 'none'; }, 5000);
+  }
+
+  function getFirebaseErrorMessage(code) {
+    const messages = {
+      'auth/wrong-password': 'Incorrect current password. Please try again.',
+      'auth/invalid-credential': 'Incorrect current password. Please try again.',
+      'auth/email-already-in-use': 'This email is already in use by another account.',
+      'auth/invalid-email': 'Please enter a valid email address.',
+      'auth/weak-password': 'New password must be at least 6 characters.',
+      'auth/requires-recent-login': 'For security, please log out and log back in before making this change.',
+      'auth/too-many-requests': 'Too many attempts. Please try again later.',
+      'auth/network-request-failed': 'Network error. Please check your connection.',
+    };
+    return messages[code] || 'Something went wrong. Please try again.';
+  }
+
+  window.saveEmail = async () => {
+    const newEmail = document.getElementById('new-email-input').value.trim();
+    const password = document.getElementById('email-change-password').value;
+
+    if (!newEmail) { showAlert('email-alert', 'error', 'Please enter a new email address.'); return; }
+    if (!password) { showAlert('email-alert', 'error', 'Please enter your current password to confirm.'); return; }
+    if (newEmail === currentUser.email) { showAlert('email-alert', 'error', 'New email is the same as your current email.'); return; }
+
+    const btn = document.getElementById('btn-save-email');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+
+    try {
+      const credential = EmailAuthProvider.credential(currentUser.email, password);
+      await reauthenticateWithCredential(currentUser, credential);
+      await updateEmail(currentUser, newEmail);
+      // Also update email in the database
+      await update(ref(db, `users/${currentUser.uid}`), { email: newEmail });
+      document.getElementById('current-email-display').value = newEmail;
+      const drawerEmailEl = document.getElementById('drawer-user-email');
+      if (drawerEmailEl) drawerEmailEl.textContent = newEmail;
+      document.getElementById('new-email-input').value = '';
+      document.getElementById('email-change-password').value = '';
+      showAlert('email-alert', 'success', 'Email updated successfully!');
+    } catch (e) {
+      showAlert('email-alert', 'error', getFirebaseErrorMessage(e.code));
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Update Email';
+    }
+  };
+
+  window.clearEmailForm = () => {
+    document.getElementById('new-email-input').value = '';
+    document.getElementById('email-change-password').value = '';
+    document.getElementById('email-alert').style.display = 'none';
+  };
+
+  window.savePassword = async () => {
+    const currentPw  = document.getElementById('current-password').value;
+    const newPw      = document.getElementById('new-password').value;
+    const confirmPw  = document.getElementById('confirm-password').value;
+
+    if (!currentPw) { showAlert('password-alert', 'error', 'Please enter your current password.'); return; }
+    if (!newPw)     { showAlert('password-alert', 'error', 'Please enter a new password.'); return; }
+    if (newPw.length < 6) { showAlert('password-alert', 'error', 'New password must be at least 6 characters.'); return; }
+    if (newPw !== confirmPw) { showAlert('password-alert', 'error', 'New passwords do not match.'); return; }
+    if (newPw === currentPw) { showAlert('password-alert', 'error', 'New password must be different from your current password.'); return; }
+
+    const btn = document.getElementById('btn-save-password');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+
+    try {
+      const credential = EmailAuthProvider.credential(currentUser.email, currentPw);
+      await reauthenticateWithCredential(currentUser, credential);
+      await updatePassword(currentUser, newPw);
+      document.getElementById('current-password').value = '';
+      document.getElementById('new-password').value = '';
+      document.getElementById('confirm-password').value = '';
+      showAlert('password-alert', 'success', 'Password updated successfully!');
+    } catch (e) {
+      showAlert('password-alert', 'error', getFirebaseErrorMessage(e.code));
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Update Password';
+    }
+  };
+
+  window.clearPasswordForm = () => {
+    document.getElementById('current-password').value = '';
+    document.getElementById('new-password').value = '';
+    document.getElementById('confirm-password').value = '';
+    document.getElementById('password-alert').style.display = 'none';
   };
 
   function updateCartBadge() {
