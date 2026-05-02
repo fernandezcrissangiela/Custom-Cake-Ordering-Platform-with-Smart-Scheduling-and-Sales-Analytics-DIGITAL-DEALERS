@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>C&N Bakery - Order History</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/history.css">
+</head>
+<body>
+
+<!-- Add right after <body>, BEFORE everything else -->
+<script>
+  if (sessionStorage.getItem('adminLoggedIn') !== 'true') {
+    window.location.replace('login.html');
+  }
+</script>
+
+<!-- ========== LOGIN OVERLAY ========== -->
+<div id="login-overlay">
+  <div class="login-box">
+    <h2><i class="fas fa-lock"></i> Admin Portal</h2>
+    <p class="login-sub">Enter your password to access Order History</p>
+    <input type="password" id="admin-pass" placeholder="Enter password"
+           onkeydown="if(event.key==='Enter') checkLogin()">
+    <button class="btn-main" onclick="checkLogin()">
+      <i class="fas fa-unlock-alt"></i> Unlock Dashboard
+    </button>
+  </div>
+</div>
+
+<!-- ========== HEADER ========== -->
+<header>
+  <a href="admin.html" class="logo-text">C&N</span> Bakery</a>
+  <button class="btn-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+</header>
+
+<div class="container">
+
+  <!-- Navigation -->
+  <div class="nav-tabs">
+    <a href="sales.html"      class="nav-link"><i class="fas fa-chart-line"></i> Sales</a>
+    <a href="orders.html"     class="nav-link"><i class="fas fa-shopping-bag"></i> Orders</a>
+    <a href="schedule.html"   class="nav-link"><i class="fas fa-calendar-alt"></i> Schedule</a>
+    <a href="admin_menu.html" class="nav-link"><i class="fas fa-birthday-cake"></i> Menu</a>
+    <a href="history.html"    class="nav-link active"><i class="fas fa-history"></i> History</a>
+  </div>
+
+  <!-- Page Title -->
+  <div class="history-header">
+    <h1><i class="fas fa-history"></i> Order <span style="color:var(--primary);">History</span></h1>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="history-stats">
+    <div class="h-stat total">
+      <h4><i class="fas fa-list"></i> Total Orders</h4>
+      <p id="stat-total">0</p>
+    </div>
+    <div class="h-stat completed">
+      <h4><i class="fas fa-check-circle"></i> Completed</h4>
+      <p id="stat-completed">0</p>
+    </div>
+    <div class="h-stat cancelled">
+      <h4><i class="fas fa-times-circle"></i> Cancelled</h4>
+      <p id="stat-cancelled">0</p>
+    </div>
+    <div class="h-stat revenue">
+      <h4><i class="fas fa-coins"></i> Total Revenue</h4>
+      <p id="stat-revenue">₱0</p>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="history-toolbar">
+    <div class="history-search">
+      <i class="fas fa-search"></i>
+      <input type="text" id="search-history" placeholder="Search customer, phone, or product…">
+    </div>
+    <div class="history-filter">
+      <i class="fas fa-filter" style="color:var(--muted);"></i>
+      <select id="filter-status">
+        <option value="all">All Statuses</option>
+        <option value="completed">Completed</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+    </div>
+    <div class="history-filter">
+      <i class="fas fa-sort" style="color:var(--muted);"></i>
+      <select id="filter-sort">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="highest">Highest Amount</option>
+        <option value="lowest">Lowest Amount</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- History Table -->
+  <div class="history-card">
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th><i class="fas fa-hashtag"></i> Order ID</th>
+          <th><i class="fas fa-user"></i> Customer</th>
+          <th><i class="fas fa-box"></i> Products</th>
+          <th><i class="fas fa-coins"></i> Amount</th>
+          <th><i class="fas fa-calendar"></i> Date</th>
+          <th><i class="fas fa-credit-card"></i> Payment</th>
+          <th><i class="fas fa-tag"></i> Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="history-list">
+        <tr>
+          <td colspan="8">
+            <div class="history-empty">
+              <i class="fas fa-spinner fa-spin"></i>
+              <p>Loading history…</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div><!-- /container -->
+
+<!-- ========== ORDER DETAIL MODAL ========== -->
+<div class="h-modal" id="history-modal">
+  <div class="h-modal-content">
+    <div class="h-modal-header">
+      <strong id="h-modal-title">Order Details</strong>
+      <button class="h-modal-close" onclick="closeHistoryModal()">×</button>
+    </div>
+    <div class="h-modal-body" id="h-modal-body"></div>
+    <div class="h-modal-footer">
+      <button class="btn-outline" onclick="closeHistoryModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== LOGIN GUARD ========== -->
+<script>
+  
+  function handleLogout() {
+  sessionStorage.removeItem('adminLoggedIn');
+  window.location.replace('login.html');
+}
+
+  function checkLogin() {
+    const input = document.getElementById('admin-pass');
+    if (input.value === "digitaldealers") {
+      document.getElementById('login-overlay').style.display = 'none';
+      sessionStorage.setItem('adminLoggedIn', 'true');
+    } else {
+      input.style.borderColor = '#c0392b';
+      input.style.boxShadow = '0 0 0 4px rgba(192,57,43,0.15)';
+      input.value = '';
+      input.placeholder = 'Incorrect password. Try again.';
+      setTimeout(() => {
+        input.style.borderColor = '';
+        input.style.boxShadow = '';
+        input.placeholder = 'Enter password';
+      }, 2000);
+      input.focus();
+    }
+  }
+
+  if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+    document.getElementById('login-overlay').style.display = 'none';
+  }
+
+  window.closeHistoryModal = function() {
+    document.getElementById('history-modal').classList.remove('open');
+  };
+
+  document.getElementById('history-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeHistoryModal();
+  });
+</script>
+
+<!-- ========== FIREBASE + HISTORY LOGIC ========== -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCWUJfDwLR5erpExZUoBWW7YJ-aDpT_zy0",
+    authDomain: "candn-bakery.firebaseapp.com",
+    databaseURL: "https://candn-bakery-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "candn-bakery"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+
+  let cachedOrders = [];
+
+  // Load only completed + cancelled orders (the "history")
+  onValue(ref(db, 'orders'), (snapshot) => {
+    cachedOrders = [];
+    if (snapshot.exists()) {
+      snapshot.forEach(snap => {
+        const o = snap.val();
+        const status = (o.status || '').toLowerCase();
+        // History = completed or cancelled orders only
+        if (['completed', 'cancelled'].includes(status)) {
+          cachedOrders.push({ id: snap.key, ...o });
+        }
+      });
+    }
+    updateStats();
+    renderHistory();
+  });
+
+  function updateStats() {
+    const completed = cachedOrders.filter(o => o.status === 'completed');
+    const cancelled = cachedOrders.filter(o => o.status === 'cancelled');
+    const revenue   = completed.reduce((sum, o) => sum + parseFloat(o.totalAmount || 0), 0);
+
+    document.getElementById('stat-total').textContent     = cachedOrders.length;
+    document.getElementById('stat-completed').textContent = completed.length;
+    document.getElementById('stat-cancelled').textContent = cancelled.length;
+    document.getElementById('stat-revenue').textContent   = `₱${revenue.toLocaleString('en-PH')}`;
+  }
+
+  function renderHistory() {
+    const tbody      = document.getElementById('history-list');
+    const search     = document.getElementById('search-history').value.toLowerCase();
+    const statusFilter = document.getElementById('filter-status').value;
+    const sortBy     = document.getElementById('filter-sort').value;
+
+    let filtered = cachedOrders.filter(o => {
+      const name   = (o.customerName || '').toLowerCase();
+      const phone  = (o.phone || '').toLowerCase();
+      const items  = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
+      const itemMatch = items.some(i => (i.name || '').toLowerCase().includes(search));
+      const matchSearch = !search || name.includes(search) || phone.includes(search) || itemMatch;
+      const matchStatus = statusFilter === 'all' || o.status === statusFilter;
+      return matchSearch && matchStatus;
+    });
+
+    // Sort
+    filtered.sort((a, b) => {
+      const aAmt  = parseFloat(a.totalAmount || 0);
+      const bAmt  = parseFloat(b.totalAmount || 0);
+      const aTime = new Date(a.completedAt || a.createdAt || 0).getTime();
+      const bTime = new Date(b.completedAt || b.createdAt || 0).getTime();
+      if (sortBy === 'newest')  return bTime - aTime;
+      if (sortBy === 'oldest')  return aTime - bTime;
+      if (sortBy === 'highest') return bAmt - aAmt;
+      if (sortBy === 'lowest')  return aAmt - bAmt;
+      return bTime - aTime;
+    });
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `
+        <tr><td colspan="8">
+          <div class="history-empty">
+            <i class="fas fa-box-open"></i>
+            <p>${cachedOrders.length === 0
+              ? 'No completed or cancelled orders yet.'
+              : 'No results match your search.'}</p>
+          </div>
+        </td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(o => {
+      const status    = (o.status || 'pending').toLowerCase();
+      const items     = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
+      const itemText  = items.map(i => `${i.quantity||1}× ${i.name}`).join(', ');
+      const dateLabel = o.completedAt
+        ? new Date(o.completedAt).toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' })
+        : (o.date || '—');
+      const payStatus = (o.paymentStatus || 'unpaid').toLowerCase();
+
+      return `
+        <tr onclick="showDetail('${o.id}')">
+          <td class="order-id-cell">#${o.id.slice(-6)}</td>
+          <td class="customer-cell">
+            <strong>${o.customerName || '—'}</strong>
+            <small><i class="fas fa-phone" style="font-size:0.7rem;"></i> ${o.phone || '—'}</small>
+          </td>
+          <td class="products-cell">${itemText || '—'}</td>
+          <td class="amount-cell">₱${parseFloat(o.totalAmount||0).toLocaleString('en-PH')}</td>
+          <td class="date-cell">${dateLabel}</td>
+          <td>
+            <span class="pay-badge pay-${payStatus}">${payStatus.toUpperCase()}</span>
+          </td>
+          <td>
+            <span class="status-badge status-${status}">${status}</span>
+          </td>
+          <td>
+            <button class="btn-view" onclick="event.stopPropagation(); showDetail('${o.id}')">
+              <i class="fas fa-eye"></i> View
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // Show order detail modal
+  window.showDetail = (orderId) => {
+    const order = cachedOrders.find(o => o.id === orderId);
+    if (!order) return;
+
+    const status    = (order.status || '').toLowerCase();
+    const items     = Array.isArray(order.items) ? order.items : Object.values(order.items || {});
+    const payStatus = (order.paymentStatus || 'unpaid').toLowerCase();
+    const payColor  =
+      payStatus === 'paid'    ? '#1A6632' :
+      payStatus === 'partial' ? '#8A6400' : '#922B21';
+
+    document.getElementById('h-modal-title').textContent =
+      `#${order.id.slice(-6)} — ${order.customerName || 'Customer'}`;
+
+    document.getElementById('h-modal-body').innerHTML = `
+      <p><strong>Customer:</strong> ${order.customerName || 'N/A'}</p>
+      <p><strong>Phone:</strong> ${order.phone || 'N/A'}</p>
+      <p><strong>Pickup / Delivery Date:</strong> ${order.date || 'N/A'}</p>
+      <p><strong>Total Amount:</strong> ₱${parseFloat(order.totalAmount||0).toLocaleString('en-PH')}</p>
+      <p><strong>Payment Method:</strong> ${order.paymentMethod || 'N/A'}</p>
+      <p><strong>Payment Status:</strong>
+        <span style="font-weight:700; color:${payColor};">${payStatus.toUpperCase()}</span>
+      </p>
+      <p><strong>Order Status:</strong>
+        <span class="status-badge status-${status}">${status}</span>
+      </p>
+      ${order.completedAt
+        ? `<p><strong>${status === 'completed' ? 'Completed' : 'Updated'} At:</strong>
+            ${new Date(order.completedAt).toLocaleString('en-PH')}</p>`
+        : ''}
+      <hr>
+      <p style="font-weight:700; color:var(--brown); margin-bottom:8px;">
+        <i class="fas fa-box" style="color:var(--primary); margin-right:6px;"></i>Items Ordered:
+      </p>
+      <div class="items-list">
+        ${items.map(i => `
+          <div>
+            <strong>${i.quantity||1}×</strong> ${i.name}
+            ${i.flavor    ? `<span style="color:var(--muted);font-size:0.8rem;"> · ${i.flavor}</span>`        : ''}
+            ${i.frosting  ? `<span style="color:var(--muted);font-size:0.8rem;"> · ${i.frosting}</span>`      : ''}
+            ${i.design    ? `<span style="color:var(--muted);font-size:0.8rem;"> · Design: ${i.design}</span>`: ''}
+            ${i.layers    ? `<span style="color:var(--muted);font-size:0.8rem;"> · ${i.layers} layers</span>` : ''}
+            ${i.message   ? `<span style="color:var(--muted);font-size:0.8rem;"> · "${i.message}"</span>`     : ''}
+          </div>`).join('')}
+      </div>
+      ${order.notes ? `<p style="margin-top:12px;"><strong>Notes:</strong> ${order.notes}</p>` : ''}
+    `;
+
+    document.getElementById('history-modal').classList.add('open');
+  };
+
+  // Bind filters
+  document.getElementById('search-history').addEventListener('input', renderHistory);
+  document.getElementById('filter-status').addEventListener('change', renderHistory);
+  document.getElementById('filter-sort').addEventListener('change', renderHistory);
+</script>
+
+</body>
+</html>

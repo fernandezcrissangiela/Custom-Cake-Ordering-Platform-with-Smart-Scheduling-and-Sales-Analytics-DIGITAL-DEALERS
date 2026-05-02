@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>C&N Bakery - My Account</title>
+
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../css/user.css">
+
+  <style>
+    :root {
+      --primary: #825A3C;
+      --primary-dark: #674831;
+      --beige: #EDE0D4;
+      --cream: #F8F1EA;
+      --brown: #704233;
+      --text: #3F2A1F;
+      --text-light: #5F4635;
+    }
+
+    .main-content {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* ── Welcome Banner ── */
+    .welcome-header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 40px 36px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: 24px;
+      color: white;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 16px 48px rgba(103, 72, 49, 0.25);
+    }
+    .welcome-header::before {
+      content: '🧁';
+      position: absolute;
+      right: 40px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 7rem;
+      opacity: 0.15;
+      pointer-events: none;
+    }
+    .welcome-header h1 { font-size: 2.3rem; margin-bottom: 10px; font-weight: 700; }
+    .welcome-header p { opacity: 0.9; font-size: 1.02rem; }
+
+    /* ── Quick Stats Row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+    .stat-card {
+      background: white;
+      border-radius: 18px;
+      padding: 22px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border: 1px solid var(--beige);
+      box-shadow: 0 4px 16px rgba(103,72,49,0.07);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(103,72,49,0.12); }
+    .stat-icon {
+      width: 50px; height: 50px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem;
+    }
+    .stat-icon.orange { background: #FFF0E6; color: var(--primary); }
+    .stat-icon.green  { background: #E6F7EE; color: #2e7d52; }
+    .stat-icon.blue   { background: #E6F0FF; color: #2456c8; }
+    .stat-label { font-size: 0.78rem; color: var(--text-light); font-weight: 500; margin-bottom: 2px; }
+    .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--brown); line-height: 1; }
+
+    /* ── Section Cards ── */
+    .section-card {
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 10px 30px rgba(103,72,49,0.08);
+      margin-bottom: 24px;
+      overflow: hidden;
+      border: 1px solid var(--beige);
+    }
+    .section-header {
+      padding: 20px 28px;
+      background: var(--cream);
+      border-bottom: 1px solid var(--beige);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section-header h2 { margin: 0; font-size: 1.2rem; color: var(--brown); font-weight: 700; }
+
+    /* ── Active Order Tracker ── */
+    .order-tracker { padding: 28px 32px; }
+    .status-stepper {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+      position: relative;
+      padding: 0 10px;
+    }
+    .status-stepper::before {
+      content: '';
+      position: absolute;
+      top: 21px; left: 0; right: 0;
+      height: 4px;
+      background: var(--beige);
+      z-index: 1;
+    }
+    .step { text-align: center; z-index: 2; flex: 1; }
+    .step-icon {
+      width: 48px; height: 48px;
+      background: #d5c4b8;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 12px;
+      font-size: 1.2rem;
+      color: white;
+      transition: all 0.3s ease;
+    }
+    .step.completed .step-icon { background: linear-gradient(135deg, #5da86a, #3e8c4e); }
+    .step.active .step-icon {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      transform: scale(1.12);
+      box-shadow: 0 0 20px rgba(130,90,60,0.4);
+    }
+    .step-text { font-size: 0.78rem; font-weight: 600; color: #b09880; }
+    .step.active .step-text  { color: var(--primary-dark); }
+    .step.completed .step-text { color: #3e8c4e; }
+
+    /* ── Order History Section ── */
+    .history-section-header { justify-content: space-between; }
+
+    /* The BIG clickable order history button */
+    .history-toggle-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 28px;
+      background: white;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: background 0.2s, border-color 0.2s;
+      user-select: none;
+    }
+    .history-toggle-bar:hover {
+      background: var(--cream);
+      border-bottom-color: var(--beige);
+    }
+    .history-toggle-bar.open {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      border-bottom-color: transparent;
+    }
+    .history-toggle-bar.open .htb-left h3,
+    .history-toggle-bar.open .htb-left p { color: white !important; }
+    .history-toggle-bar.open .htb-icon  { background: rgba(255,255,255,0.2); color: white; }
+    .history-toggle-bar.open .htb-arrow { color: white; }
+
+    .htb-left { display: flex; align-items: center; gap: 16px; }
+    .htb-icon {
+      width: 48px; height: 48px;
+      background: var(--cream);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+      color: var(--primary);
+      transition: all 0.3s;
+    }
+    .htb-left h3 { margin: 0 0 2px; font-size: 1rem; font-weight: 700; color: var(--brown); }
+    .htb-left p  { margin: 0; font-size: 0.8rem; color: var(--text-light); }
+    .htb-right { display: flex; align-items: center; gap: 12px; }
+    .htb-count {
+      background: var(--primary);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      min-width: 28px;
+      text-align: center;
+    }
+    .history-toggle-bar.open .htb-count { background: rgba(255,255,255,0.25); }
+    .htb-arrow {
+      color: var(--text-light);
+      font-size: 1rem;
+      transition: transform 0.35s cubic-bezier(0.22,1,0.36,1);
+    }
+    .history-toggle-bar.open .htb-arrow { transform: rotate(180deg); }
+
+    /* Panel animation */
+    .history-panel {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.45s cubic-bezier(0.22,1,0.36,1);
+    }
+    .history-panel.open {
+      max-height: 1200px;
+    }
+
+    /* ── Filter chips (inside history panel) ── */
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 20px 12px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--beige);
+      background: var(--cream);
+    }
+    .filter-label { font-size: 0.78rem; font-weight: 600; color: var(--text-light); margin-right: 4px; }
+    .chip {
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1.5px solid var(--beige);
+      background: white;
+      color: var(--text-light);
+      transition: all 0.2s;
+    }
+    .chip:hover, .chip.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* ── History Cards (list view) ── */
+    .history-cards-list { padding: 16px 20px 20px; }
+    .history-card {
+      background: white;
+      border: 1.5px solid var(--beige);
+      border-radius: 18px;
+      margin-bottom: 14px;
+      overflow: hidden;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .history-card:hover { box-shadow: 0 8px 24px rgba(103,72,49,0.1); transform: translateY(-1px); }
+    .hc-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px 12px;
+      gap: 12px;
+    }
+    .hc-top-left { flex: 1; min-width: 0; }
+    .hc-order-name { font-weight: 700; font-size: 0.95rem; color: var(--brown); margin: 0 0 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .hc-date { font-size: 0.76rem; color: var(--text-light); }
+    .hc-badges { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .hc-divider { border: none; border-top: 1px dashed var(--beige); margin: 0 20px; }
+    .hc-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px 14px;
+      gap: 12px;
+    }
+    .hc-total { font-size: 0.85rem; color: var(--text-light); }
+    .hc-total strong { color: var(--brown); font-size: 1rem; }
+    .hc-actions { display: flex; gap: 8px; }
+
+    /* ── Badges ── */
+    .badge {
+      padding: 4px 12px;
+      border-radius: 30px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+    }
+
+    /* ── Action Buttons ── */
+    .view-btn, .track-btn {
+      padding: 7px 16px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.8rem;
+      transition: all 0.25s;
+      font-family: 'Poppins', sans-serif;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+    .view-btn {
+      background: transparent;
+      border: 1.5px solid var(--primary);
+      color: var(--primary);
+    }
+    .view-btn:hover { background: var(--primary); color: white; transform: translateY(-1px); }
+    .track-btn {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      border: none;
+    }
+    .track-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(130,90,60,0.3); }
+
+    /* ── Active Orders Table ── */
+    .table-responsive-wrapper {
+      overflow-x: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary) var(--beige);
+    }
+    .table-responsive-wrapper::-webkit-scrollbar { height: 6px; }
+    .table-responsive-wrapper::-webkit-scrollbar-track { background: var(--beige); }
+    .table-responsive-wrapper::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 6px; }
+
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      min-width: 560px;
+    }
+    .history-table th {
+      background: var(--cream);
+      padding: 14px 16px;
+      text-align: left;
+      font-weight: 700;
+      color: var(--brown);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .history-table td {
+      padding: 15px 16px;
+      border-bottom: 1px solid var(--cream);
+      font-size: 0.88rem;
+      vertical-align: middle;
+    }
+    .history-table tr:last-child td { border-bottom: none; }
+    .history-table tr:hover td { background: var(--cream); }
+
+    /* Column widths */
+    .history-table th:nth-child(1),
+    .history-table td:nth-child(1) { width: 120px; }
+
+    .history-table th:nth-child(2),
+    .history-table td:nth-child(2) { width: auto; }
+
+    .history-table th:nth-child(3),
+    .history-table td:nth-child(3) { width: 130px; }
+
+    .history-table th:nth-child(4),
+    .history-table td:nth-child(4) { width: 110px; }
+
+    /* Action column — fixed, sticky, wide enough for both buttons */
+    .history-table th:nth-child(5),
+    .history-table td:nth-child(5) {
+      width: 200px;
+      text-align: center;
+      white-space: nowrap;
+      position: sticky;
+      right: 0;
+      background: var(--cream);
+      z-index: 5;
+      box-shadow: -2px 0 6px rgba(103,72,49,0.06);
+    }
+    .history-table td:nth-child(5) {
+      background: white;
+    }
+    .history-table tr:hover td:nth-child(5) {
+      background: var(--cream);
+    }
+
+    .empty-table-state { text-align: center; padding: 50px 20px; color: var(--text-light); }
+    .empty-table-state i { font-size: 2.8rem; opacity: 0.25; margin-bottom: 14px; display: block; }
+    .empty-table-state p { font-size: 0.9rem; }
+
+    /* ── Modal ── */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(63,42,31,0.6);
+      backdrop-filter: blur(6px);
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 16px;
+    }
+    .modal[style*="flex"] { display: flex; }
+    .modal-content {
+      background: white;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 92vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(103,72,49,0.28);
+      animation: modalIn 0.35s cubic-bezier(0.22,1,0.36,1);
+    }
+    @keyframes modalIn {
+      from { opacity:0; transform: translateY(28px) scale(0.96); }
+      to   { opacity:1; transform: translateY(0) scale(1); }
+    }
+    .modal-header {
+      padding: 22px 28px 18px;
+      border-bottom: 1px solid var(--beige);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      position: sticky;
+      top: 0;
+      background: white;
+      z-index: 2;
+    }
+    .modal-header-title { font-size: 1.15rem; font-weight: 700; color: var(--brown); margin: 0 0 4px; }
+    .modal-header-sub   { font-size: 0.78rem; color: var(--text-light); margin: 0; }
+    .close-modal {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      cursor: pointer;
+      color: #999;
+      transition: background 0.2s, color 0.2s;
+      flex-shrink: 0;
+    }
+    .close-modal:hover { background: var(--cream); color: var(--brown); }
+    .modal-body { padding: 24px 28px 28px; }
+    .modal-section-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-light);
+      margin: 18px 0 10px;
+    }
+    .modal-meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+    .meta-item {
+      background: var(--cream);
+      border: 1px solid var(--beige);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+    .meta-item .meta-label { font-size: 0.7rem; color: var(--text-light); margin-bottom: 4px; font-weight: 500; }
+    .meta-item .meta-val   { font-size: 0.88rem; font-weight: 700; color: var(--brown); }
+    .modal-items-box {
+      background: var(--cream);
+      border: 1px solid var(--beige);
+      border-radius: 14px;
+      padding: 16px;
+      margin-top: 4px;
+    }
+    .modal-item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px dashed var(--beige);
+      font-size: 0.88rem;
+    }
+    .modal-item-row:last-of-type { border-bottom: none; }
+    .modal-item-name { color: var(--text); }
+    .modal-item-qty  { color: var(--text-light); font-size: 0.78rem; }
+    .modal-item-price { font-weight: 600; color: var(--brown); }
+    .modal-total {
+      font-weight: 700;
+      font-size: 1rem;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 2px solid var(--primary);
+      display: flex;
+      justify-content: space-between;
+      color: var(--brown);
+    }
+    .modal-total .total-amt { color: var(--primary); font-size: 1.1rem; }
+    .modal-actions { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+    .modal-btn-primary {
+      width: 100%;
+      padding: 13px 24px;
+      border-radius: 50px;
+      border: none;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: all 0.3s;
+      box-shadow: 0 6px 20px rgba(103,72,49,0.25);
+    }
+    .modal-btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(103,72,49,0.38); }
+
+    /* ── Order Received Button ── */
+    .order-received-wrap {
+      margin-top: 28px;
+      padding: 20px 24px;
+      background: linear-gradient(135deg, #e8f5ee, #d4eddb);
+      border: 1.5px dashed #5da86a;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .order-received-wrap .or-text {
+      flex: 1;
+    }
+    .order-received-wrap .or-text p {
+      margin: 0 0 2px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: #2e7d52;
+    }
+    .order-received-wrap .or-text span {
+      font-size: 0.78rem;
+      color: #4a9a66;
+    }
+    .btn-order-received {
+      padding: 11px 22px;
+      border-radius: 50px;
+      border: none;
+      background: linear-gradient(135deg, #5da86a, #3e8c4e);
+      color: white;
+      font-weight: 700;
+      font-size: 0.88rem;
+      cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s;
+      box-shadow: 0 6px 18px rgba(62,140,78,0.3);
+      white-space: nowrap;
+    }
+    .btn-order-received:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 26px rgba(62,140,78,0.4);
+    }
+    .btn-order-received:active { transform: scale(0.97); }
+
+    /* ── Confirm Received Modal ── */
+    .confirm-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(63,42,31,0.6);
+      backdrop-filter: blur(6px);
+      align-items: center;
+      justify-content: center;
+      z-index: 3000;
+      padding: 16px;
+    }
+    .confirm-modal[style*="flex"] { display: flex; }
+    .confirm-modal-box {
+      background: white;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 420px;
+      padding: 36px 32px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(103,72,49,0.28);
+      animation: modalIn 0.35s cubic-bezier(0.22,1,0.36,1);
+    }
+    .confirm-modal-icon {
+      font-size: 4rem;
+      margin-bottom: 16px;
+      display: block;
+    }
+    .confirm-modal-box h3 {
+      font-size: 1.3rem;
+      color: var(--brown);
+      margin: 0 0 10px;
+    }
+    .confirm-modal-box p {
+      font-size: 0.88rem;
+      color: var(--text-light);
+      margin: 0 0 28px;
+      line-height: 1.6;
+    }
+    .confirm-modal-btns {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+    .confirm-btn-yes {
+      padding: 12px 28px;
+      border-radius: 50px;
+      border: none;
+      background: linear-gradient(135deg, #5da86a, #3e8c4e);
+      color: white;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+      transition: all 0.3s;
+      box-shadow: 0 6px 18px rgba(62,140,78,0.3);
+    }
+    .confirm-btn-yes:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(62,140,78,0.4); }
+    .confirm-btn-no {
+      padding: 12px 28px;
+      border-radius: 50px;
+      border: 1.5px solid var(--beige);
+      background: white;
+      color: var(--text-light);
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+      transition: all 0.2s;
+    }
+    .confirm-btn-no:hover { background: var(--cream); border-color: var(--primary); color: var(--primary); }
+
+    /* ── Responsive ── */
+    @media (max-width: 700px) {
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .stats-row .stat-card:last-child { grid-column: 1/-1; }
+      .modal-meta-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      .hc-top { flex-direction: column; align-items: flex-start; }
+      .history-toggle-bar { padding: 14px 16px; }
+      .htb-left p { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="container nav-flex">
+    <a href="index.html" class="logo-text">C&N <span>Bakery</span></a>
+
+    <input type="checkbox" id="nav-toggle" class="nav-toggle">
+    <label for="nav-toggle" class="nav-toggle-label"><span></span></label>
+
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="menu.html">Menu</a></li>
+        <li><a href="index.html#faq">FAQ</a></li>
+      </ul>
+
+      <div class="auth-area">
+        <div class="nav-icons">
+          <div class="cart-wrapper" onclick="location.href='cart.html'">
+            <i class="fas fa-shopping-cart"></i>
+            <span id="cart-count-header" style="display:none;">0</span>
+          </div>
+          <div class="user-wrapper" onclick="location.href='user.html'">
+            <i class="fas fa-user" style="color: var(--primary);"></i>
+          </div>
+        </div>
+        <span id="user-name-display"></span>
+        <button class="btn-outline" onclick="handleLogout()">Logout</button>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<div class="container main-content">
+
+  <!-- Welcome -->
+  <div class="welcome-header">
+    <h1>Hello, <span id="display-name">Sweet Tooth</span>! 🎂</h1>
+    <p>Manage your orders and track your delicious deliveries in real-time.</p>
+  </div>
+
+  <!-- Quick Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon orange"><i class="fas fa-box-open"></i></div>
+      <div>
+        <div class="stat-label">Active Orders</div>
+        <div class="stat-value" id="stat-active">0</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+      <div>
+        <div class="stat-label">Completed</div>
+        <div class="stat-value" id="stat-completed">0</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon blue"><i class="fas fa-receipt"></i></div>
+      <div>
+        <div class="stat-label">Total Orders</div>
+        <div class="stat-value" id="stat-total">0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Order Tracking -->
+  <div class="section-card">
+    <div class="section-header">
+      <i class="fas fa-motorcycle" style="font-size:1.4rem; color:var(--primary);"></i>
+      <h2>Track Your Order</h2>
+    </div>
+    <div class="order-tracker" id="order-container">
+      <!-- Empty State -->
+      <div id="no-active-order">
+        <p style="text-align:center; color:#777; padding:40px 20px; font-size:1rem;">
+          <i class="fas fa-box-open" style="font-size:3rem; margin-bottom:16px; display:block; opacity:0.25;"></i>
+          You don't have any ongoing orders right now.
+        </p>
+        <div style="text-align:center; padding-bottom: 10px;">
+          <button class="btn-outline" onclick="location.href='menu.html'">
+            <i class="fas fa-shopping-bag"></i> Start Shopping
+          </button>
+        </div>
+      </div>
+      <!-- Pending -->
+      <div id="status-pending" class="hidden" style="text-align:center; padding:46px 20px;">
+        <div style="font-size:3.5rem; margin-bottom:14px;">⏳</div>
+        <h3>Order Received!</h3>
+        <p style="color:var(--text-light); margin-top:8px; font-size:0.95rem;">We're reviewing your order. You'll be notified once it's confirmed.</p>
+      </div>
+      <!-- Active Tracking -->
+      <div id="status-tracking" class="hidden">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px; margin-bottom:28px;">
+          <div>
+            <h3 id="active-order-id" style="margin:0 0 5px 0;">Order #12345</h3>
+            <p id="active-order-items" style="margin:0; color:var(--text-light); font-size:0.88rem;"></p>
+          </div>
+          <div style="text-align:right;">
+            <span id="active-status-badge" class="badge badge-pending">Processing</span><br><br>
+            <span id="active-payment-badge" class="badge badge-pay-unpaid">⬤ UNPAID</span>
+          </div>
+        </div>
+        <div class="status-stepper">
+          <div class="step" id="step-preparing">
+            <div class="step-icon"><i class="fas fa-utensils"></i></div>
+            <div class="step-text">Preparing</div>
+          </div>
+          <div class="step" id="step-baking">
+            <div class="step-icon"><i class="fas fa-fire-burner"></i></div>
+            <div class="step-text">Baking</div>
+          </div>
+          <div class="step" id="step-packing">
+            <div class="step-icon"><i class="fas fa-box"></i></div>
+            <div class="step-text">Packing</div>
+          </div>
+          <div class="step" id="step-delivery">
+            <div class="step-icon"><i class="fas fa-truck"></i></div>
+            <div class="step-text">Delivery</div>
+          </div>
+        </div>
+
+        <!-- Order Received Button (shown only when status = delivery) -->
+        <div id="order-received-wrap" class="order-received-wrap" style="display:none;">
+          <div class="or-text">
+            <p>🧡 Your order is on its way to you!</p>
+          </div>
+          <button class="btn-order-received" onclick="promptOrderReceived()">
+            <i class="fas fa-box-check"></i> Order Received
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Orders Table -->
+  <div class="section-card">
+    <div class="section-header">
+      <i class="fas fa-clock" style="font-size:1.4rem; color:var(--primary);"></i>
+      <h2>Active Orders</h2>
+    </div>
+    <div class="table-responsive-wrapper">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Order</th>
+            <th>Status</th>
+            <th>Payment</th>
+            <th style="text-align:center;"></th>
+          </tr>
+        </thead>
+        <tbody id="active-orders-list"></tbody>
+      </table>
+      <div id="no-active-orders-msg" class="empty-table-state hidden">
+        <i class="fas fa-box-open"></i>
+        <p>No active orders at the moment.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order History (collapsible) -->
+  <div class="section-card" id="order-history-card">
+
+    <!-- Clickable Toggle Bar -->
+    <div class="history-toggle-bar" id="history-toggle-btn" onclick="toggleOrderHistory()">
+      <div class="htb-left">
+        <div class="htb-icon"><i class="fas fa-clock-rotate-left"></i></div>
+        <div>
+          <h3>Order History</h3>
+          <p>View your past orders, receipts &amp; details</p>
+        </div>
+      </div>
+      <div class="htb-right">
+        <span class="htb-count" id="history-count-badge">0</span>
+        <i class="fas fa-chevron-down htb-arrow"></i>
+      </div>
+    </div>
+
+    <!-- Collapsible Panel -->
+    <div class="history-panel" id="history-panel">
+
+      <!-- Filter Chips -->
+      <div class="filter-row">
+        <span class="filter-label">Filter:</span>
+        <button class="chip active" data-filter="all"    onclick="filterHistory(this, 'all')">All</button>
+        <button class="chip"        data-filter="completed" onclick="filterHistory(this, 'completed')">Completed</button>
+        <button class="chip"        data-filter="cancelled" onclick="filterHistory(this, 'cancelled')">Cancelled</button>
+      </div>
+
+      <!-- History Cards -->
+      <div class="history-cards-list" id="history-list">
+        <!-- Filled dynamically -->
+      </div>
+
+      <div id="no-history-msg" class="empty-table-state hidden" style="padding:40px 20px;">
+        <i class="fas fa-receipt"></i>
+        <p>No completed or cancelled orders yet.</p>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /main-content -->
+
+<!-- Order Details Modal -->
+<div id="details-modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div>
+        <p class="modal-header-title" id="modal-order-id">Order Details</p>
+        <p class="modal-header-sub" id="modal-order-date"></p>
+      </div>
+      <span class="close-modal" onclick="closeModal()">×</span>
+    </div>
+    <div class="modal-body" id="modal-body">
+      <!-- Filled by JavaScript -->
+    </div>
+  </div>
+</div>
+
+<!-- Order Received Confirmation Modal -->
+<div id="confirm-received-modal" class="confirm-modal">
+  <div class="confirm-modal-box">
+    <p>We hope every bite brings a smile to your face! Confirm that your order has arrived safely🍞</p>
+    <div class="confirm-modal-btns">
+      <button class="confirm-btn-no" onclick="closeConfirmModal()">Not Yet</button>
+      <button class="confirm-btn-yes" id="confirm-yes-btn" onclick="confirmOrderReceived()">
+        <i class="fas fa-check"></i> Yes, Received!
+      </button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCWUJfDwLR5erpExZUoBWW7YJ-aDpT_zy0",
+    authDomain: "candn-bakery.firebaseapp.com",
+    databaseURL: "https://candn-bakery-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "candn-bakery"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  let allHistoryCards = [];
+  let activeOrderId = null; // tracks the currently displayed active order
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      get(ref(db, 'users/' + user.uid)).then(snap => {
+        if (snap.exists()) {
+          document.getElementById('user-name-display').textContent = "Hi, " + snap.val().name;
+          document.getElementById('display-name').textContent = snap.val().name;
+        }
+      });
+
+      onValue(ref(db, `orders/${user.uid}/latest`), async (snapshot) => {
+        const latest = snapshot.val();
+        if (latest && latest.orderId) {
+          const orderSnap = await get(ref(db, `orders/${latest.orderId}`));
+          if (orderSnap.exists()) {
+            updateActiveTracker(latest.orderId, orderSnap.val());
+          }
+        } else {
+          showEmptyState();
+        }
+      });
+
+      onValue(ref(db, 'orders'), (snapshot) => {
+        const allOrders = snapshot.val();
+        const activeBody = document.getElementById('active-orders-list');
+        const historyContainer = document.getElementById('history-list');
+        activeBody.innerHTML = '';
+        historyContainer.innerHTML = '';
+        allHistoryCards = [];
+
+        const DONE_STATUSES = ['completed', 'cancelled'];
+        const ACTIVE_STATUSES = ['pending', 'confirmed', 'downpayment-received', 'preparing', 'baking', 'packing', 'delivery'];
+
+        let activeCount = 0;
+        let historyCount = 0;
+        let totalCount = 0;
+
+        if (!allOrders) {
+          document.getElementById('no-active-orders-msg').classList.remove('hidden');
+          document.getElementById('no-history-msg').classList.remove('hidden');
+          updateStats(0, 0, 0);
+          return;
+        }
+
+        Object.entries(allOrders).reverse().forEach(([id, data]) => {
+          if (!data || data.userId !== user.uid || typeof data !== 'object' || id === 'latest') return;
+
+          const payStatus = data.paymentStatus || 'unpaid';
+          const payLabel = payStatus === 'paid' ? 'PAID' :
+                          payStatus === 'partial' ? 'DOWNPAYMENT' :
+                          payStatus === 'cod' ? 'COD' : 'UNPAID';
+
+          const isHistory = DONE_STATUSES.includes(data.status);
+          const isActive  = ACTIVE_STATUSES.includes(data.status);
+          if (!isHistory && !isActive) return;
+
+          totalCount++;
+
+          if (isActive) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${data.date || '—'}</td>
+              <td><strong>${data.orderName || (data.items?.[0]?.name + ' Order') || 'Bakery Order'}</strong></td>
+              <td><span class="badge badge-${data.status}">${data.status}</span></td>
+              <td><span class="badge badge-pay-${payStatus}">${payLabel}</span></td>
+              <td>
+                <button class="view-btn" onclick="viewOrderDetails('${id}')"><i class="fas fa-eye"></i> View</button>
+                ${data.status !== 'pending' ? `<button class="track-btn" style="margin-left:6px;" onclick="trackThisOrder('${id}')"><i class="fas fa-location-dot"></i> Track</button>` : ''}
+                ${data.status === 'delivery' ? `<button class="btn-order-received" style="margin-left:6px; padding:7px 14px; font-size:0.78rem;" onclick="activeOrderId='${id}'; promptOrderReceived();"><i class="fas fa-box-check"></i> Received</button>` : ''}
+              </td>`;
+            activeBody.appendChild(row);
+            activeCount++;
+          }
+
+          if (isHistory) {
+            historyCount++;
+            const card = document.createElement('div');
+            card.className = 'history-card';
+            card.dataset.status = data.status;
+            card.innerHTML = `
+              <div class="hc-top">
+                <div class="hc-top-left">
+                  <p class="hc-order-name">${data.orderName || (data.items?.[0]?.name + ' Order') || 'Bakery Order'}</p>
+                  <p class="hc-date"><i class="fas fa-calendar-alt" style="margin-right:4px; opacity:0.6;"></i>${data.date || '—'}</p>
+                </div>
+                <div class="hc-badges">
+                  <span class="badge badge-${data.status}">${data.status}</span>
+                  <span class="badge badge-pay-${payStatus}">${payLabel}</span>
+                </div>
+              </div>
+              <hr class="hc-divider">
+              <div class="hc-bottom">
+                <div class="hc-total">
+                  Total: <strong>₱${data.totalAmount || '—'}</strong>
+                </div>
+                <div class="hc-actions">
+                  <button class="view-btn" onclick="viewOrderDetails('${id}')"><i class="fas fa-eye"></i> Details</button>
+                </div>
+              </div>`;
+            historyContainer.appendChild(card);
+            allHistoryCards.push(card);
+          }
+        });
+
+        const completedCount = allHistoryCards.filter(c => c.dataset.status === 'completed').length;
+        updateStats(activeCount, completedCount, totalCount);
+        document.getElementById('history-count-badge').textContent = historyCount;
+
+        if (activeCount === 0) document.getElementById('no-active-orders-msg').classList.remove('hidden');
+        if (historyCount === 0) document.getElementById('no-history-msg').classList.remove('hidden');
+      });
+
+    } else {
+      window.location.href = "index.html";
+    }
+  });
+
+  function updateStats(active, completed, total) {
+    document.getElementById('stat-active').textContent    = active;
+    document.getElementById('stat-completed').textContent = completed;
+    document.getElementById('stat-total').textContent     = total;
+  }
+
+  function showEmptyState() {
+    document.getElementById('no-active-order').classList.remove('hidden');
+    document.getElementById('status-pending').classList.add('hidden');
+    document.getElementById('status-tracking').classList.add('hidden');
+  }
+
+  function updateActiveTracker(id, order) {
+    activeOrderId = id;
+    document.getElementById('no-active-order').classList.add('hidden');
+    document.getElementById('status-pending').classList.add('hidden');
+    document.getElementById('status-tracking').classList.remove('hidden');
+
+    document.getElementById('active-order-id').textContent = order.orderName || (order.items?.[0]?.name + ' Order') || 'Order';
+    document.getElementById('active-order-items').textContent = order.items?.map(i => `${i.quantity}× ${i.name}`).join(', ') || '';
+
+    const payStatus = order.paymentStatus || 'unpaid';
+    const payBadge  = document.getElementById('active-payment-badge');
+    const payLabels = { paid: 'PAID', partial: 'DOWNPAYMENT', cod: 'COD', unpaid: 'UNPAID' };
+    payBadge.textContent = `⬤ ${payLabels[payStatus]}`;
+    payBadge.className = `badge badge-pay-${payStatus}`;
+
+    // Show "Order Received" button only when status is delivery
+    const receivedWrap = document.getElementById('order-received-wrap');
+    receivedWrap.style.display = (order.status === 'delivery') ? 'flex' : 'none';
+
+    if (order.status === 'pending') {
+      document.getElementById('status-pending').classList.remove('hidden');
+      document.getElementById('status-tracking').classList.add('hidden');
+    } else {
+      updateStepper(order.status);
+    }
+  }
+
+  function updateStepper(status) {
+    const steps = ['preparing', 'baking', 'packing', 'delivery'];
+    let currentIndex = -1;
+
+    if (status === 'completed') {
+      steps.forEach(s => document.getElementById('step-' + s).classList.add('completed'));
+      document.getElementById('active-status-badge').textContent = "DELIVERED";
+      document.getElementById('active-status-badge').className = "badge badge-completed";
+      return;
+    }
+
+    if (['confirmed', 'downpayment-received', 'preparing'].includes(status)) currentIndex = 0;
+    else if (status === 'baking')   currentIndex = 1;
+    else if (status === 'packing')  currentIndex = 2;
+    else if (status === 'delivery') currentIndex = 3;
+
+    steps.forEach((s, i) => {
+      const el = document.getElementById('step-' + s);
+      el.classList.remove('active', 'completed');
+      if (i < currentIndex) el.classList.add('completed');
+      else if (i === currentIndex) {
+        el.classList.add('active');
+        document.getElementById('active-status-badge').textContent = s.toUpperCase();
+        document.getElementById('active-status-badge').className = `badge badge-${s}`;
+      }
+    });
+  }
+
+  window.viewOrderDetails = async (id) => {
+    const snap = await get(ref(db, `orders/${id}`));
+    if (!snap.exists()) return;
+    const order = snap.val();
+
+    document.getElementById('modal-order-id').textContent  = order.orderName || 'Order Details';
+    document.getElementById('modal-order-date').textContent = order.date || '';
+
+    const payStatus = order.paymentStatus || 'unpaid';
+    const payLabels = { paid: 'PAID', partial: 'DOWNPAYMENT RECEIVED', cod: 'CASH ON DELIVERY', unpaid: 'UNPAID' };
+    const payLabel  = payLabels[payStatus] || 'UNPAID';
+
+    const itemsHTML = order.items.map(i => `
+      <div class="modal-item-row">
+        <div>
+          <div class="modal-item-name">${i.name}</div>
+          <div class="modal-item-qty">${i.quantity} pc${i.quantity > 1 ? 's' : ''} × ₱${parseFloat(i.price).toFixed(2)}</div>
+        </div>
+        <div class="modal-item-price">₱${(i.price * i.quantity).toFixed(2)}</div>
+      </div>`).join('');
+
+    const isActive = ['pending','confirmed','downpayment-received','preparing','baking','packing','delivery'].includes(order.status);
+
+    document.getElementById('modal-body').innerHTML = `
+      <div class="modal-section-title">Order Info</div>
+      <div class="modal-meta-grid">
+        <div class="meta-item">
+          <div class="meta-label">Status</div>
+          <div class="meta-val"><span class="badge badge-${order.status}">${order.status}</span></div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Payment</div>
+          <div class="meta-val"><span class="badge badge-pay-${payStatus}">${payLabel}</span></div>
+        </div>
+      </div>
+      <div class="modal-section-title" style="margin-top:20px;">Items Ordered</div>
+      <div class="modal-items-box">
+        ${itemsHTML}
+        <div class="modal-total">
+          <span>Total Amount</span>
+          <span class="total-amt">₱${order.totalAmount}</span>
+        </div>
+      </div>
+      <div class="modal-actions">
+        ${isActive && order.status !== 'pending' ? `
+          <button class="modal-btn-primary" onclick="trackThisOrder('${id}'); closeModal();">
+            <i class="fas fa-location-dot"></i> Track This Order
+          </button>` : ''}
+        ${order.status === 'delivery' ? `
+          <button class="modal-btn-primary" style="background: linear-gradient(135deg,#5da86a,#3e8c4e); box-shadow: 0 6px 20px rgba(62,140,78,0.3);"
+            onclick="activeOrderId='${id}'; closeModal(); setTimeout(promptOrderReceived, 200);">
+            <i class="fas fa-box-check"></i> Order Received
+          </button>` : ''}
+      </div>`;
+
+    document.getElementById('details-modal').style.display = 'flex';
+  };
+
+  window.trackThisOrder = async (id) => {
+    const snap = await get(ref(db, `orders/${id}`));
+    if (snap.exists()) {
+      updateActiveTracker(id, snap.val());
+      closeModal();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  window.toggleOrderHistory = () => {
+    const panel  = document.getElementById('history-panel');
+    const btn    = document.getElementById('history-toggle-btn');
+    const isOpen = panel.classList.contains('open');
+    panel.classList.toggle('open', !isOpen);
+    btn.classList.toggle('open', !isOpen);
+  };
+
+  window.filterHistory = (chip, filter) => {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    allHistoryCards.forEach(card => {
+      const show = filter === 'all' || card.dataset.status === filter;
+      card.style.display = show ? 'block' : 'none';
+    });
+    const visible = allHistoryCards.filter(c => c.style.display !== 'none');
+    document.getElementById('no-history-msg').classList.toggle('hidden', visible.length > 0);
+  };
+
+  window.promptOrderReceived = () => {
+    document.getElementById('confirm-received-modal').style.display = 'flex';
+  };
+
+  window.closeConfirmModal = () => {
+    document.getElementById('confirm-received-modal').style.display = 'none';
+  };
+
+  window.confirmOrderReceived = async () => {
+    if (!activeOrderId) return;
+    const btn = document.getElementById('confirm-yes-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Confirming...';
+
+    try {
+      await update(ref(db, `orders/${activeOrderId}`), {
+        status: 'completed',
+        receivedAt: new Date().toISOString()
+      });
+      closeConfirmModal();
+
+      // Hide the Order Received button and show empty state after a short delay
+      document.getElementById('order-received-wrap').style.display = 'none';
+      showEmptyState();
+
+      // Auto-open Order History so user sees their completed order
+      const panel = document.getElementById('history-panel');
+      const toggleBtn = document.getElementById('history-toggle-btn');
+      if (!panel.classList.contains('open')) {
+        panel.classList.add('open');
+        toggleBtn.classList.add('open');
+      }
+      setTimeout(() => {
+        document.getElementById('order-history-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 400);
+    } catch (e) {
+      console.error(e);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-check"></i> Yes, Received!';
+    }
+  };
+
+  window.closeModal = () => {
+    document.getElementById('details-modal').style.display = 'none';
+  };
+
+  window.handleLogout = () => {
+    signOut(auth).then(() => window.location.href = "index.html");
+  };
+
+  function updateCartBadge() {
+    const cart  = JSON.parse(localStorage.getItem('cart') || '[]');
+    const total = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+    const badge = document.getElementById('cart-count-header');
+    badge.textContent = total;
+    badge.style.display = total > 0 ? 'flex' : 'none';
+  }
+  updateCartBadge();
+  window.addEventListener('storage', updateCartBadge);
+</script>
+</body>
+</html>

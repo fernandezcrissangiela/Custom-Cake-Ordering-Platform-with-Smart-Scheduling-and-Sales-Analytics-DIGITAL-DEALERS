@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>C&N Bakery - Menu Management</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/admin_menu.css">
+</head>
+<body>
+
+<!-- Add right after <body>, BEFORE everything else -->
+<script>
+  if (sessionStorage.getItem('adminLoggedIn') !== 'true') {
+    window.location.replace('login.html');
+  }
+</script>
+
+<!-- ========== LOGIN OVERLAY ========== -->
+<div id="login-overlay">
+  <div class="login-box">
+    <h2><i class="fas fa-lock"></i> Admin Portal</h2>
+    <p class="login-sub">Enter your password to access Menu Management</p>
+    <input type="password" id="admin-pass" placeholder="Enter password"
+           onkeydown="if(event.key==='Enter') checkLogin()">
+    <button class="btn-main" onclick="checkLogin()">
+      <i class="fas fa-unlock-alt"></i> Unlock Dashboard
+    </button>
+  </div>
+</div>
+
+<!-- ========== HEADER ========== -->
+<header>
+  <a href="admin.html" class="logo-text">C&N</span> Bakery</a>
+  <button class="btn-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+</header>
+
+<div class="container">
+
+  <!-- Navigation -->
+  <div class="nav-tabs">
+    <a href="sales.html"      class="nav-link"><i class="fas fa-chart-line"></i> Sales</a>
+    <a href="orders.html"     class="nav-link"><i class="fas fa-shopping-bag"></i> Orders</a>
+    <a href="schedule.html"   class="nav-link"><i class="fas fa-calendar-alt"></i> Schedule</a>
+    <a href="admin_menu.html" class="nav-link active"><i class="fas fa-birthday-cake"></i> Menu</a>
+    <a href="history.html"    class="nav-link"><i class="fas fa-history"></i> History</a>
+  </div>
+
+  <!-- ══ MENU SUB-NAV ══ -->
+  <div class="nav-tabs menu-subnav">
+    <button class="subnav-btn active" data-panel="panel-products">
+      <i class="fas fa-birthday-cake"></i> Menu Management
+    </button>
+    <button class="subnav-btn" data-panel="panel-categories">
+      <i class="fas fa-tags"></i> Product Categories
+    </button>
+    <button class="subnav-btn" data-panel="panel-custom">
+      <i class="fas fa-magic"></i> Manage Custom Cake 
+    </button>
+  </div>
+
+  <!-- ══ PANEL 1: Menu Management ══ -->
+  <div id="panel-products" class="menu-panel active">
+
+  <!-- ══ PAGE HEADING ══ -->
+  <div class="page-heading">
+    <h1 class="page-title"><i class="fas fa-birthday-cake"></i> Menu Management</h1>
+    <p class="page-subtitle">Add, edit, and organize your bakery products.</p>
+  </div>
+
+  <!-- ══ TOP ROW: sidebar (Add Product) + main (Menu Items) ══ -->
+  <div class="menu-layout">
+
+    <!-- LEFT sticky panel: Add New Product -->
+    <aside class="sidebar-panel">
+      <div class="admin-card panel-sticky">
+        <h2><i class="fas fa-plus-circle"></i> Add New Product</h2>
+        <p class="card-sub">Fill in the details to add an item to the menu.</p>
+        <form id="add-product-form">
+          <div class="form-group">
+            <label>Product Name *</label>
+            <input type="text" id="name" required placeholder="e.g. Chocolate Truffle Cake">
+          </div>
+          <div class="form-group">
+            <label>Price (₱) *</label>
+            <input type="number" id="price" step="0.01" min="0" required placeholder="0.00">
+          </div>
+          <div class="form-group">
+            <label>Category *</label>
+            <select id="category" required>
+              <option value="" disabled selected>Select a category…</option>
+              <option value="cakes">Cakes</option>
+              <option value="pastries">Pastries</option>
+              <option value="custom">Custom Cake Base</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Description <span style="color:var(--muted); font-weight:400;">(optional)</span></label>
+            <textarea id="description" placeholder="Describe this product…" rows="3"></textarea>
+          </div>
+          <label class="file-input-label"><i class="fas fa-image"></i> Product Photo *</label>
+          <input type="file" id="image-file" accept="image/*" required>
+          <img id="admin-img-preview" src="" alt="Preview">
+          <button type="submit" id="submit-btn" class="btn-main btn-full">
+            <i class="fas fa-plus"></i> Add Product to Menu
+          </button>
+        </form>
+      </div>
+    </aside>
+
+    <!-- RIGHT main panel: Current Menu Items -->
+    <main class="main-panel">
+      <div class="admin-card">
+        <h2><i class="fas fa-list-ul"></i> Current Menu Items</h2>
+        <p class="card-sub">Browse, edit, or remove existing products.</p>
+        <div class="filter-bar">
+          <select id="product-filter-category">
+            <option value="all">All Categories</option>
+            <option value="cakes">Cakes</option>
+            <option value="pastries">Pastries</option>
+            <option value="custom">Custom Bases</option>
+          </select>
+          <input type="text" id="product-search" placeholder="🔍 Search by name…">
+        </div>
+        <div id="products-list">
+          <div class="loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            Loading menu items…
+          </div>
+        </div>
+      </div>
+    </main>
+
+  </div><!-- /menu-layout -->
+
+  </div><!-- /panel-products -->
+
+  <!-- ══ PANEL 2: Manage Product Categories ══ -->
+  <div id="panel-categories" class="menu-panel">
+
+  <div class="page-heading">
+    <h1 class="page-title"><i class="fas fa-tags"></i> Manage Product Categories</h1>
+    <p class="page-subtitle">Add or remove product categories. Deleting a category will also delete all products inside it.</p>
+  </div>
+
+  <!-- ══ Same two-column layout as Menu Management ══ -->
+  <div class="menu-layout">
+
+    <!-- LEFT sticky panel: Add New Category -->
+    <aside class="sidebar-panel">
+      <div class="admin-card panel-sticky">
+        <h2><i class="fas fa-plus-circle"></i> Add New Category</h2>
+        <p class="card-sub">Fill in the details to create a new product category.</p>
+        <form id="add-category-form">
+          <div class="form-group">
+            <label>Display Name *</label>
+            <input type="text" id="cat-display-name" placeholder="e.g. Cookies" required>
+          </div>
+          <button type="submit" class="btn-main btn-full">
+            <i class="fas fa-folder-plus"></i> Create Category
+          </button>
+        </form>
+      </div>
+    </aside>
+
+    <!-- RIGHT main panel: Existing Categories -->
+    <main class="main-panel">
+      <div class="admin-card">
+        <h2><i class="fas fa-list-ul"></i> Existing Categories</h2>
+        <p class="card-sub">Browse or remove existing product categories.</p>
+        <div id="categories-list">
+          <p><i class="fas fa-spinner fa-spin"></i> Loading…</p>
+        </div>
+      </div>
+    </main>
+
+  </div><!-- /menu-layout -->
+
+  </div><!-- /panel-categories -->
+
+  <!-- ══ PANEL 3: Manage Custom Cake Options ══ -->
+  <div id="panel-custom" class="menu-panel">
+
+  <div class="page-heading">
+    <h1 class="page-title"><i class="fas fa-magic"></i> Manage Custom Cake Options</h1>
+    <p class="page-subtitle">These options appear as dropdowns on the customer customization page.</p>
+  </div>
+
+  <!-- ══ Same two-column layout as Menu Management ══ -->
+  <div class="menu-layout">
+
+    <!-- LEFT sticky panel: Add New Option -->
+    <aside class="sidebar-panel">
+      <div class="admin-card panel-sticky">
+        <h2><i class="fas fa-plus-circle"></i> Add New Option</h2>
+        <p class="card-sub">Fill in the details to add an option to the selected category.</p>
+        <form id="add-option-form">
+          <div class="form-group">
+            <label>Option Name *</label>
+            <input type="text" id="opt-name" placeholder="e.g. Red Velvet" required>
+          </div>
+          <div class="form-group">
+            <label>Price (₱)</label>
+            <input type="number" id="opt-price" placeholder="0" step="1" min="0" required>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="opt-enabled">
+              <option value="true">Enabled</option>
+              <option value="false">Disabled</option>
+            </select>
+          </div>
+          <button type="submit" class="btn-main btn-full">
+            <i class="fas fa-plus"></i> Add Option
+          </button>
+        </form>
+      </div>
+    </aside>
+
+    <!-- RIGHT main panel: View & Delete Options -->
+    <main class="main-panel">
+      <div class="admin-card">
+        <h2><i class="fas fa-list-ul"></i> Current Options</h2>
+        <p class="card-sub">Browse, edit, or remove options by category.</p>
+        <div class="filter-bar">
+          <select id="option-category">
+            <option value="layers">Layers</option>
+            <option value="flavors">Chiffon Flavors</option>
+            <option value="frostings">Frostings</option>
+            <option value="designs">Design Styles</option>
+          </select>
+        </div>
+        <div id="options-list">
+          <p><i class="fas fa-spinner fa-spin"></i> Loading…</p>
+        </div>
+      </div>
+    </main>
+
+  </div><!-- /menu-layout -->
+
+  </div><!-- /panel-custom -->
+
+</div><!-- /container -->
+
+<!-- ========== EDIT PRODUCT MODAL ========== -->
+<div id="edit-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+  <div style="background:var(--white); border-radius:20px; padding:32px; max-width:520px; width:100%; box-shadow:0 24px 60px rgba(0,0,0,0.25); position:relative; max-height:90vh; overflow-y:auto;">
+    <button onclick="closeEditModal()" style="position:absolute; top:16px; right:18px; background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--muted);">&times;</button>
+    <h2 style="font-size:1.2rem; font-weight:700; color:var(--brown); margin-bottom:20px; display:flex; align-items:center; gap:10px;">
+      <i class="fas fa-pen" style="color:var(--primary);"></i> Edit Product
+    </h2>
+
+    <form id="edit-product-form">
+      <input type="hidden" id="edit-id">
+      <input type="hidden" id="edit-cat">
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Product Name *</label>
+          <input type="text" id="edit-name" required placeholder="e.g. Chocolate Truffle Cake">
+        </div>
+        <div class="form-group">
+          <label>Price (₱) *</label>
+          <input type="number" id="edit-price" step="0.01" min="0" required placeholder="0.00">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Category *</label>
+        <select id="edit-category" required>
+          <option value="cakes">Cakes</option>
+          <option value="pastries">Pastries</option>
+          <option value="custom">Custom Cake Base</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Description <span style="color:var(--muted); font-weight:400;">(optional)</span></label>
+        <textarea id="edit-description" rows="3" placeholder="Describe this product…"></textarea>
+      </div>
+
+      <label class="file-input-label"><i class="fas fa-image"></i> Replace Photo <span style="color:var(--muted); font-weight:400;">(optional)</span></label>
+      <input type="file" id="edit-image-file" accept="image/*" style="width:100%; padding:10px 12px; border:1.5px dashed var(--border); border-radius:12px; background:var(--cream); font-family:'Poppins',sans-serif; font-size:0.88rem; color:var(--muted); cursor:pointer; margin-bottom:10px; box-sizing:border-box;">
+      <img id="edit-img-preview" src="" alt="Preview" style="max-width:180px; border-radius:12px; margin:6px 0 14px; display:none; border:2px solid var(--border); object-fit:cover; aspect-ratio:4/3;">
+
+      <button type="submit" id="edit-submit-btn" class="btn-main" style="width:100%; justify-content:center;">
+        <i class="fas fa-save"></i> Save Changes
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ========== EDIT OPTION MODAL ========== -->
+<div id="edit-option-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+  <div style="background:var(--white); border-radius:20px; padding:32px; max-width:420px; width:100%; box-shadow:0 24px 60px rgba(0,0,0,0.25); position:relative;">
+    <button onclick="closeEditOptionModal()" style="position:absolute; top:16px; right:18px; background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--muted);">&times;</button>
+    <h2 style="font-size:1.2rem; font-weight:700; color:var(--brown); margin-bottom:20px; display:flex; align-items:center; gap:10px;">
+      <i class="fas fa-pen" style="color:var(--primary);"></i> Edit Option
+    </h2>
+    <form id="edit-option-form">
+      <input type="hidden" id="edit-opt-category">
+      <input type="hidden" id="edit-opt-id">
+      <div class="form-group">
+        <label>Option Name *</label>
+        <input type="text" id="edit-opt-name" required placeholder="e.g. Red Velvet">
+      </div>
+      <div class="form-group">
+        <label>Price (₱)</label>
+        <input type="number" id="edit-opt-price" placeholder="0" step="1" min="0" required>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="edit-opt-enabled">
+          <option value="true">Enabled</option>
+          <option value="false">Disabled</option>
+        </select>
+      </div>
+      <button type="submit" id="edit-opt-submit-btn" class="btn-main" style="width:100%; justify-content:center;">
+        <i class="fas fa-save"></i> Save Changes
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ========== DELETE CATEGORY MODAL ========== -->
+<div id="delete-category-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+  <div style="background:var(--white); border-radius:20px; padding:36px 32px; max-width:440px; width:100%; box-shadow:0 24px 60px rgba(0,0,0,0.3); position:relative; text-align:center;">
+    <div style="width:64px; height:64px; background:#fff0f0; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
+      <i class="fas fa-exclamation-triangle" style="font-size:1.8rem; color:#c0392b;"></i>
+    </div>
+    <h2 style="font-size:1.25rem; font-weight:700; color:#c0392b; margin-bottom:10px;">Delete Category</h2>
+    <p style="color:var(--muted); font-size:0.95rem; line-height:1.6; margin-bottom:6px;">
+      You are about to delete <strong id="del-cat-name" style="color:var(--brown);"></strong>.
+    </p>
+    <p style="color:#c0392b; font-size:0.88rem; font-weight:600; background:#fff0f0; padding:10px 14px; border-radius:10px; margin:14px 0 24px;">
+      This will permanently delete the entire category and <u>all products</u> inside it. This cannot be undone.
+    </p>
+    <div style="display:flex; gap:12px; justify-content:center;">
+      <button onclick="closDeleteCatModal()" style="flex:1; padding:12px; border-radius:12px; border:1.5px solid var(--border); background:var(--white); color:var(--brown); font-family:'Poppins',sans-serif; font-size:0.92rem; font-weight:600; cursor:pointer;">
+        Cancel
+      </button>
+      <button id="del-cat-confirm-btn" style="flex:1; padding:12px; border-radius:12px; border:none; background:#c0392b; color:#fff; font-family:'Poppins',sans-serif; font-size:0.92rem; font-weight:600; cursor:pointer;">
+        <i class="fas fa-trash-alt"></i> Yes, Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== EDIT CATEGORY MODAL ========== -->
+<div id="edit-category-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+  <div style="background:var(--white); border-radius:20px; padding:32px; max-width:420px; width:100%; box-shadow:0 24px 60px rgba(0,0,0,0.25); position:relative;">
+    <button onclick="closeEditCategoryModal()" style="position:absolute; top:16px; right:18px; background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--muted);">&times;</button>
+    <h2 style="font-size:1.2rem; font-weight:700; color:var(--brown); margin-bottom:20px; display:flex; align-items:center; gap:10px;">
+      <i class="fas fa-pen" style="color:var(--primary);"></i> Edit Category
+    </h2>
+    <form id="edit-category-form">
+      <input type="hidden" id="edit-cat-key">
+      <div class="form-group">
+        <label>Display Name *</label>
+        <input type="text" id="edit-cat-display-name" required placeholder="e.g. Cookies">
+      </div>
+      <button type="submit" id="edit-cat-submit-btn" class="btn-main" style="width:100%; justify-content:center;">
+        <i class="fas fa-save"></i> Save Changes
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ========== DELETE PRODUCT MODAL ========== -->
+<div id="delete-product-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+  <div style="background:var(--white); border-radius:20px; padding:36px 32px; max-width:440px; width:100%; box-shadow:0 24px 60px rgba(0,0,0,0.3); position:relative; text-align:center;">
+    <div style="width:64px; height:64px; background:#fff0f0; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
+      <i class="fas fa-trash-alt" style="font-size:1.8rem; color:#c0392b;"></i>
+    </div>
+    <h2 style="font-size:1.25rem; font-weight:700; color:#c0392b; margin-bottom:10px;">Delete Product</h2>
+    <p style="color:var(--muted); font-size:0.95rem; line-height:1.6; margin-bottom:6px;">
+      You are about to delete <strong id="del-prod-name" style="color:var(--brown);"></strong>.
+    </p>
+    <div style="display:flex; gap:12px; justify-content:center;">
+      <button onclick="closeDeleteProdModal()" style="flex:1; padding:12px; border-radius:12px; border:1.5px solid var(--border); background:var(--white); color:var(--brown); font-family:'Poppins',sans-serif; font-size:0.92rem; font-weight:600; cursor:pointer;">
+        Cancel
+      </button>
+      <button id="del-prod-confirm-btn" style="flex:1; padding:12px; border-radius:12px; border:none; background:#c0392b; color:#fff; font-family:'Poppins',sans-serif; font-size:0.92rem; font-weight:600; cursor:pointer;">
+        <i class="fas fa-trash-alt"></i> Yes, Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== DELETE OPTION MODAL ========== -->
+<div id="delete-option-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+  <div style="background:var(--white); border-radius:20px; padding:36px 32px; max-width:440px; width:100%; box-shadow:0 24px 60px rgba(0,0,0,0.3); position:relative; text-align:center;">
+    <div style="width:64px; height:64px; background:#fff0f0; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
+      <i class="fas fa-trash-alt" style="font-size:1.8rem; color:#c0392b;"></i>
+    </div>
+    <h2 style="font-size:1.25rem; font-weight:700; color:#c0392b; margin-bottom:10px;">Delete Option</h2>
+    <p style="color:var(--muted); font-size:0.95rem; line-height:1.6; margin-bottom:6px;">
+      You are about to delete <strong id="del-opt-name" style="color:var(--brown);"></strong>.
+    </p>
+    <div style="display:flex; gap:12px; justify-content:center;">
+      <button onclick="closeDeleteOptModal()" style="flex:1; padding:12px; border-radius:12px; border:1.5px solid var(--border); background:var(--white); color:var(--brown); font-family:'Poppins',sans-serif; font-size:0.92rem; font-weight:600; cursor:pointer;">
+        Cancel
+      </button>
+      <button id="del-opt-confirm-btn" style="flex:1; padding:12px; border-radius:12px; border:none; background:#c0392b; color:#fff; font-family:'Poppins',sans-serif; font-size:0.92rem; font-weight:600; cursor:pointer;">
+        <i class="fas fa-trash-alt"></i> Yes, Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== LOGIN GUARD ========== -->
+<script>
+  
+  function handleLogout() {
+  sessionStorage.removeItem('adminLoggedIn');
+  window.location.replace('login.html');
+}
+
+  function checkLogin() {
+    const input = document.getElementById('admin-pass');
+    if (input.value === "digitaldealers") {
+      document.getElementById('login-overlay').style.display = 'none';
+      sessionStorage.setItem('adminLoggedIn', 'true');
+    } else {
+      input.style.borderColor = '#c0392b';
+      input.style.boxShadow = '0 0 0 4px rgba(192,57,43,0.15)';
+      input.value = '';
+      input.placeholder = 'Incorrect password. Try again.';
+      setTimeout(() => {
+        input.style.borderColor = '';
+        input.style.boxShadow = '';
+        input.placeholder = 'Enter password';
+      }, 2000);
+      input.focus();
+    }
+  }
+
+  if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+    document.getElementById('login-overlay').style.display = 'none';
+  }
+</script>
+
+<!-- ========== FIREBASE + MENU LOGIC ========== -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getDatabase, ref, push, get, remove, update, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCWUJfDwLR5erpExZUoBWW7YJ-aDpT_zy0",
+    authDomain: "candn-bakery.firebaseapp.com",
+    databaseURL: "https://candn-bakery-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "candn-bakery"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+
+  let cachedProducts   = [];
+  let cachedCategories = []; // { key, displayName }
+  let productBase64    = "";
+
+  // ── Image Preview ──
+  document.getElementById('image-file').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      productBase64 = reader.result;
+      const preview = document.getElementById('admin-img-preview');
+      preview.src   = reader.result;
+      preview.style.display = "block";
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // ── Auto-generate key from display name (internal) ──
+  function generateKey(displayName) {
+    return displayName.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+  }
+
+  // ══════════════════════════════════════════════
+  // CATEGORY MANAGEMENT
+  // ══════════════════════════════════════════════
+
+  async function loadCategories() {
+    const container = document.getElementById('categories-list');
+    container.innerHTML = '<p><i class="fas fa-spinner fa-spin"></i> Loading…</p>';
+    try {
+      const snap = await get(ref(db, 'categories'));
+      cachedCategories = [];
+      if (snap.exists()) {
+        snap.forEach(child => {
+          cachedCategories.push({ key: child.key, displayName: child.val().displayName || child.key });
+        });
+      }
+      renderCategories();
+      refreshCategorySelects();
+    } catch (err) {
+      container.innerHTML = `<p style="color:#c0392b;">Error: ${err.message}</p>`;
+    }
+  }
+
+  function renderCategories() {
+    const container = document.getElementById('categories-list');
+    if (cachedCategories.length === 0) {
+      container.innerHTML = '<p style="color:var(--muted);">No categories yet.</p>';
+      return;
+    }
+    container.innerHTML = '';
+    cachedCategories.forEach(cat => {
+      const row = document.createElement('div');
+      row.className = 'category-row';
+      row.innerHTML = `
+        <span class="category-row-name">${cat.displayName}</span>
+        <div class="option-row-actions">
+          <button class="btn-edit-opt" onclick="openEditCategory('${cat.key}','${cat.displayName.replace(/'/g, "\\'")}')">
+            <i class="fas fa-pen"></i> Edit
+          </button>
+          <button class="btn-delete-opt" onclick="deleteCategory('${cat.key}','${cat.displayName.replace(/'/g, "\\'")}')">
+            <i class="fas fa-trash-alt"></i> Delete
+          </button>
+        </div>`;
+      container.appendChild(row);
+    });
+  }
+
+  // Populate all <select> elements that list categories
+  function refreshCategorySelects() {
+    const selects = [
+      document.getElementById('category'),
+      document.getElementById('edit-category'),
+      document.getElementById('product-filter-category')
+    ];
+
+    selects.forEach((sel, i) => {
+      if (!sel) return;
+      const currentVal = sel.value;
+
+      if (i === 2) {
+        // filter dropdown: keep "All Categories" option
+        sel.innerHTML = '<option value="all">All Categories</option>';
+      } else {
+        sel.innerHTML = '<option value="" disabled selected>Select a category…</option>';
+      }
+
+      cachedCategories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat.key;
+        opt.textContent = cat.displayName;
+        sel.appendChild(opt);
+      });
+
+      // restore selection if still valid
+      if ([...sel.options].some(o => o.value === currentVal)) {
+        sel.value = currentVal;
+      }
+    });
+  }
+
+  let _pendingDeleteKey = null;
+  let _pendingDeleteName = null;
+
+  window.deleteCategory = function(key, displayName) {
+    _pendingDeleteKey  = key;
+    _pendingDeleteName = displayName;
+    document.getElementById('del-cat-name').textContent = `"${displayName}"`;
+    const modal = document.getElementById('delete-category-modal');
+    modal.style.display = 'flex';
+  };
+
+  window.closDeleteCatModal = function() {
+    document.getElementById('delete-category-modal').style.display = 'none';
+    _pendingDeleteKey  = null;
+    _pendingDeleteName = null;
+  };
+
+  // ── Edit Category ──
+  window.openEditCategory = function(key, displayName) {
+    document.getElementById('edit-cat-key').value          = key;
+    document.getElementById('edit-cat-display-name').value = displayName;
+    document.getElementById('edit-category-modal').style.display = 'flex';
+  };
+
+  window.closeEditCategoryModal = function() {
+    document.getElementById('edit-category-modal').style.display = 'none';
+  };
+
+  document.getElementById('edit-category-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('edit-category-modal')) closeEditCategoryModal();
+  });
+
+  document.getElementById('edit-category-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn  = document.getElementById('edit-cat-submit-btn');
+    btn.disabled  = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+
+    const key         = document.getElementById('edit-cat-key').value;
+    const displayName = document.getElementById('edit-cat-display-name').value.trim();
+
+    if (!displayName) {
+      alert("Please enter a category name.");
+      btn.disabled  = false;
+      btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+      return;
+    }
+
+    try {
+      await update(ref(db, `categories/${key}`), { displayName });
+      closeEditCategoryModal();
+      await loadCategories();
+      loadProducts();
+    } catch (err) {
+      alert("Error updating category: " + err.message);
+    } finally {
+      btn.disabled  = false;
+      btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+    }
+  });
+
+  document.getElementById('delete-category-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('delete-category-modal')) closDeleteCatModal();
+  });
+
+  document.getElementById('del-cat-confirm-btn').addEventListener('click', async () => {
+    if (!_pendingDeleteKey) return;
+    const btn = document.getElementById('del-cat-confirm-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting…';
+    try {
+      await remove(ref(db, `products/${_pendingDeleteKey}`));
+      await remove(ref(db, `categories/${_pendingDeleteKey}`));
+      closDeleteCatModal();
+      await loadCategories();
+      loadProducts();
+    } catch (err) {
+      alert("Error deleting category: " + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-trash-alt"></i> Yes, Delete';
+    }
+  });
+
+  document.getElementById('add-category-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = e.submitter;
+    const displayName = document.getElementById('cat-display-name').value.trim();
+    const key         = generateKey(displayName);
+
+    if (!displayName) { alert("Please enter a category name."); return; }
+    if (!key)         { alert("Category name must contain at least one letter or number."); return; }
+    if (cachedCategories.some(c => c.key === key)) { alert(`A category with the name "${displayName}" already exists.`); return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating…';
+
+    try {
+      // Store category metadata
+      await update(ref(db, `categories/${key}`), { displayName, createdAt: Date.now() });
+      // Initialize empty products node so it's visible in Firebase
+      await update(ref(db, `products/${key}`), { _placeholder: true });
+      document.getElementById('add-category-form').reset();
+      await loadCategories();
+      loadProducts();
+    } catch (err) {
+      alert("Error creating category: " + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-folder-plus"></i> Create Category';
+    }
+  });
+
+  // ══════════════════════════════════════════════
+  // PRODUCT LOADING (now dynamic categories)
+  // ══════════════════════════════════════════════
+
+  // ── Load Products ──
+  async function loadProducts() {
+    const container = document.getElementById('products-list');
+    container.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading menu items…</div>';
+
+    try {
+      // Get categories from Firebase if not yet loaded
+      if (cachedCategories.length === 0) {
+        const catSnap = await get(ref(db, 'categories'));
+        cachedCategories = [];
+        if (catSnap.exists()) {
+          catSnap.forEach(child => {
+            cachedCategories.push({ key: child.key, displayName: child.val().displayName || child.key });
+          });
+        }
+        refreshCategorySelects();
+      }
+
+      const paths = cachedCategories.map(c => `products/${c.key}`);
+      if (paths.length === 0) {
+        container.innerHTML = '<div class="no-products"><i class="fas fa-box-open"></i> No categories found. Add one above.</div>';
+        return;
+      }
+
+      const snapshots = await Promise.all(paths.map(path => get(ref(db, path))));
+      cachedProducts = [];
+      snapshots.forEach((snap, i) => {
+        const cat = cachedCategories[i].key;
+        if (snap.exists()) {
+          snap.forEach(child => {
+            // skip the placeholder entry
+            if (child.key === '_placeholder') return;
+            cachedProducts.push({ id: child.key, category: cat, ...child.val() });
+          });
+        }
+      });
+      renderFilteredProducts();
+    } catch (err) {
+      container.innerHTML = `<div class="no-products"><i class="fas fa-exclamation-triangle"></i> Error: ${err.message}</div>`;
+    }
+  }
+
+  function renderFilteredProducts() {
+    const container = document.getElementById('products-list');
+    const catFilter = document.getElementById('product-filter-category').value;
+    const search    = document.getElementById('product-search').value.toLowerCase().trim();
+
+    const filtered = cachedProducts.filter(p => {
+      const catMatch  = catFilter === 'all' || p.category === catFilter;
+      const nameMatch = (p.name || '').toLowerCase().includes(search);
+      return catMatch && nameMatch;
+    });
+
+    if (filtered.length === 0) {
+      container.innerHTML = '<div class="no-products"><i class="fas fa-box-open"></i> No products found.</div>';
+      return;
+    }
+
+    container.innerHTML = '';
+    filtered.forEach(p => {
+      const catObj   = cachedCategories.find(c => c.key === p.category);
+      const catLabel = catObj ? catObj.displayName : (p.category.charAt(0).toUpperCase() + p.category.slice(1));
+      const card = document.createElement('div');
+      card.className = 'product-card';
+      card.innerHTML = `
+        <div class="img-wrapper">
+          <img src="${p.image || 'https://via.placeholder.com/280x185?text=No+Image'}" alt="${p.name}"
+               onerror="this.src='https://via.placeholder.com/280x185?text=Image+Error'">
+          <span class="price-pill">₱${Number(p.price).toFixed(2)}</span>
+        </div>
+        <div class="product-info">
+          <div class="top-row">
+            <h4>${p.name}</h4>
+            <span class="product-cat-badge cat-${p.category}">${catLabel}</span>
+          </div>
+          <small>${p.description ? p.description.substring(0, 72) + (p.description.length > 72 ? '…' : '') : '<em style="opacity:0.45;">No description</em>'}</small>
+          <div class="card-divider"></div>
+          <div class="card-actions">
+            <button class="edit-btn" data-id="${p.id}" data-cat="${p.category}">
+              <i class="fas fa-pen"></i> Edit
+            </button>
+            <button class="delete-btn" data-id="${p.id}" data-cat="${p.category}">
+              <i class="fas fa-trash-alt"></i> Delete
+            </button>
+          </div>
+        </div>`;
+      container.appendChild(card);
+    });
+  }
+
+  // ── Edit Product (open modal) ──
+  let editBase64 = "";
+
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('.edit-btn');
+    if (!btn) return;
+    const { id, cat } = btn.dataset;
+    const product = cachedProducts.find(p => p.id === id && p.category === cat);
+    if (!product) return;
+
+    document.getElementById('edit-id').value          = id;
+    document.getElementById('edit-cat').value         = cat;
+    document.getElementById('edit-name').value        = product.name || '';
+    document.getElementById('edit-price').value       = product.price || '';
+    document.getElementById('edit-category').value    = product.category || 'cakes';
+    document.getElementById('edit-description').value = product.description || '';
+
+    const preview = document.getElementById('edit-img-preview');
+    if (product.image) { preview.src = product.image; preview.style.display = 'block'; }
+    else               { preview.style.display = 'none'; }
+
+    editBase64 = "";
+    document.getElementById('edit-image-file').value = '';
+    document.getElementById('edit-modal').style.display = 'flex';
+  });
+
+  document.getElementById('edit-image-file').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      editBase64 = reader.result;
+      const preview = document.getElementById('edit-img-preview');
+      preview.src = editBase64;
+      preview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById('edit-product-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = document.getElementById('edit-submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+
+    const id       = document.getElementById('edit-id').value;
+    const oldCat   = document.getElementById('edit-cat').value;
+    const newCat   = document.getElementById('edit-category').value;
+    const name     = document.getElementById('edit-name').value.trim();
+    const price    = parseFloat(document.getElementById('edit-price').value);
+    const desc     = document.getElementById('edit-description').value.trim();
+
+    if (!name || isNaN(price) || price <= 0) {
+      alert("Please fill in a valid name and price.");
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+      return;
+    }
+
+    try {
+      if (oldCat !== newCat) {
+        // Category changed: read old data, write to new path, delete old
+        const snap = await get(ref(db, `products/${oldCat}/${id}`));
+        const existing = snap.val() || {};
+        const newData = { ...existing, name, price, description: desc, category: newCat };
+        if (editBase64) newData.image = editBase64;
+        await push(ref(db, `products/${newCat}`), newData);
+        await remove(ref(db, `products/${oldCat}/${id}`));
+      } else {
+        const updates = { name, price, description: desc };
+        if (editBase64) updates.image = editBase64;
+        await update(ref(db, `products/${oldCat}/${id}`), updates);
+      }
+
+      closeEditModal();
+      loadProducts();
+    } catch (err) {
+      alert("Error saving changes: " + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+    }
+  });
+
+  window.closeEditModal = () => {
+    document.getElementById('edit-modal').style.display = 'none';
+    editBase64 = "";
+  };
+
+  // Close modal on backdrop click
+  document.getElementById('edit-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('edit-modal')) closeEditModal();
+  });
+
+  // ── Delete Product ──
+  let _pendingDeleteProdId  = null;
+  let _pendingDeleteProdCat = null;
+
+  window.closeDeleteProdModal = function () {
+    document.getElementById('delete-product-modal').style.display = 'none';
+    _pendingDeleteProdId  = null;
+    _pendingDeleteProdCat = null;
+  };
+
+  document.getElementById('delete-product-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('delete-product-modal')) closeDeleteProdModal();
+  });
+
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('.delete-btn');
+    if (!btn) return;
+    const { id, cat } = btn.dataset;
+    const product = cachedProducts.find(p => p.id === id && p.category === cat);
+    _pendingDeleteProdId  = id;
+    _pendingDeleteProdCat = cat;
+    document.getElementById('del-prod-name').textContent = product ? `"${product.name}"` : 'this product';
+    document.getElementById('delete-product-modal').style.display = 'flex';
+  });
+
+  document.getElementById('del-prod-confirm-btn').addEventListener('click', async () => {
+    if (!_pendingDeleteProdId) return;
+    const btn = document.getElementById('del-prod-confirm-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting…';
+    try {
+      await remove(ref(db, `products/${_pendingDeleteProdCat}/${_pendingDeleteProdId}`));
+      closeDeleteProdModal();
+      loadProducts();
+    } catch (err) {
+      alert("Delete failed: " + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-trash-alt"></i> Yes, Delete';
+    }
+  });
+
+  // ── Add Product ──
+  document.getElementById('add-product-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding…';
+
+    const category = document.getElementById('category').value;
+    if (!category) {
+      alert("Please select a category.");
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-plus"></i> Add Product to Menu';
+      return;
+    }
+
+    const data = {
+      name:        document.getElementById('name').value.trim(),
+      price:       parseFloat(document.getElementById('price').value),
+      image:       productBase64 || '',
+      description: document.getElementById('description').value.trim(),
+      createdAt:   Date.now()
+    };
+
+    if (!data.name || isNaN(data.price) || data.price <= 0) {
+      alert("Please fill in a valid name and price.");
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-plus"></i> Add Product to Menu';
+      return;
+    }
+
+    try {
+      await push(ref(db, `products/${category}`), data);
+      document.getElementById('add-product-form').reset();
+      productBase64 = "";
+      document.getElementById('admin-img-preview').style.display = "none";
+      loadProducts();
+    } catch (err) {
+      alert("Error adding product: " + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-plus"></i> Add Product to Menu';
+    }
+  });
+
+  // ── Filters ──
+  document.getElementById('product-search').addEventListener('input', renderFilteredProducts);
+  document.getElementById('product-filter-category').addEventListener('change', renderFilteredProducts);
+
+  // ── Custom Cake Options ──
+  window.loadCurrentOptions = function () {
+    const category  = document.getElementById('option-category').value;
+    const container = document.getElementById('options-list');
+    container.innerHTML = '<p><i class="fas fa-spinner fa-spin"></i> Loading…</p>';
+
+    onValue(ref(db, `customization-options/${category}`), (snapshot) => {
+      if (!snapshot.exists()) {
+        container.innerHTML = '<p>No options yet for this category.</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      snapshot.forEach(child => {
+        const data = child.val();
+        const row  = document.createElement('div');
+        row.className = 'option-row';
+        row.innerHTML = `
+          <div class="option-row-left">
+            <strong>${data.name}</strong>
+            <span class="option-price">₱${data.price || 0}</span>
+            <span class="option-enabled ${data.enabled ? 'opt-on' : 'opt-off'}">
+              ${data.enabled ? 'Enabled' : 'Disabled'}
+            </span>
+          </div>
+          <div class="option-row-actions">
+            <button class="btn-edit-opt"
+                    onclick="openEditOption('${category}','${child.key}','${data.name}',${data.price || 0},'${data.enabled}')">
+              <i class="fas fa-pen"></i> Edit
+            </button>
+            <button class="btn-delete-opt"
+                    onclick="deleteOption('${category}','${child.key}','${data.name.replace(/'/g, "\\'")}')">
+              <i class="fas fa-trash-alt"></i> Delete
+            </button>
+          </div>`;
+        container.appendChild(row);
+      });
+    });
+  };
+
+  // ── Add Option ──
+  document.getElementById('add-option-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const category = document.getElementById('option-category').value;
+    const name     = document.getElementById('opt-name').value.trim();
+    const price    = parseFloat(document.getElementById('opt-price').value) || 0;
+    const enabled  = document.getElementById('opt-enabled').value === "true";
+
+    if (!name) { alert("Please enter an option name."); return; }
+
+    try {
+      await push(ref(db, `customization-options/${category}`), {
+        name, price, enabled, createdAt: Date.now()
+      });
+      document.getElementById('add-option-form').reset();
+      loadCurrentOptions();
+    } catch (err) {
+      alert("Error adding option: " + err.message);
+    }
+  });
+
+  // ── Delete Option ──
+  let _pendingDeleteOptCat = null;
+  let _pendingDeleteOptId  = null;
+
+  window.closeDeleteOptModal = function () {
+    document.getElementById('delete-option-modal').style.display = 'none';
+    _pendingDeleteOptCat = null;
+    _pendingDeleteOptId  = null;
+  };
+
+  document.getElementById('delete-option-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('delete-option-modal')) closeDeleteOptModal();
+  });
+
+  window.deleteOption = function (category, id, name) {
+    _pendingDeleteOptCat = category;
+    _pendingDeleteOptId  = id;
+    document.getElementById('del-opt-name').textContent = name ? `"${name}"` : 'this option';
+    document.getElementById('delete-option-modal').style.display = 'flex';
+  };
+
+  document.getElementById('del-opt-confirm-btn').addEventListener('click', async () => {
+    if (!_pendingDeleteOptCat) return;
+    const btn = document.getElementById('del-opt-confirm-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting…';
+    try {
+      await remove(ref(db, `customization-options/${_pendingDeleteOptCat}/${_pendingDeleteOptId}`));
+      closeDeleteOptModal();
+      loadCurrentOptions();
+    } catch (err) {
+      alert("Error: " + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-trash-alt"></i> Yes, Delete';
+    }
+  });
+
+  // ── Edit Option ──
+  window.openEditOption = function (category, id, name, price, enabled) {
+    document.getElementById('edit-opt-category').value = category;
+    document.getElementById('edit-opt-id').value       = id;
+    document.getElementById('edit-opt-name').value     = name;
+    document.getElementById('edit-opt-price').value    = price;
+    document.getElementById('edit-opt-enabled').value  = enabled;
+    document.getElementById('edit-option-modal').style.display = 'flex';
+  };
+
+  window.closeEditOptionModal = function () {
+    document.getElementById('edit-option-modal').style.display = 'none';
+  };
+
+  document.getElementById('edit-option-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('edit-option-modal')) closeEditOptionModal();
+  });
+
+  document.getElementById('edit-option-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn      = document.getElementById('edit-opt-submit-btn');
+    btn.disabled   = true;
+    btn.innerHTML  = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+
+    const category = document.getElementById('edit-opt-category').value;
+    const id       = document.getElementById('edit-opt-id').value;
+    const name     = document.getElementById('edit-opt-name').value.trim();
+    const price    = parseFloat(document.getElementById('edit-opt-price').value) || 0;
+    const enabled  = document.getElementById('edit-opt-enabled').value === 'true';
+
+    if (!name) { alert("Please enter an option name."); btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save Changes'; return; }
+
+    try {
+      await update(ref(db, `customization-options/${category}/${id}`), { name, price, enabled });
+      closeEditOptionModal();
+      loadCurrentOptions();
+    } catch (err) {
+      alert("Error saving option: " + err.message);
+    } finally {
+      btn.disabled  = false;
+      btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+    }
+  });
+
+  // ── Sub-nav panel switching ──
+  document.querySelectorAll('.subnav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.subnav-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.menu-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.panel).classList.add('active');
+    });
+  });
+
+  // ── Initial load ──
+  loadCategories().then(() => loadProducts());
+
+  // ── Auto-load options when select changes ──
+  document.getElementById('option-category').addEventListener('change', loadCurrentOptions);
+
+  // ── Load default option category on page load ──
+  loadCurrentOptions();
+</script>
+
+</body>
+</html>

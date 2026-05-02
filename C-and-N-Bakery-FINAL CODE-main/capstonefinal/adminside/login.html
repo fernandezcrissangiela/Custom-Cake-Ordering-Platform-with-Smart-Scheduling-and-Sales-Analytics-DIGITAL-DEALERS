@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>C&N Bakery — Admin Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --primary: #825A3C;
+      --primary-dark: #674831;
+      --brown: #704233;
+      --cream: #F8F1EA;
+      --secondary: #F0E0D2;
+      --border: #E8D5C4;
+      --text: #3F2A1F;
+      --muted: #9A7B6A;
+      --white: #FFFFFF;
+      --btn-start: #5C3F2A;
+      --btn-end: #4A321F;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Poppins', serif;
+      min-height: 100vh;
+      display: flex;
+      background: var(--cream);
+      overflow: hidden;
+    }
+
+    /* ── Left decorative panel ── */
+    .login-panel-left {
+      flex: 0 0 38%;
+      background: linear-gradient(160deg, #5C3F2A 0%, #3F2A1F 60%, #2C1D14 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-panel-left::before {
+      content: '';
+      position: absolute;
+      top: -120px; right: -120px;
+      width: 400px; height: 400px;
+      border-radius: 50%;
+      background: rgba(130, 90, 60, 0.18);
+    }
+
+    .login-panel-left::after {
+      content: '';
+      position: absolute;
+      bottom: -80px; left: -80px;
+      width: 280px; height: 280px;
+      border-radius: 50%;
+      background: rgba(240, 224, 210, 0.07);
+    }
+
+    .brand-icon {
+      font-size: 4rem;
+      color: var(--secondary);
+      margin-bottom: 24px;
+      opacity: 0.9;
+      animation: float 4s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .brand-name {
+      font-family: 'Poppins', serif;
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1.1;
+      text-align: center;
+      z-index: 1;
+    }
+
+    .brand-name span {
+      color: var(--secondary);
+    }
+
+    .brand-tagline {
+      font-size: 0.95rem;
+      color: rgba(240, 224, 210, 0.65);
+      margin-top: 14px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      font-weight: 300;
+      text-align: center;
+      z-index: 1;
+    }
+
+    .left-dots {
+      position: absolute;
+      bottom: 48px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .left-dots span {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: rgba(240, 224, 210, 0.3);
+    }
+
+    .left-dots span:first-child {
+      background: var(--secondary);
+      width: 24px;
+      border-radius: 4px;
+    }
+
+    /* ── Right login form panel ── */
+    .login-panel-right {
+      flex: 1;
+      background: var(--white);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 56px 52px;
+      box-shadow: -20px 0 60px rgba(63, 42, 31, 0.12);
+      animation: slideInRight 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(40px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .login-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+
+    .login-heading {
+      font-family: 'Poppins', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+      line-height: 1.2;
+    }
+
+    .login-sub {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 40px;
+    }
+
+    .form-field {
+      margin-bottom: 20px;
+    }
+
+    .form-field label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--brown);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-wrapper i {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 0.95rem;
+      transition: color 0.3s;
+    }
+
+    .input-wrapper input {
+      width: 100%;
+      padding: 14px 48px 14px 44px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      font-family: 'Poppins', serif;
+      font-size: 0.95rem;
+      color: var(--text);
+      background: var(--cream);
+      outline: none;
+      transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .input-wrapper input:focus {
+      border-color: var(--primary);
+      background: var(--white);
+      box-shadow: 0 0 0 4px rgba(130, 90, 60, 0.10);
+    }
+
+    .input-wrapper input:focus + i,
+    .input-wrapper i:has(+ input:focus) { color: var(--primary); }
+
+    .input-wrapper input.error {
+      border-color: #c0392b;
+      box-shadow: 0 0 0 4px rgba(192, 57, 43, 0.10);
+      animation: shake 0.4s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%       { transform: translateX(-6px); }
+      40%       { transform: translateX(6px); }
+      60%       { transform: translateX(-4px); }
+      80%       { transform: translateX(4px); }
+    }
+
+    .toggle-eye {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+
+    .toggle-eye:hover { color: var(--primary); }
+
+    .error-msg {
+      display: none;
+      color: #c0392b;
+      font-size: 0.8rem;
+      margin-top: 6px;
+      font-weight: 500;
+    }
+
+    .error-msg.visible { display: block; }
+
+    .btn-login {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, var(--btn-start), var(--btn-end));
+      color: var(--white);
+      border: none;
+      border-radius: 12px;
+      font-family: 'Poppins', serif;
+      font-size: 0.97rem;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      box-shadow: 0 8px 28px rgba(92, 63, 42, 0.35);
+      transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .btn-login:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 14px 36px rgba(92, 63, 42, 0.45);
+      background: linear-gradient(135deg, #4F3522, #3C2818);
+    }
+
+    .btn-login:active { transform: translateY(0); }
+
+    .btn-login .btn-spinner {
+      display: none;
+      width: 18px; height: 18px;
+      border: 2.5px solid rgba(255,255,255,0.4);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .btn-login.loading .btn-text { display: none; }
+    .btn-login.loading .btn-spinner { display: block; }
+
+    .login-footer {
+      margin-top: 36px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .login-footer i {
+      color: var(--primary);
+      font-size: 1rem;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      body { flex-direction: column; overflow: auto; }
+
+      .login-panel-left {
+        flex: none;
+        padding: 40px 24px 32px;
+        min-height: 220px;
+      }
+
+      .brand-name { font-size: 2rem; }
+      .brand-tagline { font-size: 0.82rem; }
+
+      .login-panel-right {
+        width: 100%;
+        padding: 40px 28px 48px;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Left decorative panel -->
+<div class="login-panel-left">
+  <i class="fas fa-birthday-cake brand-icon"></i>
+  <div class="brand-name">C&N<br>Bakery</div>
+  <p class="brand-tagline">Admin Dashboard</p>
+  <div class="left-dots">
+    <span></span><span></span><span></span>
+  </div>
+</div>
+
+<!-- Right login form -->
+<div class="login-panel-right">
+  <p class="login-title">Welcome Back</p>
+  <h1 class="login-heading">Sign in to<br>your dashboard</h1>
+  <p class="login-sub">Enter your admin credentials to continue.</p>
+
+  <div class="form-field">
+    <label for="admin-pass"><i class="fas fa-lock" style="margin-right:6px;"></i>Password</label>
+    <div class="input-wrapper">
+      <i class="fas fa-key"></i>
+      <input
+        type="password"
+        id="admin-pass"
+        placeholder="Enter your password"
+        autocomplete="current-password"
+        onkeydown="if(event.key==='Enter') attemptLogin()"
+      >
+      <span class="toggle-eye" onclick="togglePassword()" title="Show/hide password">
+        <i class="fas fa-eye" id="eye-icon"></i>
+      </span>
+    </div>
+    <p class="error-msg" id="error-msg">
+      <i class="fas fa-exclamation-circle"></i> Incorrect password. Please try again.
+    </p>
+  </div>
+
+  <button class="btn-login" id="login-btn" onclick="attemptLogin()">
+    <span class="btn-text"><i class="fas fa-unlock-alt"></i> Unlock Dashboard</span>
+    <span class="btn-spinner"></span>
+  </button>
+
+  <div class="login-footer">
+    <i class="fas fa-shield-alt"></i>
+    <span>Secure admin access — C&N Bakery management portal</span>
+  </div>
+</div>
+
+<script>
+  // If already logged in, skip straight to dashboard
+  if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+    window.location.replace('admin.html');
+  }
+
+  function attemptLogin() {
+    const input  = document.getElementById('admin-pass');
+    const errMsg = document.getElementById('error-msg');
+    const btn    = document.getElementById('login-btn');
+
+    // Reset error state
+    input.classList.remove('error');
+    errMsg.classList.remove('visible');
+
+    if (!input.value) {
+      input.classList.add('error');
+      input.focus();
+      return;
+    }
+
+    // Show loading
+    btn.classList.add('loading');
+
+    setTimeout(() => {
+      if (input.value === "digitaldealers") {
+        sessionStorage.setItem('adminLoggedIn', 'true');
+        window.location.replace('admin.html');
+      } else {
+        btn.classList.remove('loading');
+        input.classList.add('error');
+        errMsg.classList.add('visible');
+        input.value = '';
+        input.focus();
+      }
+    }, 600);
+  }
+
+  function togglePassword() {
+    const input = document.getElementById('admin-pass');
+    const icon  = document.getElementById('eye-icon');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+      input.type = 'password';
+      icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+  }
+</script>
+
+</body>
+</html>

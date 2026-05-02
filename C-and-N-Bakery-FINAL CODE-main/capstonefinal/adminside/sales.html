@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>C&N Bakery - Sales & Analytics</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/sales.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* ── Date Filter Bar ── */
+    .filter-bar-sales {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 22px;
+    }
+    .filter-bar-sales label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    .filter-bar-sales select,
+    .filter-bar-sales input[type="date"] {
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.85rem;
+      color: var(--brown);
+      background: var(--white);
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .filter-bar-sales select:focus,
+    .filter-bar-sales input[type="date"]:focus {
+      border-color: var(--primary);
+    }
+    .filter-bar-sales .btn-apply {
+      padding: 8px 20px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .filter-bar-sales .btn-apply:hover { background: var(--primary-dark); }
+
+    /* ── Stats grid ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 18px;
+      margin-bottom: 26px;
+    }
+    .stat-box { position: relative; }
+    .stat-trend {
+      margin-top: 8px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .stat-trend.up   { color: #27ae60; }
+    .stat-trend.down { color: #c0392b; }
+    .stat-trend.flat { color: var(--muted); }
+
+    /* ── Section heading row ── */
+    .section-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .section-heading h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--brown);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-heading h2 i { color: var(--primary); }
+
+    /* ── Top-sellers tabbed panel ── */
+    .topsell-panel {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 26px;
+      overflow: hidden;
+      transition: var(--transition);
+    }
+    .topsell-panel:hover { box-shadow: var(--shadow); }
+    .topsell-tabs {
+      display: flex;
+      border-bottom: 2px solid var(--border);
+      padding: 0 24px;
+      gap: 4px;
+      overflow-x: auto;
+    }
+    .topsell-tab {
+      padding: 13px 18px;
+      border: none;
+      background: none;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      white-space: nowrap;
+      transition: color 0.2s, border-color 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .topsell-tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+    .topsell-tab:hover { color: var(--brown); }
+    .topsell-body {
+      padding: 20px 24px;
+    }
+    .topsell-pane { display: none; }
+    .topsell-pane.active { display: block; }
+
+    /* ── Product rows ── */
+    .product-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 11px 0;
+      border-bottom: 1px dashed var(--border);
+      transition: var(--transition);
+    }
+    .product-row:last-child { border-bottom: none; }
+    .product-row:hover { padding-left: 6px; }
+    .product-row-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .rank {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--secondary);
+      color: var(--brown);
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .rank-1 { background: linear-gradient(135deg,#b8860b,#FFD700); color: #fff; }
+    .rank-2 { background: linear-gradient(135deg,#888,#C0C0C0); color: #fff; }
+    .rank-3 { background: linear-gradient(135deg,#8B4513,#CD7F32); color: #fff; }
+    .product-name { font-weight: 500; color: var(--brown); font-size: 0.9rem; }
+    .qty-badge {
+      background: var(--cream);
+      color: var(--primary-dark);
+      padding: 4px 12px;
+      border-radius: 30px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      border: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 28px 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .empty-state i { font-size: 1.8rem; margin-bottom: 8px; display: block; opacity: 0.4; }
+
+    /* ── Recent Sales Feed ── */
+    .recent-sales-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 24px;
+      margin-bottom: 26px;
+      transition: var(--transition);
+    }
+    .recent-sales-card:hover { box-shadow: var(--shadow); }
+    .recent-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 13px 0;
+      border-bottom: 1px solid var(--border);
+      animation: fadeSlideIn 0.4s ease;
+    }
+    .recent-item:last-child { border-bottom: none; }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .recent-icon {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      background: var(--cream);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+    .recent-info { flex: 1; min-width: 0; }
+    .recent-name {
+      font-weight: 600;
+      color: var(--brown);
+      font-size: 0.88rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .recent-meta {
+      font-size: 0.76rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .recent-amount {
+      font-weight: 700;
+      color: var(--primary-dark);
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      margin-left: 6px;
+    }
+    .status-completed { background: #d5f5e3; color: #1e8449; }
+    .status-cancelled { background: #fdecea; color: #c0392b; }
+
+    /* ── Revenue breakdown table ── */
+    .breakdown-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 24px;
+      margin-bottom: 26px;
+      transition: var(--transition);
+    }
+    .breakdown-card:hover { box-shadow: var(--shadow); }
+    .breakdown-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+    }
+    .breakdown-table th {
+      text-align: left;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 8px 10px;
+      border-bottom: 2px solid var(--border);
+    }
+    .breakdown-table td {
+      padding: 10px 10px;
+      border-bottom: 1px dashed var(--border);
+      color: var(--brown);
+    }
+    .breakdown-table tr:last-child td { border-bottom: none; }
+    .breakdown-table tr:hover td { background: var(--cream); }
+    .bar-cell { width: 140px; }
+    .mini-bar-track {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .mini-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--brown-light, #c9a882));
+      transition: width 0.8s ease;
+    }
+
+    /* ── Export button ── */
+    .btn-export {
+      padding: 8px 18px;
+      border: 2px solid var(--primary);
+      background: transparent;
+      color: var(--primary);
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 0.82rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn-export:hover { background: var(--primary); color: #fff; }
+
+    /* ── Responsive ── */
+    @media (max-width: 850px) {
+      .charts-grid { grid-template-columns: 1fr; }
+      .breakdown-card .btn-export { display: none; }
+    }
+    @media (max-width: 600px) {
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .bar-cell { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Add right after <body>, BEFORE everything else -->
+<script>
+  if (sessionStorage.getItem('adminLoggedIn') !== 'true') {
+    window.location.replace('login.html');
+  }
+</script>
+
+<!-- ========== LOGIN OVERLAY ========== -->
+<div id="login-overlay">
+  <div class="login-box">
+    <h2><i class="fas fa-lock"></i>C&N Bakery </h2>
+    <p class="login-sub">Enter your password to access Sales & Analytics</p>
+    <input type="password" id="admin-pass" placeholder="Enter password"
+           onkeydown="if(event.key==='Enter') checkLogin()">
+    <button class="btn-main" onclick="checkLogin()">
+      <i class="fas fa-unlock-alt"></i> Unlock Dashboard
+    </button>
+  </div>
+</div>
+
+<!-- ========== HEADER ========== -->
+<header>
+  <a href="admin.html" class="logo-text">C&N</span> Bakery</a>
+  <button class="btn-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+</header>
+
+<div class="container">
+
+  <!-- Navigation -->
+  <div class="nav-tabs">
+    <a href="sales.html"    class="nav-link active"><i class="fas fa-chart-line"></i> Sales</a>
+    <a href="orders.html"   class="nav-link"><i class="fas fa-shopping-bag"></i> Orders</a>
+    <a href="schedule.html" class="nav-link"><i class="fas fa-calendar-alt"></i> Schedule</a>
+    <a href="admin_menu.html" class="nav-link"><i class="fas fa-birthday-cake"></i> Menu</a>
+    <a href="history.html"  class="nav-link"><i class="fas fa-history"></i> History</a>
+  </div>
+
+  <!-- Page Title -->
+  <div class="page-title">
+    <h1><i class="fas fa-chart-line" style="color:var(--primary);"></i> Sales and <span>Analytics</span></h1>
+  </div>
+
+  <!-- ── Date / Period Filter ── -->
+  <div class="filter-bar-sales">
+    <label><i class="fas fa-filter"></i> Period</label>
+    <select id="period-select" onchange="onPeriodChange()">
+      <option value="thisMonth">This Month</option>
+      <option value="lastMonth">Last Month</option>
+      <option value="thisYear" selected>This Year</option>
+      <option value="allTime">All Time</option>
+      <option value="custom">Custom Range</option>
+    </select>
+    <span id="custom-range-inputs" style="display:none;align-items:center;gap:6px;">
+      <input type="date" id="date-from"> <span style="color:var(--muted)">–</span>
+      <input type="date" id="date-to">
+      <button class="btn-apply" onclick="applyFilters()"><i class="fas fa-check"></i> Apply</button>
+    </span>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-box">
+      <h3><i class="fas fa-peso-sign"></i> Total Revenue</h3>
+      <p id="total-revenue">PHP 0</p>
+      <div class="stat-trend flat" id="trend-revenue"><i class="fas fa-minus"></i> —</div>
+    </div>
+    <div class="stat-box">
+      <h3><i class="fas fa-calendar"></i> <span data-stat="period-label">This Year</span> Revenue</h3>
+      <p id="monthly-revenue">PHP 0</p>
+      <div class="stat-trend flat" id="trend-monthly"><i class="fas fa-minus"></i> —</div>
+    </div>
+    <div class="stat-box">
+      <h3><i class="fas fa-box"></i> Items Sold</h3>
+      <p id="total-items">0</p>
+      <div class="stat-trend flat" id="trend-items"><i class="fas fa-minus"></i> —</div>
+    </div>
+    <div class="stat-box">
+      <h3><i class="fas fa-receipt"></i> Orders</h3>
+      <p id="total-orders">0</p>
+      <div class="stat-trend flat" id="trend-orders"><i class="fas fa-minus"></i> —</div>
+    </div>
+    <div class="stat-box">
+      <h3><i class="fas fa-users"></i> Customers</h3>
+      <p id="total-customers">0</p>
+      <div class="stat-trend flat" id="trend-customers"><i class="fas fa-minus"></i> —</div>
+    </div>
+    <div class="stat-box">
+      <h3><i class="fas fa-receipt"></i> Avg. Order Value</h3>
+      <p id="avg-order">PHP 0</p>
+      <div class="stat-trend flat" id="trend-avg"><i class="fas fa-minus"></i> —</div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts-grid">
+    <div class="chart-card">
+      <h3><i class="fas fa-chart-area"></i> Monthly Revenue Trends</h3>
+      <canvas id="sales-chart"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3><i class="fas fa-chart-pie"></i> Product Category Split</h3>
+      <canvas id="category-chart"></canvas>
+    </div>
+  </div>
+
+  <!-- ── Top Selling Products — tabbed by category ── -->
+  <div class="section-heading">
+    <h2><i class="fas fa-trophy"></i> Top Selling Products</h2>
+  </div>
+  <div class="topsell-panel">
+    <div class="topsell-tabs" id="topsell-tabs">
+      <!-- Tabs injected by JS -->
+    </div>
+    <div class="topsell-body" id="topsell-body">
+      <!-- Panes injected by JS -->
+    </div>
+  </div>
+
+  <!-- ── Revenue Breakdown by Category ── -->
+  <div class="breakdown-card">
+    <div class="section-heading" style="margin-bottom:14px;">
+      <h2><i class="fas fa-table"></i> Revenue by Category</h2>
+      <button class="btn-export" onclick="exportCSV()"><i class="fas fa-download"></i> Export CSV</button>
+    </div>
+    <table class="breakdown-table">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Items Sold</th>
+          <th>Revenue</th>
+          <th>% of Total</th>
+          <th class="bar-cell"></th>
+        </tr>
+      </thead>
+      <tbody id="breakdown-tbody">
+        <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Recent Sales Feed ── -->
+  <div class="recent-sales-card">
+    <div class="section-heading" style="margin-bottom:14px;">
+      <h2><i class="fas fa-clock"></i> Recent Sales</h2>
+      <span style="font-size:0.8rem;color:var(--muted);">Last 10 completed orders</span>
+    </div>
+    <div id="recent-sales-list">
+      <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading…</p></div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- ========== LOGIN GUARD ========== -->
+<script>
+  function handleLogout() {
+  sessionStorage.removeItem('adminLoggedIn');
+  window.location.replace('login.html');
+}
+  function checkLogin() {
+    const password = document.getElementById('admin-pass').value;
+    if (password === "digitaldealers") {
+      document.getElementById('login-overlay').style.display = 'none';
+      sessionStorage.setItem('adminLoggedIn', 'true');
+    } else {
+      const input = document.getElementById('admin-pass');
+      input.style.borderColor = '#c0392b';
+      input.style.boxShadow = '0 0 0 4px rgba(192,57,43,0.15)';
+      input.value = '';
+      input.placeholder = 'Incorrect password. Try again.';
+      setTimeout(() => {
+        input.style.borderColor = '';
+        input.style.boxShadow = '';
+        input.placeholder = 'Enter password';
+      }, 2000);
+      input.focus();
+    }
+  }
+  if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+    document.getElementById('login-overlay').style.display = 'none';
+  }
+
+  function onPeriodChange() {
+    const v = document.getElementById('period-select').value;
+    document.getElementById('custom-range-inputs').style.display =
+      v === 'custom' ? 'flex' : 'none';
+    if (v !== 'custom') applyFilters();
+  }
+  function applyFilters() {
+    if (window._rebuildDashboard) window._rebuildDashboard();
+  }
+
+  // CSV Export
+  function exportCSV() {
+    const rows = [['Category','Items Sold','Revenue','% of Total']];
+    document.querySelectorAll('#breakdown-tbody tr').forEach(tr => {
+      const cells = [...tr.querySelectorAll('td')].slice(0,4).map(td => td.innerText.trim());
+      if (cells.length === 4) rows.push(cells);
+    });
+    const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    a.download = 'cn_bakery_sales.csv';
+    a.click();
+  }
+</script>
+
+<!-- ========== FIREBASE + CHARTS ========== -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCWUJfDwLR5erpExZUoBWW7YJ-aDpT_zy0",
+    authDomain: "candn-bakery.firebaseapp.com",
+    databaseURL: "https://candn-bakery-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "candn-bakery"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+
+  let salesChart, categoryChart;
+  let _allHistory = [];
+
+  // Category icon map — extend as needed
+  const CAT_ICONS = {
+    cakes:    'fas fa-birthday-cake',
+    pastries: 'fas fa-cookie',
+    custom:   'fas fa-magic',
+  };
+  function catIcon(cat) {
+    return CAT_ICONS[cat] || 'fas fa-box';
+  }
+
+  // ── Date filter helpers ──
+  function getDateRange() {
+    const period = document.getElementById('period-select').value;
+    const now = new Date();
+    let from, to;
+    if (period === 'thisMonth') {
+      from = new Date(now.getFullYear(), now.getMonth(), 1);
+      to   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    } else if (period === 'lastMonth') {
+      from = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      to   = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+    } else if (period === 'thisYear') {
+      from = new Date(now.getFullYear(), 0, 1);
+      to   = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
+    } else if (period === 'allTime') {
+      from = new Date(0); to = new Date(8640000000000000);
+    } else {
+      const fromVal = document.getElementById('date-from').value;
+      const toVal   = document.getElementById('date-to').value;
+      from = fromVal ? new Date(fromVal) : new Date(0);
+      to   = toVal   ? new Date(toVal)  : new Date(8640000000000000);
+      if (toVal) to.setHours(23, 59, 59);
+    }
+    return { from, to };
+  }
+
+  function inRange(order, from, to) {
+    const d = new Date(order.completedAt || order.createdAt || 0);
+    return d >= from && d <= to;
+  }
+
+  // ── Period label map ──
+  const PERIOD_LABELS = {
+    thisMonth: 'This Month',
+    lastMonth: 'Last Month',
+    thisYear:  'This Year',
+    allTime:   'All Time',
+    custom:    'Custom Range'
+  };
+
+  // ── Main rebuild ──
+  function rebuildDashboard() {
+    const { from, to } = getDateRange();
+    const period = document.getElementById('period-select').value;
+
+    // allFiltered = everything in range (completed + cancelled) — for recent feed
+    const allFiltered = _allHistory.filter(o => inRange(o, from, to));
+    // completedFiltered = completed only — for all stats, charts, rankings
+    const completedFiltered = allFiltered.filter(o => (o.status || '').toLowerCase() === 'completed');
+
+    // all-time completed revenue for the top stat
+    const totalRev = _allHistory
+      .filter(o => (o.status || '').toLowerCase() === 'completed')
+      .reduce((s, o) => s + (parseFloat(o.totalAmount) || 0), 0);
+
+    let totalItems = 0;
+    const customers = new Set();
+    const cats = {};
+    const productRankings = {};
+    const isMonthPeriod = ['thisMonth', 'lastMonth'].includes(period);
+    const daysInPeriod  = isMonthPeriod
+      ? new Date(from.getFullYear(), from.getMonth() + 1, 0).getDate()
+      : 12;
+    const monthlyRevData = Array(daysInPeriod).fill(0);
+
+    completedFiltered.forEach(o => {
+      const amt  = parseFloat(o.totalAmount) || 0;
+      const date = new Date(o.completedAt || o.createdAt || 0);
+
+      // Chart bucketing: by day for month views, by month for year/alltime
+      const bucket = isMonthPeriod ? (date.getDate() - 1) : date.getMonth();
+      if (bucket >= 0 && bucket < monthlyRevData.length) {
+        monthlyRevData[bucket] += amt;
+      }
+
+      if (o.phone) customers.add(o.phone.trim());
+
+      const items = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
+      items.forEach(i => {
+        const qty    = parseInt(i.quantity) || 1;
+        const name   = i.name || 'Unnamed Item';
+        const rawCat = (i.category || 'cakes').toLowerCase();
+        const label  = rawCat.charAt(0).toUpperCase() + rawCat.slice(1);
+
+        totalItems += qty;
+        if (!cats[label]) cats[label] = { qty: 0, rev: 0 };
+        cats[label].qty += qty;
+        // Use item price if available, else spread order total evenly across items
+        const itemRev = i.price != null
+          ? (parseFloat(i.price) || 0) * qty
+          : (parseFloat(o.totalAmount) || 0) / (items.length || 1);
+        cats[label].rev += itemRev;
+
+        if (!productRankings[rawCat]) productRankings[rawCat] = {};
+        productRankings[rawCat][name] = (productRankings[rawCat][name] || 0) + qty;
+      });
+    });
+
+    const periodRev = completedFiltered.reduce((s, o) => s + (parseFloat(o.totalAmount) || 0), 0);
+    const avgOrder  = completedFiltered.length ? periodRev / completedFiltered.length : 0;
+
+    // Update period card label dynamically
+    document.querySelector('[data-stat="period-label"]').innerText =
+      PERIOD_LABELS[period] || 'Period';
+
+    document.getElementById('total-revenue').innerText   = `PHP ${totalRev.toLocaleString()}`;
+    document.getElementById('monthly-revenue').innerText = `PHP ${periodRev.toLocaleString()}`;
+    document.getElementById('total-items').innerText     = totalItems.toLocaleString();
+    document.getElementById('total-orders').innerText    = completedFiltered.length.toLocaleString();
+    document.getElementById('total-customers').innerText = customers.size;
+    document.getElementById('avg-order').innerText       = `PHP ${Math.round(avgOrder).toLocaleString()}`;
+
+    renderTabs(productRankings, completedFiltered);
+    renderBreakdown(cats, periodRev);
+    renderRecentSales(allFiltered);
+    renderSalesTrend(monthlyRevData, period);
+    renderCategorySplit(cats);
+  }
+
+  // ── Tabbed top-sellers ──
+  function renderTabs(rankings, completedOrders) {
+    // Build per-product revenue map from completed orders
+    const productRevenue = {};
+    completedOrders.forEach(o => {
+      const items = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
+      items.forEach(i => {
+        const rawCat = (i.category || 'cakes').toLowerCase();
+        const name   = i.name || 'Unnamed Item';
+        const qty    = parseInt(i.quantity) || 1;
+        const rev    = i.price != null
+          ? (parseFloat(i.price) || 0) * qty
+          : (parseFloat(o.totalAmount) || 0) / (items.length || 1);
+        if (!productRevenue[rawCat]) productRevenue[rawCat] = {};
+        productRevenue[rawCat][name] = (productRevenue[rawCat][name] || 0) + rev;
+      });
+    });
+    const tabsEl = document.getElementById('topsell-tabs');
+    const bodyEl = document.getElementById('topsell-body');
+    const cats   = Object.keys(rankings);
+
+    if (!cats.length) {
+      tabsEl.innerHTML = '';
+      bodyEl.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>No sales data yet.</p></div>';
+      return;
+    }
+
+    tabsEl.innerHTML = cats.map((cat, i) => `
+      <button class="topsell-tab ${i===0?'active':''}" data-cat="${cat}" onclick="switchTab('${cat}')">
+        <i class="${catIcon(cat)}"></i>
+        ${cat.charAt(0).toUpperCase() + cat.slice(1)}
+      </button>
+    `).join('');
+
+    bodyEl.innerHTML = cats.map((cat, i) => {
+      const sorted = Object.entries(rankings[cat] || {})
+        .sort(([,a],[,b]) => b - a).slice(0, 7);
+      return `
+        <div class="topsell-pane ${i===0?'active':''}" id="pane-${cat}">
+          ${sorted.length === 0
+            ? '<div class="empty-state"><i class="fas fa-inbox"></i><p>No items sold yet.</p></div>'
+            : sorted.map(([name, qty], idx) => {
+                const rev = (productRevenue[cat] || {})[name] || 0;
+                return `
+                <div class="product-row">
+                  <div class="product-row-left">
+                    <span class="rank rank-${idx+1}">${idx+1}</span>
+                    <span class="product-name">${name}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:0.78rem;color:var(--muted);">PHP ${Math.round(rev).toLocaleString()}</span>
+                    <span class="qty-badge">${qty} sold</span>
+                  </div>
+                </div>`;
+              }).join('')}
+        </div>`;
+    }).join('');
+  }
+
+  window.switchTab = function(cat) {
+    document.querySelectorAll('.topsell-tab').forEach(t =>
+      t.classList.toggle('active', t.dataset.cat === cat));
+    document.querySelectorAll('.topsell-pane').forEach(p =>
+      p.classList.toggle('active', p.id === `pane-${cat}`));
+  };
+
+  // ── Revenue Breakdown Table ──
+  function renderBreakdown(cats, totalRev) {
+    const tbody = document.getElementById('breakdown-tbody');
+    const entries = Object.entries(cats).sort(([,a],[,b]) => b.rev - a.rev);
+    if (!entries.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">No data.</td></tr>';
+      return;
+    }
+    const max = Math.max(...entries.map(([,v]) => v.rev));
+    tbody.innerHTML = entries.map(([cat, v]) => {
+      const pct = totalRev > 0 ? ((v.rev / totalRev) * 100).toFixed(1) : '0.0';
+      const bar = max > 0 ? ((v.rev / max) * 100).toFixed(1) : 0;
+      return `
+        <tr>
+          <td><i class="${catIcon(cat.toLowerCase())}" style="color:var(--primary);margin-right:7px;"></i>${cat}</td>
+          <td>${v.qty.toLocaleString()}</td>
+          <td>PHP ${Math.round(v.rev).toLocaleString()}</td>
+          <td>${pct}%</td>
+          <td class="bar-cell">
+            <div class="mini-bar-track">
+              <div class="mini-bar-fill" style="width:${bar}%"></div>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  // ── Recent Sales ──
+  function renderRecentSales(orders) {
+    const el = document.getElementById('recent-sales-list');
+    const recent = [...orders]
+      .sort((a, b) => new Date(b.completedAt || b.createdAt || 0) - new Date(a.completedAt || a.createdAt || 0))
+      .slice(0, 10);
+
+    if (!recent.length) {
+      el.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>No recent sales.</p></div>';
+      return;
+    }
+
+    el.innerHTML = recent.map(o => {
+      const amt      = parseFloat(o.totalAmount) || 0;
+      const date     = new Date(o.completedAt || o.createdAt || 0);
+      const status   = (o.status || 'completed').toLowerCase();
+      const isCancelled = status === 'cancelled';
+      const items    = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
+      const summary  = items.slice(0, 2).map(i => `${i.name}${i.quantity > 1 ? ' ×'+i.quantity : ''}`).join(', ')
+        + (items.length > 2 ? ` +${items.length-2} more` : '');
+      const firstCat = (items[0]?.category || 'cakes').toLowerCase();
+
+      return `
+        <div class="recent-item" style="${isCancelled ? 'opacity:0.55;' : ''}">
+          <div class="recent-icon"><i class="${catIcon(firstCat)}"></i></div>
+          <div class="recent-info">
+            <div class="recent-name">${o.customerName || o.customer || o.name || o.fullName || 'Unknown Customer'} <span class="status-badge status-${status}">${status}</span></div>
+            <div class="recent-meta">${summary}</div>
+            <div class="recent-meta">${date.toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' })}
+              &nbsp;·&nbsp; ${date.toLocaleTimeString('en-PH', { hour:'2-digit', minute:'2-digit' })}
+            </div>
+          </div>
+          <div class="recent-amount" style="${isCancelled ? 'text-decoration:line-through;color:var(--muted);' : ''}">PHP ${amt.toLocaleString()}</div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Charts ──
+  function renderSalesTrend(data, period) {
+    const isMonthly = ['thisMonth','lastMonth'].includes(period);
+    const labels = isMonthly
+      ? Array.from({length: data.length}, (_, i) => `${i+1}`)
+      : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    if (salesChart) salesChart.destroy();
+    salesChart = new Chart(document.getElementById('sales-chart'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Revenue (PHP)',
+          data,
+          borderColor: '#674831',
+          backgroundColor: 'rgba(130, 90, 60, 0.10)',
+          fill: true, tension: 0.4,
+          pointBackgroundColor: '#825A3C',
+          pointRadius: 5, pointHoverRadius: 7
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, grid: { color: 'rgba(130,90,60,0.08)' },
+               ticks: { color: '#5F4635', font: { family: 'Poppins', size: 11 },
+                        callback: v => 'PHP ' + v.toLocaleString() } },
+          x: { grid: { display: false }, ticks: { color: '#5F4635', font: { family: 'Poppins', size: 11 } } }
+        }
+      }
+    });
+  }
+
+  function renderCategorySplit(cats) {
+    if (categoryChart) categoryChart.destroy();
+    categoryChart = new Chart(document.getElementById('category-chart'), {
+      type: 'doughnut',
+      data: {
+        labels: Object.keys(cats),
+        datasets: [{
+          data: Object.values(cats).map(v => v.qty),
+          backgroundColor: ['#825A3C','#8F6454','#B08060','#C9A882','#EDE0D4'],
+          borderWidth: 2, borderColor: '#F8F1EA'
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom',
+            labels: { color: '#3F2A1F', font: { family: 'Poppins', size: 12 }, padding: 16 } },
+          tooltip: {
+            callbacks: {
+              label: ctx => ` ${ctx.label}: ${ctx.parsed} items sold`
+            }
+          }
+        },
+        cutout: '60%'
+      }
+    });
+  }
+
+  // ── Firebase listener ──
+  onValue(ref(db, 'orders'), (snapshot) => {
+    const orders = snapshot.val() || {};
+    _allHistory = Object.values(orders).filter(o => {
+      const s = (o.status || '').toLowerCase();
+      return ['completed', 'cancelled'].includes(s);
+    });
+    rebuildDashboard();
+  });
+
+  window._rebuildDashboard = rebuildDashboard;
+</script>
+
+</body>
+</html>

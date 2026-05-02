@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>C&N Bakery - Admin Orders</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../css/orders.css">
+  <link rel="stylesheet" href="../css/admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>emailjs.init("LjFPVh32OznI3FhJv");</script>
+</head>
+<body>
+
+  <!-- Add right after <body>, BEFORE everything else -->
+<script>
+  if (sessionStorage.getItem('adminLoggedIn') !== 'true') {
+    window.location.replace('login.html');
+  }
+</script>
+
+<!-- ── LOGIN OVERLAY ── -->
+<div id="login-overlay">
+  <div class="login-box">
+    <h2><i class="fas fa-lock"></i>C&N Bakery </h2>
+    <p class="login-sub">Enter your password to access Orders</p>
+    <input type="password" id="admin-pass" placeholder="Enter password"
+           onkeydown="if(event.key==='Enter') checkLogin()">
+    <button class="btn-main" onclick="checkLogin()">
+      <i class="fas fa-unlock-alt"></i> Unlock Dashboard
+    </button>
+  </div>
+</div>
+
+<!-- ── HEADER ── -->
+<header>
+  <a href="admin.html" class="logo-text">C&N </span> Bakery</a>
+  <button class="btn-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+</header>
+
+<div class="container">
+  <div class="nav-tabs">
+    <a href="sales.html"      class="nav-link"><i class="fas fa-chart-line"></i> Sales</a>
+    <a href="orders.html"     class="nav-link active"><i class="fas fa-shopping-bag"></i> Orders</a>
+    <a href="schedule.html"   class="nav-link"><i class="fas fa-calendar-alt"></i> Schedule</a>
+    <a href="admin_menu.html" class="nav-link"><i class="fas fa-birthday-cake"></i> Menu</a>
+    <a href="history.html"    class="nav-link"><i class="fas fa-history"></i> History</a>
+  </div>
+
+  <!-- ══ ORDERS SUB-NAV ══ -->
+  <div class="nav-tabs orders-subnav">
+    <button class="subnav-btn active" data-panel="panel-new-orders">
+      <i class="fas fa-pause-circle"></i> New Orders
+      <span class="order-count-badge" id="badge-pending">0</span>
+    </button>
+    <button class="subnav-btn" data-panel="panel-active-orders">
+      <i class="fas fa-truck"></i> Active Orders
+      <span class="order-count-badge active-badge" id="badge-active">0</span>
+    </button>
+  </div>
+
+  <!-- ══ PANEL: New Orders ══ -->
+  <div id="panel-new-orders" class="orders-panel active">
+    <div class="page-heading">
+      <h1 class="page-title"><i class="fas fa-pause-circle"></i> New Orders</h1>
+      <p class="page-subtitle">Incoming orders waiting for confirmation.</p>
+    </div>
+    <div id="pending-list"></div>
+  </div>
+
+  <!-- ══ PANEL: Active Orders ══ -->
+  <div id="panel-active-orders" class="orders-panel">
+    <div class="page-heading">
+      <h1 class="page-title"><i class="fas fa-truck"></i> Active Orders</h1>
+      <p class="page-subtitle">Orders currently being prepared or out for delivery.</p>
+    </div>
+    <div id="active-list"></div>
+  </div>
+
+</div>
+
+<!-- ── ORDER DETAIL MODAL ── -->
+<div id="order-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="mh">
+      <span class="mh-title" id="modal-title">Order Details</span>
+      <button class="mh-close" onclick="closeOrderModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="mb" id="modal-body"></div>
+  </div>
+</div>
+
+<!-- ── ZOOM MODAL ── -->
+<div id="zoom-overlay" onclick="closeZoom()">
+  <span id="zoom-close" onclick="closeZoom()"><i class="fas fa-times"></i></span>
+  <img id="zoom-img" src="" alt="Reference Photo">
+</div>
+
+<!-- ── EARLY SHIP WARNING MODAL ── -->
+<div id="ship-warning-modal" style="
+  display:none; position:fixed; inset:0; z-index:9999;
+  background:rgba(0,0,0,0.55); align-items:center; justify-content:center;">
+  <div style="
+    background:#fff; border-radius:16px; padding:32px 28px; max-width:420px; width:90%;
+    box-shadow:0 8px 32px rgba(0,0,0,0.18); text-align:center;">
+    <div style="font-size:2.8rem; margin-bottom:12px;">⚠️</div>
+    <h3 style="margin:0 0 8px; color:#c0392b; font-size:1.15rem;">Not Ready to Ship</h3>
+    <p style="color:#555; font-size:0.93rem; margin:0 0 6px;">
+      This order is scheduled for
+      <strong id="ship-warn-date" style="color:#2c3e50;"></strong>
+      today is
+      <strong id="ship-warn-today" style="color:#2c3e50;"></strong>.
+    </p>
+    <p style="color:#888; font-size:0.85rem; margin:0 0 24px;">
+      This order is not yet due for delivery. Do you still want to proceed and mark it as
+      <em>Out for Delivery</em>?
+    </p>
+    <div style="display:flex; gap:10px; justify-content:center;">
+      <button id="ship-warn-cancel" style="
+        padding:10px 22px; border-radius:8px; border:1.5px solid #ccc;
+        background:#f5f5f5; color:#555; font-size:0.9rem; cursor:pointer; font-weight:600;">
+        Cancel
+      </button>
+      <button id="ship-warn-proceed" style="
+        padding:10px 22px; border-radius:8px; border:none;
+        background:#e74c3c; color:#fff; font-size:0.9rem; cursor:pointer; font-weight:600;">
+        Ship Anyway
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── GENERIC CONFIRM MODAL ── -->
+<div id="confirm-modal" style="
+  display:none; position:fixed; inset:0; z-index:9999;
+  background:rgba(0,0,0,0.55); align-items:center; justify-content:center;">
+  <div style="
+    background:#fff; border-radius:16px; padding:32px 28px; max-width:400px; width:90%;
+    box-shadow:0 8px 32px rgba(0,0,0,0.18); text-align:center;">
+    <div id="confirm-modal-icon" style="font-size:2.8rem; margin-bottom:12px;"></div>
+    <h3 id="confirm-modal-title" style="margin:0 0 8px; font-size:1.1rem;"></h3>
+    <p id="confirm-modal-body" style="color:#666; font-size:0.9rem; margin:0 0 24px; line-height:1.6;"></p>
+    <div style="display:flex; gap:10px; justify-content:center;">
+      <button id="confirm-modal-cancel" style="
+        padding:10px 22px; border-radius:8px; border:1.5px solid #ccc;
+        background:#f5f5f5; color:#555; font-size:0.9rem; cursor:pointer; font-weight:600;">
+        Cancel
+      </button>
+      <button id="confirm-modal-ok" style="
+        padding:10px 22px; border-radius:8px; border:none;
+        font-size:0.9rem; cursor:pointer; font-weight:600; color:#fff;">
+        Confirm
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── LOGIN GUARD ── -->
+<script>
+  function handleLogout() {
+  sessionStorage.removeItem('adminLoggedIn');
+  window.location.replace('login.html');
+}
+
+  function checkLogin() {
+    const input = document.getElementById('admin-pass');
+    if (input.value === "digitaldealers") {
+      document.getElementById('login-overlay').style.display = 'none';
+      sessionStorage.setItem('adminLoggedIn', 'true');
+    } else {
+      input.style.borderColor = '#c0392b';
+      input.style.boxShadow = '0 0 0 4px rgba(192,57,43,0.15)';
+      input.value = '';
+      input.placeholder = 'Incorrect password. Try again.';
+      setTimeout(() => {
+        input.style.borderColor = '';
+        input.style.boxShadow = '';
+        input.placeholder = 'Enter password';
+      }, 2000);
+      input.focus();
+    }
+  }
+  if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+    document.getElementById('login-overlay').style.display = 'none';
+  }
+
+  window.closeZoom = () => document.getElementById('zoom-overlay').classList.remove('open');
+  window.zoomPhoto = (src) => {
+    document.getElementById('zoom-img').src = src;
+    document.getElementById('zoom-overlay').classList.add('open');
+  };
+  window.closeOrderModal = () => {
+    document.getElementById('order-modal').classList.remove('open');
+  };
+
+  // ── Orders Sub-nav Panel Switching ──
+  document.querySelectorAll('.subnav-btn[data-panel]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.subnav-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.orders-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.panel).classList.add('active');
+    });
+  });
+</script>
+
+<!-- ── FIREBASE + ORDERS LOGIC ── -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getDatabase, ref, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCWUJfDwLR5erpExZUoBWW7YJ-aDpT_zy0",
+    authDomain: "candn-bakery.firebaseapp.com",
+    databaseURL: "https://candn-bakery-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "candn-bakery"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+
+  const progressSteps = ['preparing', 'baking', 'packing', 'delivery'];
+
+  // ── GENERIC CONFIRM MODAL HELPER ──
+  function showConfirm({ icon, title, body, okLabel = 'Confirm', okColor = '#2ecc71' }) {
+    return new Promise(resolve => {
+      document.getElementById('confirm-modal-icon').textContent  = icon;
+      document.getElementById('confirm-modal-title').textContent = title;
+      document.getElementById('confirm-modal-body').textContent  = body;
+      document.getElementById('confirm-modal-ok').textContent    = okLabel;
+      document.getElementById('confirm-modal-ok').style.background = okColor;
+
+      const modal = document.getElementById('confirm-modal');
+      modal.style.display = 'flex';
+
+      document.getElementById('confirm-modal-ok').onclick = () => {
+        modal.style.display = 'none';
+        resolve(true);
+      };
+      document.getElementById('confirm-modal-cancel').onclick = () => {
+        modal.style.display = 'none';
+        resolve(false);
+      };
+    });
+  }
+
+  // ── STATUS MODAL CONFIG ──
+  function getStatusModalConfig(newStatus) {
+    const map = {
+      confirmed:  { title: 'Confirm this order?',         body: 'This will notify the customer that their order has been confirmed.',          okLabel: 'Yes, Confirm',  okColor: '#27ae60' },
+      preparing:  { title: 'Start preparing this order?', body: 'Mark this order as currently being prepared.',                               okLabel: 'Yes, Prepare',  okColor: '#2980b9' },
+      baking:     { title: 'Start baking this order?',    body: 'Mark this order as currently in the oven.',                                   okLabel: 'Yes, Bake',     okColor: '#e67e22' },
+      packing:    { title: 'Pack this order?',            body: 'Mark this order as packed and ready for delivery or pickup.',                  okLabel: 'Yes, Pack',     okColor: '#8e44ad' },
+      delivery:   { title: 'Ship this order?',            body: 'This will notify the customer that their order is out for delivery.',          okLabel: 'Yes, Ship',     okColor: '#2980b9' },
+      cancelled:  { title: 'Cancel this order?',          body: 'This action cannot be undone. The customer will be notified of the cancellation.', okLabel: 'Yes, Cancel', okColor: '#e74c3c' },
+      completed:  { title: 'Mark as received?',           body: 'Confirm that the customer has received this order.',                           okLabel: 'Yes, Complete', okColor: '#27ae60' },
+    };
+    return map[newStatus] || { icon: '❓', title: `Change status to "${newStatus}"?`, body: 'Are you sure you want to update this order status?', okLabel: 'Confirm', okColor: '#2ecc71' };
+  }
+
+  function getStepIndex(status) {
+    if (['confirmed', 'downpayment-received', 'preparing'].includes(status)) return 0;
+    if (status === 'baking')   return 1;
+    if (status === 'packing')  return 2;
+    if (status === 'delivery') return 3;
+    return -1;
+  }
+
+  function getStatusMessage(status) {
+    const msgs = {
+      packing:   "🎉 Your order is READY FOR PICKUP!",
+      delivery:  "🚚 Your order is OUT FOR DELIVERY!",
+      baking:    "👩‍🍳 Your order is currently being baked with care.",
+      preparing: "📝 Your order is now being prepared.",
+      completed: "✅ Your order has been marked as received. Enjoy!",
+    };
+    return msgs[status] || `Your order status is now ${status}.`;
+  }
+
+  async function getEmailForOrder(order) {
+    if (order.userId) {
+      const snap = await get(ref(db, `users/${order.userId}`));
+      if (snap.exists() && snap.val().email) return snap.val().email;
+    }
+    return order.email || null;
+  }
+
+  function sendEmail(email, customerName, orderId, status, order = {}) {
+    const items = (order.items || [])
+      .map(i => `${i.quantity || 1}× ${i.name} (${i.category || 'Item'})`)
+      .join('\n');
+
+    emailjs.send("service_06n33to", "template_xh0chdq", {
+      to_email:           email,
+      customer_name:      customerName,
+      order_id:           orderId.slice(-6),
+      order_date:         order.date           || '—',
+      fulfillment_method: order.method         || '—',
+      address:            order.address        || 'Store Pickup',
+      payment_method:     order.paymentMethod  || '—',
+      payment_status:     order.paymentStatus  || '—',
+      order_total:        order.totalAmount    || 0,
+      order_items:        items,
+      status:             status,
+      message:            getStatusMessage(status)
+    })
+    .then(() => console.log("Email sent to:", email))
+    .catch(err => console.error("Email error:", err));
+  }
+
+  // ── EXTRACTED SHIP LOGIC ──
+  async function proceedShip(id, order, newStatus) {
+    await update(ref(db, `orders/${id}`), { status: newStatus });
+
+    if (order.userId) {
+      await update(ref(db, `users/${order.userId}/latest`), { status: newStatus, orderId: id });
+    }
+
+    const email = await getEmailForOrder(order);
+    if (email) {
+      if (newStatus === 'delivery') {
+        sendShipEmail(email, order.customerName, id, order);
+      } else {
+        sendEmail(email, order.customerName, id, newStatus, order);
+      }
+    }
+
+    const fresh = await get(ref(db, `orders/${id}`));
+    if (fresh.exists()) openOrderModal(id, fresh.val());
+  }
+
+  // ── UPDATE STATUS ──
+  window.updateStatus = async (id, newStatus, silent = false) => {
+    const snap = await get(ref(db, `orders/${id}`));
+    if (!snap.exists()) return alert("Order not found!");
+    const order = snap.val();
+
+    // ── DELIVERY: date check first, no generic confirm ──
+    if (newStatus === 'delivery') {
+      const orderDate = order.date || '';
+      const todayDate = new Date().toLocaleDateString('en-CA');
+
+      if (orderDate && orderDate !== todayDate) {
+        const fmt = d => {
+          if (!d) return '—';
+          const [y, m, day] = d.split('-');
+          return new Date(y, m - 1, day).toLocaleDateString('en-PH', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+          });
+        };
+
+        document.getElementById('ship-warn-date').textContent  = fmt(orderDate);
+        document.getElementById('ship-warn-today').textContent = fmt(todayDate);
+
+        const modal = document.getElementById('ship-warning-modal');
+        modal.style.display = 'flex';
+
+        await new Promise(resolve => {
+          document.getElementById('ship-warn-proceed').onclick = () => {
+            modal.style.display = 'none';
+            resolve(true);
+          };
+          document.getElementById('ship-warn-cancel').onclick = () => {
+            modal.style.display = 'none';
+            resolve(false);
+          };
+        }).then(async confirmed => {
+          if (!confirmed) return;
+          await proceedShip(id, order, newStatus);
+        });
+        return;
+      }
+
+      // Dates match — ship immediately
+      await proceedShip(id, order, newStatus);
+      return;
+    }
+
+    // ── All other statuses — styled confirm modal ──
+    if (!silent) {
+      const cfg = getStatusModalConfig(newStatus);
+      const confirmed = await showConfirm(cfg);
+      if (!confirmed) return;
+    }
+
+    await proceedShip(id, order, newStatus);
+  };
+
+  window.updatePayment = async (id, newPayStatus) => {
+    const payLabels = {
+      unpaid:  { icon: '❌', title: 'Mark as Unpaid?',        body: 'This will set the payment status back to unpaid.',                    okLabel: 'Yes, Mark Unpaid',  okColor: '#e74c3c' },
+      partial: { icon: '💰', title: 'Confirm Downpayment?',   body: 'Mark that the customer has paid the 50% downpayment for this order.', okLabel: 'Yes, Confirm',      okColor: '#e67e22' },
+      paid:    { icon: '✅', title: 'Mark as Fully Paid?',    body: 'Confirm that full payment has been received for this order.',         okLabel: 'Yes, Mark Paid',    okColor: '#27ae60' },
+    };
+
+    const cfg = payLabels[newPayStatus] || {
+      icon: '💳', title: `Mark payment as "${newPayStatus}"?`,
+      body: 'Are you sure you want to update the payment status?',
+      okLabel: 'Confirm', okColor: '#2ecc71'
+    };
+
+    const confirmed = await showConfirm(cfg);
+    if (!confirmed) return;
+
+    const snap = await get(ref(db, `orders/${id}`));
+    if (!snap.exists()) return alert("Order not found!");
+    const order = snap.val();
+
+    const hasCustom = hasCustomCake(order.items || []);
+    const isCOD     = (order.paymentMethod || '').toLowerCase() === 'cod';
+    const updates   = { paymentStatus: newPayStatus };
+
+    if (newPayStatus === 'partial') updates.status = 'downpayment-received';
+    if (newPayStatus === 'paid' && !hasCustom && !isCOD) updates.status = 'confirmed';
+
+    await update(ref(db, `orders/${id}`), updates);
+
+    if (updates.status && order.userId) {
+      await update(ref(db, `users/${order.userId}/latest`), {
+        status: updates.status,
+        orderId: id
+      });
+    }
+
+    const email = await getEmailForOrder(order);
+    if (email) {
+      if (newPayStatus === 'partial') {
+        sendDownpaymentEmail(email, order.customerName, id, order);
+      } else if (newPayStatus === 'paid' && !hasCustom && !isCOD) {
+        const fresh = (await get(ref(db, `orders/${id}`))).val();
+        sendEmail(email, order.customerName, id, 'confirmed', fresh || order);
+      }
+    }
+
+    const fresh = await get(ref(db, `orders/${id}`));
+    if (fresh.exists()) openOrderModal(id, fresh.val());
+  };
+
+  function isCustomItem(item) {
+    const cat  = (item.category || '').toLowerCase().trim();
+    const name = (item.name     || '').toLowerCase().trim();
+    return cat.includes('custom') || name.includes('custom');
+  }
+
+  function calcCustomDownpayment(order) {
+    const items       = order.items || [];
+    const customItems = items.filter(isCustomItem);
+    const hasPrice    = customItems.some(i => parseFloat(i.price) > 0);
+    if (hasPrice) {
+      const subtotal = customItems.reduce((sum, i) =>
+        sum + (parseFloat(i.price || 0) * (i.quantity || 1)), 0);
+      return (subtotal * 0.5).toFixed(2);
+    }
+    if (order.downpayment) return parseFloat(order.downpayment).toFixed(2);
+    return (parseFloat(order.totalAmount || 0) * 0.5).toFixed(2);
+  }
+
+  function sendDownpaymentEmail(email, customerName, orderId, order = {}) {
+    const customItems = (order.items || []).filter(isCustomItem);
+    const itemList = customItems
+      .map(i => `${i.quantity || 1}× ${i.name} (${i.category || 'Item'})`)
+      .join('\n');
+
+    emailjs.send("service_06n33to", "template_5mznngl", {
+      to_email:            email,
+      customer_name:       customerName,
+      order_id:            orderId.slice(-6),
+      order_date:          order.date          || '—',
+      fulfillment_method:  order.method        || '—',
+      address:             order.address       || 'Store Pickup',
+      payment_method:      order.paymentMethod || '—',
+      order_total:         order.totalAmount   || 0,
+      downpayment_amount:  calcCustomDownpayment(order),
+      order_items:         itemList,
+      message: '✅ We have received your downpayment for your custom cake(s)! Your order is now being processed. The remaining balance is due upon pickup or delivery.'
+    })
+    .then(() => console.log("[order-email] Downpayment email sent to:", email))
+    .catch(err => console.error("[order-email] Downpayment email error:", err));
+  }
+
+  function sendShipEmail(email, customerName, orderId, order = {}) {
+    const method     = (order.method || '').toLowerCase();
+    const isDelivery = method.includes('delivery');
+
+    const subject = isDelivery
+      ? '🚚 Your order is out for delivery!'
+      : '🎉 Your order is ready for pickup!';
+
+    const message = isDelivery
+      ? '🚚 Great news! Your order is now out for delivery. Our rider is on the way — please be available to receive it.'
+      : '🎉 Your order is ready for pickup!\n\n📍 C&N Bakery stall at Passi Public Market, in front of Andoks food truck — Entrance of the market (look for C&N Bakery stall)\n🕐 Store Hours: Mon–Sat, 8AM–6PM\n📞 09814535981';
+
+    const items = (order.items || [])
+      .map(i => `${i.quantity || 1}× ${i.name} (${i.category || 'Item'})`)
+      .join('\n');
+
+    emailjs.send("service_06n33to", "template_xh0chdq", {
+      to_email:           email,
+      customer_name:      customerName,
+      order_id:           orderId.slice(-6),
+      order_date:         order.date          || '—',
+      fulfillment_method: order.method        || '—',
+      address:            order.address       || 'Store Pickup',
+      payment_method:     order.paymentMethod || '—',
+      payment_status:     order.paymentStatus || '—',
+      order_total:        order.totalAmount   || 0,
+      order_items:        items,
+      email_subject:      subject,
+      message:            message
+    })
+    .then(() => console.log("[order-email] Ship email sent to:", email))
+    .catch(err => console.error("[order-email] Ship email error:", err));
+  }
+
+  window.markReceived = async (id) => {
+    const confirmed = await showConfirm({
+      icon: '🎉', title: 'Mark as Received?',
+      body: 'Confirm that the customer has successfully received this order.',
+      okLabel: 'Yes, Received!', okColor: '#27ae60'
+    });
+    if (!confirmed) return;
+
+    const snap = await get(ref(db, `orders/${id}`));
+    if (!snap.exists()) return;
+    const order = snap.val();
+
+    await update(ref(db, `orders/${id}`), { status: 'completed', receivedAt: new Date().toISOString() });
+
+    if (order.userId) {
+      await update(ref(db, `users/${order.userId}/latest`), { status: 'completed', orderId: id });
+    }
+
+    const email = await getEmailForOrder(order);
+    if (email) sendEmail(email, order.customerName, id, 'completed', order);
+
+    closeOrderModal();
+  };
+
+  window.markNotReceived = async (id) => {
+    await showConfirm({
+      icon: 'ℹ️', title: 'Order Not Yet Received',
+      body: 'The order will remain as "Out for Delivery". Please follow up with the customer.',
+      okLabel: 'Got it', okColor: '#2980b9'
+    });
+    closeOrderModal();
+  };
+
+  function hasCustomCake(items = []) {
+    return items.some(i => (i.category || '').trim() === 'Customize Cake');
+  }
+
+  function groupItems(items = []) {
+    const g = { 'Customize Cake': [], 'Regular Cake': [], 'Pastries': [], 'Others': [] };
+    items.forEach(item => {
+      const c = (item.category || '').trim();
+      (g[c] || g['Others']).push(item);
+    });
+    return g;
+  }
+
+  function payBadgeHtml(status = 'unpaid') {
+    const map = { unpaid: '⬤ UNPAID', partial: '⬤ PARTIAL', paid: '⬤ PAID' };
+    return `<span class="pay-badge ${status}">${map[status] || map.unpaid}</span>`;
+  }
+
+  function statusPillHtml(status = 'pending') {
+    return `<span class="status-pill ${status}">${status.toUpperCase()}</span>`;
+  }
+
+  function getOrderTypes(items = []) {
+    const types = new Set();
+    items.forEach(item => {
+      const cat = (item.category || '').trim();
+      if (["Customize Cake", "Regular Cake", "Pastries"].includes(cat)) types.add(cat);
+    });
+    return Array.from(types);
+  }
+
+  // ── OPEN MODAL ──
+  window.openOrderModal = (id, order) => {
+    const status      = (order.status || 'pending').toLowerCase();
+    const payStatus   = order.paymentStatus || 'unpaid';
+    const groups      = groupItems(order.items || []);
+    const hasCustom   = hasCustomCake(order.items || []);
+    const shortId     = id.slice(-6);
+    const isDelivery  = status === 'delivery';
+    const isCompleted = status === 'completed';
+    const isCancelled = status === 'cancelled';
+
+    document.getElementById('modal-title').textContent =
+      `Order #${shortId} — ${order.customerName || 'Customer'}`;
+
+    let html = '';
+
+    if (isDelivery) {
+      html += `
+        <div class="delivery-confirm-box">
+          <h4><i class="fas fa-truck" style="margin-right:6px;"></i>Out for Delivery</h4>
+          <p>Has the customer received this order?</p>
+          <div class="delivery-confirm-btns">
+            <button class="btn-received" onclick="markReceived('${id}')">
+              <i class="fas fa-check-circle"></i> Yes, Received!
+            </button>
+            <button class="btn-not-received" onclick="markNotReceived('${id}')">
+              Not Yet
+            </button>
+          </div>
+        </div>`;
+    }
+
+    const payMethodLabel = (method) => {
+      const m = (method || '').toLowerCase();
+      if (m === 'gcash') return '<i class="fas fa-mobile-alt" style="color:#0275d8;"></i> GCash';
+      if (m === 'bank')  return '<i class="fas fa-university" style="color:#6c3483;"></i> Bank Transfer';
+      if (m === 'cod')   return '<i class="fas fa-money-bill-wave" style="color:#27ae60;"></i> Cash on Delivery';
+      return `<i class="fas fa-credit-card"></i> ${method || '—'}`;
+    };
+
+    const fbLink = order.facebookLink
+      ? `<div class="info-row">
+           <i class="fab fa-facebook" style="color:#1877f2;"></i>
+           <a href="${order.facebookLink}" target="_blank" rel="noopener noreferrer"
+              style="color:#1877f2; word-break:break-all;">${order.facebookLink}</a>
+         </div>`
+      : '';
+
+    const method = (order.method || '').toLowerCase();
+    const isPickup = method.includes('pickup') || method === 'store pickup';
+    const fulfillmentIcon = isPickup ? 'fas fa-store' : 'fas fa-truck';
+    const fulfillmentLabel = isPickup ? 'Store Pickup' : 'Delivery';
+    const fulfillmentColor = isPickup ? '#8e44ad' : '#2980b9';
+    const fulfillmentBadge = `
+      <span style="
+        display:inline-flex; align-items:center; gap:6px;
+        background:${isPickup ? '#f3e9ff' : '#e8f4fd'};
+        color:${fulfillmentColor};
+        border: 1.5px solid ${isPickup ? '#d7b8f5' : '#aad4f5'};
+        border-radius:20px; padding:3px 12px;
+        font-size:0.8rem; font-weight:700;">
+        <i class="${fulfillmentIcon}"></i> ${fulfillmentLabel}
+      </span>`;
+
+    const addressRow = !isPickup && order.address
+      ? `<div class="info-row" style="align-items:flex-start;">
+           <i class="fas fa-map-marker-alt" style="color:#e74c3c; margin-top:2px;"></i>
+           <span>${order.address}</span>
+         </div>`
+      : (isPickup
+          ? `<div class="info-row">
+               <i class="fas fa-map-marker-alt" style="color:#8e44ad;"></i>
+               <span style="color:#666; font-size:0.85rem;">C&amp;N Bakery Stall — Passi Public Market</span>
+             </div>`
+          : '');
+
+    html += `
+      <div class="info-row"><i class="fas fa-user"></i> <strong>${order.customerName || '—'}</strong></div>
+      <div class="info-row"><i class="fas fa-phone"></i> ${order.phone || '—'}</div>
+      ${fbLink}
+      <div class="info-row"><i class="fas fa-calendar"></i> ${order.date || '—'}</div>
+      <div class="info-row">
+        <i class="${fulfillmentIcon}" style="color:${fulfillmentColor};"></i>
+        <span>Fulfillment: ${fulfillmentBadge}</span>
+      </div>
+      ${addressRow}
+      <div class="info-row"><i class="fas fa-credit-card"></i> ${payMethodLabel(order.paymentMethod)}</div>
+      <div class="info-row">
+        <i class="fas fa-tag"></i>
+        <span>Status: ${statusPillHtml(status)}</span>
+        <span style="margin-left:8px;">Payment: ${payBadgeHtml(payStatus)}</span>
+      </div>`;
+
+    const isActive = !['pending', 'cancelled', 'completed'].includes(status);
+    if (hasCustom && isActive && payStatus === 'unpaid') {
+      html += `
+        <div class="downpayment-prompt-box">
+          <h4><i class="fas fa-hand-holding-usd" style="margin-right:6px;"></i>Awaiting Downpayment</h4>
+          <p>This custom cake order requires a 50% downpayment before baking begins.</p>
+          <button class="btn-downpayment-modal" onclick="updatePayment('${id}', 'partial')">
+            <i class="fas fa-check-circle"></i> Downpayment Received
+          </button>
+        </div>`;
+    }
+
+    if (!isCompleted && !isCancelled) {
+      html += `
+        <div class="section-label"><i class="fas fa-credit-card" style="margin-right:4px;"></i>Update Payment</div>
+        <div class="payment-btns">
+          <button class="pay-btn unpaid  ${payStatus === 'unpaid'  ? 'active-pay' : ''}" onclick="updatePayment('${id}','unpaid')">
+            <i class="fas fa-times-circle"></i> Unpaid
+          </button>
+          ${hasCustom && payStatus !== 'paid' ? `
+          <button class="pay-btn partial ${payStatus === 'partial' ? 'active-pay' : ''}" onclick="updatePayment('${id}','partial')">
+            <i class="fas fa-adjust"></i> Downpayment
+          </button>` : ''}
+          <button class="pay-btn paid    ${payStatus === 'paid'    ? 'active-pay' : ''}" onclick="updatePayment('${id}','paid')">
+            <i class="fas fa-check-circle"></i> Paid
+          </button>
+        </div>`;
+    }
+
+    html += `<div class="section-label"><i class="fas fa-box-open" style="margin-right:4px;"></i>Order Items</div>`;
+
+    if (groups['Customize Cake'].length > 0) {
+      groups['Customize Cake'].forEach(item => {
+        const cd       = item.customDetails || {};
+        const layers   = item.layers   || cd.layers   || '';
+        const flavor   = item.flavor   || cd.flavor   || '';
+        const frosting = item.frosting || cd.frosting || '';
+        const design   = item.design   || cd.design   || '';
+        const message  = item.message  || cd.message  || '';
+        const notes    = item.notes    || cd.notes    || '';
+        const refPhoto = item.referencePhoto || cd.referencePhoto || '';
+
+        const detailRows = [
+          { label: '🍰 Number of Layers', value: layers },
+          { label: '🧁 Chiffon Flavor',   value: flavor },
+          { label: '🍦 Frosting Kind',     value: frosting },
+          { label: '🎨 Design Style',      value: design },
+          { label: '💬 Special Message',   value: message },
+          { label: '📝 Notes',             value: notes },
+        ].filter(r => r.value);
+
+        const refPhotoHtml = (refPhoto && !refPhoto.includes('placeholder'))
+          ? `<div class="ref-photo-wrap">
+               <span><i class="fas fa-image" style="margin-right:4px;"></i>Reference Photo — click to zoom</span>
+               <img class="ref-photo-img"
+                    src="${refPhoto}"
+                    alt="Reference Photo"
+                    onclick="zoomPhoto('${refPhoto}')"
+                    onerror="this.parentElement.style.display='none';">
+             </div>`
+          : '';
+
+        const detailHtml = detailRows.length > 0
+          ? detailRows.map(r =>
+              `<div class="detail-row">
+                 <strong>${r.label}</strong>
+                 <span>${r.value}</span>
+               </div>`).join('')
+          : '<p style="font-size:0.82rem;color:#aaa;margin:6px 0 0;">No customization details recorded.</p>';
+
+        html += `
+          <div class="customize-block">
+            <h4>🎂 ${item.quantity || 1}× ${item.name || 'Customized Cake'}</h4>
+            ${detailHtml}
+            ${refPhotoHtml}
+          </div>`;
+      });
+    }
+
+    ['Regular Cake', 'Pastries', 'Others'].forEach(g => {
+      if (groups[g].length === 0) return;
+      html += `
+        <div class="items-list-block">
+          <div class="items-list-head">${g}</div>
+          ${groups[g].map(item => `
+            <div class="item-row">
+              <span><span class="item-qty">${item.quantity || 1}×</span> ${item.name || '—'}</span>
+              <span class="item-price">₱${((item.price || 0) * (item.quantity || 1)).toLocaleString('en-PH')}</span>
+            </div>`).join('')}
+        </div>`;
+    });
+
+    html += `
+      <div class="total-row">
+        <span>Total Amount</span>
+        <span>₱${parseFloat(order.totalAmount || 0).toLocaleString('en-PH')}</span>
+      </div>`;
+
+    document.getElementById('modal-body').innerHTML = html;
+    document.getElementById('order-modal').classList.add('open');
+  };
+
+  // ── ORDER CARD ──
+  function renderOrderCard(id, order) {
+    const status      = (order.status || 'pending').toLowerCase();
+    const payStatus   = order.paymentStatus || 'unpaid';
+    const shortId     = id.slice(-6);
+    const hasCustom   = hasCustomCake(order.items || []);
+    const orderTypes  = getOrderTypes(order.items || []);
+    const isPending   = status === 'pending';
+    const isActive    = !['pending', 'cancelled', 'completed'].includes(status);
+
+    const badgesHTML = orderTypes.map(t => {
+      let c = 'order-type-badge';
+      if (t === 'Customize Cake') c += ' badge-customize';
+      if (t === 'Regular Cake')   c += ' badge-regular';
+      if (t === 'Pastries')       c += ' badge-pastries';
+      return `<span class="${c}">${t}</span>`;
+    }).join('');
+
+    let buttons = '';
+    if (isPending) {
+      const isCOD       = (order.paymentMethod || '').toLowerCase() === 'cod';
+      const isGcashBank = !isCOD;
+
+      if (hasCustom) {
+        buttons = `
+          <button class="btn-action btn-confirm" onclick="event.stopPropagation(); updateStatus('${id}', 'confirmed')">
+            <i class="fas fa-check"></i> Confirm Order
+          </button>
+          <button class="btn-action btn-danger" onclick="event.stopPropagation(); updateStatus('${id}', 'cancelled')">
+            <i class="fas fa-times"></i> Cancel
+          </button>`;
+      } else if (isGcashBank) {
+        if (payStatus === 'unpaid') {
+          buttons = `
+            <button class="btn-action btn-confirm" onclick="event.stopPropagation(); updatePayment('${id}', 'paid')">
+              <i class="fas fa-check-circle"></i> Confirm Payment
+            </button>
+            <button class="btn-action btn-danger" onclick="event.stopPropagation(); updateStatus('${id}', 'cancelled')">
+              <i class="fas fa-times"></i> Cancel
+            </button>`;
+        } else if (payStatus === 'paid') {
+          buttons = `
+            <button class="btn-action btn-confirm" onclick="event.stopPropagation(); updateStatus('${id}', 'confirmed')">
+              <i class="fas fa-check"></i> Confirm Order
+            </button>
+            <button class="btn-action btn-danger" onclick="event.stopPropagation(); updateStatus('${id}', 'cancelled')">
+              <i class="fas fa-times"></i> Cancel
+            </button>`;
+        }
+      } else {
+        buttons = `
+          <button class="btn-action btn-confirm" onclick="event.stopPropagation(); updateStatus('${id}', 'confirmed')">
+            <i class="fas fa-check"></i> Confirm Order
+          </button>
+          <button class="btn-action btn-danger" onclick="event.stopPropagation(); updateStatus('${id}', 'cancelled')">
+            <i class="fas fa-times"></i> Cancel
+          </button>`;
+      }
+    }
+
+    if (isActive) {
+      buttons = `
+        <button class="btn-action" onclick="event.stopPropagation(); updateStatus('${id}', 'preparing')"><i class="fas fa-utensils"></i> Prepare</button>
+        <button class="btn-action" onclick="event.stopPropagation(); updateStatus('${id}', 'baking')"><i class="fas fa-fire-burner"></i> Bake</button>
+        <button class="btn-action" onclick="event.stopPropagation(); updateStatus('${id}', 'packing')"><i class="fas fa-box"></i> Pack</button>
+        <button class="btn-action" onclick="event.stopPropagation(); updateStatus('${id}', 'delivery')"><i class="fas fa-truck"></i> Ship</button>
+        <button class="btn-action btn-danger" onclick="event.stopPropagation(); updateStatus('${id}', 'cancelled')"><i class="fas fa-times"></i> Cancel</button>`;
+    }
+
+    let stepper = '';
+    if (isActive) {
+      const idx = getStepIndex(status);
+      stepper = `
+        <div class="status-stepper">
+          ${progressSteps.map((step, i) => `
+            <div class="step ${i < idx ? 'completed' : ''} ${i === idx ? 'active' : ''}">
+              <div class="step-icon">
+                ${step === 'preparing' ? '<i class="fas fa-utensils"></i>'    :
+                  step === 'baking'    ? '<i class="fas fa-fire-burner"></i>' :
+                  step === 'packing'   ? '<i class="fas fa-box"></i>'         :
+                                         '<i class="fas fa-truck"></i>'}
+              </div>
+              <div>${step}</div>
+            </div>`).join('')}
+        </div>`;
+    }
+
+    const deliveryHint = status === 'delivery'
+      ? `<div style="margin-top:8px; font-size:0.78rem; color:#2980b9; font-weight:600;">
+           <i class="fas fa-circle-question" style="margin-right:4px;"></i>Click to confirm delivery
+         </div>` : '';
+
+    return `
+      <div class="order-card"
+           onclick="openOrderModal('${id}', ${JSON.stringify(order).replace(/'/g,"\\x27").replace(/"/g,'&quot;')})">
+        <div class="order-header">
+          <div>
+            <strong>#${shortId} — ${order.customerName || 'Customer'}</strong><br>
+            <small><i class="fas fa-phone"></i> ${order.phone || '—'}</small>
+          </div>
+          <div style="text-align:right; display:flex; flex-direction:column; gap:5px; align-items:flex-end;">
+            ${payBadgeHtml(payStatus)}
+            <span class="status-pill ${status}">${status.toUpperCase()}</span>
+          </div>
+        </div>
+
+        <div class="order-type-badges">${badgesHTML}</div>
+
+        <div class="order-summary">
+          <strong>₱${parseFloat(order.totalAmount || 0).toLocaleString('en-PH')}</strong>
+          <div style="margin-top:5px; font-size:0.82rem; color:#888;">
+            ${order.items?.map(i => `${i.quantity || 1}× ${i.name}`).join(' · ') || 'No items'}
+          </div>
+          <div style="margin-top:7px;">
+            ${(() => {
+              const m = (order.method || '').toLowerCase();
+              const isP = m.includes('pickup') || m === 'store pickup';
+              return `<span style="display:inline-flex;align-items:center;gap:5px;background:${isP?'#f3e9ff':'#e8f4fd'};color:${isP?'#8e44ad':'#2980b9'};border:1.5px solid ${isP?'#d7b8f5':'#aad4f5'};border-radius:20px;padding:2px 10px;font-size:0.75rem;font-weight:700;">
+                <i class="fas fa-${isP?'store':'truck'}"></i> ${isP?'Store Pickup':'Delivery'}
+              </span>`;
+            })()}
+          </div>
+        </div>
+
+        ${stepper}
+        ${deliveryHint}
+        <div class="order-actions">${buttons}</div>
+      </div>`;
+  }
+
+  // ── LIVE LISTENER ──
+  onValue(ref(db, 'orders'), (snapshot) => {
+    const orders  = snapshot.val() || {};
+    const pending = document.getElementById('pending-list');
+    const active  = document.getElementById('active-list');
+    pending.innerHTML = '';
+    active.innerHTML  = '';
+
+    const entries = Object.entries(orders).reverse();
+    if (entries.length === 0) {
+      pending.innerHTML = '<p class="no-orders">No orders yet.</p>';
+      return;
+    }
+
+    let hasPending = false, hasActive = false;
+    let pendingCount = 0, activeCount = 0;
+    entries.forEach(([id, order]) => {
+      if (typeof order !== 'object') return;
+      const st   = (order.status || 'pending').toLowerCase();
+      const card = renderOrderCard(id, order);
+      if (st === 'pending') { pending.innerHTML += card; hasPending = true; pendingCount++; }
+      else if (!['cancelled', 'completed'].includes(st)) { active.innerHTML += card; hasActive = true; activeCount++; }
+    });
+
+    if (!hasPending) pending.innerHTML = '<p class="no-orders">No new orders.</p>';
+    if (!hasActive)  active.innerHTML  = '<p class="no-orders">No active orders.</p>';
+
+    // Update badge counts
+    document.getElementById('badge-pending').textContent = pendingCount;
+    document.getElementById('badge-active').textContent  = activeCount;
+  });
+</script>
+</body>
+</html>

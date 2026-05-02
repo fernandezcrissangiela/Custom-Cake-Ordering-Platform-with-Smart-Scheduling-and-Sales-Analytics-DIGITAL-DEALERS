@@ -1,0 +1,463 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+/* ============================================================
+   C&N BAKERY — CHECKOUT PAGE STYLES
+   Matches the warm brown style.css theme
+   ============================================================ */
+
+:root {
+  --primary: #825A3C;
+  --primary-dark: #674831;
+  --secondary: #F0E0D2;
+  --brown: #704233;
+  --brown-light: #8F6454;
+  --beige: #EDE0D4;
+  --cream: #F8F1EA;
+  --bg: #F8F1EA;
+  --text: #3F2A1F;
+  --text-light: #5F4635;
+  --white: #FFFFFF;
+  --muted: #9A7B6A;
+  --border: #E8D5C4;
+  --danger: #c0392b;
+  --success: #27ae60;
+  --shadow: 0 16px 48px rgba(103, 72, 49, 0.18);
+  --shadow-sm: 0 8px 28px rgba(103, 72, 49, 0.10);
+  --radius: 20px;
+  --transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  --btn-dark-start: #5C3F2A;
+  --btn-dark-end: #4A321F;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── Container ── */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ── Header ── */
+header {
+  background: var(--white);
+  padding: 15px 0;
+  box-shadow: 0 3px 14px rgba(103, 72, 49, 0.10);
+  margin-bottom: 36px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo-text {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.logo-text span {
+  color: var(--primary);
+}
+
+.back-link {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--primary-dark);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  border-radius: 50px;
+  border: 1.5px solid var(--border);
+  background: var(--cream);
+  transition: var(--transition);
+}
+
+.back-link:hover {
+  background: var(--secondary);
+  border-color: var(--primary);
+  transform: translateX(-3px);
+}
+
+/* ── Checkout Grid ── */
+.checkout-grid {
+  display: grid;
+  grid-template-columns: 1.25fr 0.75fr;
+  gap: 28px;
+  padding-bottom: 60px;
+}
+
+/* ── Section Card ── */
+.section-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 28px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 22px;
+  border: 1.5px solid transparent;
+  transition: var(--transition);
+}
+
+.section-card:hover {
+  box-shadow: var(--shadow);
+  border-color: var(--border);
+}
+
+.section-card h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: var(--brown);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-card h2 i {
+  color: var(--primary);
+}
+
+/* ── Custom Cake Notice ── */
+.custom-notice {
+  background: #FFF8F0;
+  border-left: 4px solid var(--primary);
+  padding: 15px 18px;
+  border-radius: 12px;
+  font-size: 0.87rem;
+  color: var(--brown);
+  margin-bottom: 22px;
+  line-height: 1.7;
+}
+
+.custom-notice i {
+  color: var(--primary);
+  margin-right: 6px;
+}
+
+/* ── Form Elements ── */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-light);
+  margin-bottom: 7px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea,
+input[type="text"],
+input[type="tel"],
+input[type="date"],
+select,
+textarea {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.92rem;
+  color: var(--text);
+  background: var(--cream);
+  outline: none;
+  transition: var(--transition);
+  box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus,
+input[type="text"]:focus,
+input[type="tel"]:focus,
+input[type="date"]:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--primary);
+  background: var(--white);
+  box-shadow: 0 0 0 4px rgba(130, 90, 60, 0.12);
+}
+
+input[type="date"]:invalid {
+  border-color: var(--danger);
+  background: #fff5f3;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
+/* ── Fulfillment Choice Buttons ── */
+.choice-group {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.choice-btn {
+  flex: 1;
+  padding: 14px 12px;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  text-align: center;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--muted);
+  background: var(--cream);
+  transition: var(--transition);
+}
+
+.choice-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary-dark);
+  background: var(--secondary);
+  transform: translateY(-2px);
+}
+
+.choice-btn.active {
+  border-color: var(--primary-dark);
+  background: var(--secondary);
+  color: var(--brown);
+  box-shadow: 0 6px 18px rgba(103, 72, 49, 0.14);
+}
+
+/* ── Payment Method Options ── */
+.payment-method {
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: var(--transition);
+  background: var(--cream);
+}
+
+.payment-method:hover {
+  border-color: var(--primary);
+  background: var(--white);
+}
+
+.payment-method.active {
+  border-color: var(--primary-dark);
+  background: var(--white);
+  box-shadow: 0 4px 16px rgba(103, 72, 49, 0.12);
+}
+
+.payment-method label {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 0.93rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.payment-method input[type="radio"] {
+  width: auto;
+  accent-color: var(--primary-dark);
+  cursor: pointer;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* ── QR / Payment Details ── */
+.qr-placeholder {
+  display: none;
+  margin-top: 12px;
+  padding: 14px;
+  background: var(--cream);
+  border-radius: 10px;
+  border: 1px dashed var(--border);
+  font-size: 0.88rem;
+  color: var(--text-light);
+  text-align: center;
+  line-height: 1.7;
+}
+
+.qr-placeholder strong {
+  color: var(--brown);
+}
+
+/* ── Order Summary ── */
+.summary-side .section-card {
+  position: sticky;
+  top: 100px;
+}
+
+#summary-items-list {
+  margin-bottom: 6px;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 11px;
+  font-size: 0.9rem;
+  color: var(--text-light);
+  gap: 10px;
+}
+
+.summary-item span:last-child {
+  font-weight: 700;
+  color: var(--brown);
+  white-space: nowrap;
+}
+
+.summary-item small {
+  display: block;
+  font-size: 0.76rem;
+  color: var(--primary-dark);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.total-row {
+  border-top: 2px dashed var(--border);
+  margin-top: 14px;
+  padding-top: 14px;
+}
+
+.total-row .summary-item {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--brown);
+}
+
+.total-row .summary-item span:last-child {
+  color: var(--primary-dark);
+  font-size: 1.2rem;
+}
+
+/* ── Payment Note ── */
+#payment-note {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: var(--cream);
+  border-radius: 10px;
+  border-left: 3px solid var(--border);
+  line-height: 1.7;
+}
+
+/* ── Place Order Button ── */
+.btn-checkout {
+  width: 100%;
+  background: linear-gradient(135deg, var(--btn-dark-start), var(--btn-dark-end));
+  color: var(--white);
+  border: none;
+  padding: 17px;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 1.05rem;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  margin-top: 20px;
+  box-shadow: 0 10px 28px rgba(90, 60, 40, 0.30);
+  transition: var(--transition);
+  letter-spacing: 0.3px;
+}
+
+.btn-checkout:hover:not(:disabled) {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 16px 36px rgba(90, 60, 40, 0.40);
+  background: linear-gradient(135deg, #4F3522, #3C2818);
+}
+
+.btn-checkout:disabled {
+  background: var(--border);
+  color: var(--muted);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ── Utilities ── */
+.hidden {
+  display: none !important;
+}
+
+.error {
+  color: var(--danger);
+  font-size: 0.82rem;
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--cream);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--brown-light);
+}
+
+/* ── Responsive ── */
+@media (max-width: 860px) {
+  .checkout-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-side .section-card {
+    position: static;
+  }
+}
+
+@media (max-width: 480px) {
+  .section-card {
+    padding: 18px;
+  }
+
+  .choice-group {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .btn-checkout {
+    padding: 15px;
+    font-size: 0.97rem;
+  }
+
+  header {
+    margin-bottom: 20px;
+  }
+
+  .back-link span {
+    display: none;
+  }
+}

@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>C&N Bakery - Homemade Cakes & Pastries</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCWUJfDwLR5erpExZUoBWW7YJ-aDpT_zy0",
+      authDomain: "candn-bakery.firebaseapp.com",
+      databaseURL: "https://candn-bakery-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "candn-bakery",
+      storageBucket: "candn-bakery.appspot.com",
+      messagingSenderId: "620414447517",
+      appId: "1:620414447517:web:d42c5d50a91ff41e5ac974"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getDatabase(app);
+
+    function updateCartCount(uid) {
+      const cartCount = document.getElementById('cart-count');
+      if (!cartCount) return;
+      if (!uid) { cartCount.innerText = '0'; cartCount.style.display = 'none'; return; }
+      const cart  = JSON.parse(localStorage.getItem('cart') || '[]');
+      const total = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+      cartCount.innerText     = total;
+      cartCount.style.display = total > 0 ? 'flex' : 'none';
+    }
+
+    window.handleSignup = async function(e) {
+      e.preventDefault();
+      const { name, email, password } = e.target;
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email.value, password.value);
+        const newUid = userCredential.user.uid;
+        await set(ref(db, "users/" + newUid), { name: name.value, email: email.value });
+        await signOut(auth);
+        const successMsg = document.createElement('p');
+        successMsg.className = 'signup-success-msg';
+        successMsg.style.cssText = 'color:#4CAF50;text-align:center;margin:1rem 0;font-weight:500;';
+        successMsg.textContent = "Account created! Please sign in below.";
+        const signupForm  = document.getElementById('signup-form');
+        const existingMsg = signupForm.querySelector('.signup-success-msg');
+        if (existingMsg) existingMsg.remove();
+        signupForm.insertBefore(successMsg, signupForm.firstChild);
+        document.querySelector('[data-tab="login"]').click();
+        const loginEmailInput = document.querySelector('#login-form input[name="email"]');
+        loginEmailInput.value = email.value;
+        loginEmailInput.focus();
+        name.value = ''; email.value = ''; password.value = '';
+      } catch (error) { alert("Signup failed: " + error.message); }
+    };
+
+    window.handleLogin = async function(e) {
+      e.preventDefault();
+      try {
+        await signInWithEmailAndPassword(auth, e.target.email.value, e.target.password.value);
+        closeModal();
+      } catch (error) { alert("Login failed: " + error.message); }
+    };
+
+    window.handleLogout = async () => {
+      localStorage.removeItem('cart');
+      localStorage.removeItem('currentUserId');
+      await signOut(auth);
+      updateCartCount(null);
+    };
+
+    onAuthStateChanged(auth, async (user) => {
+      const signupBtn = document.getElementById('signup-trigger');
+      const logoutBtn = document.getElementById('logout-trigger');
+      const nameTag   = document.getElementById('user-name-display');
+      if (user) {
+        const uid = user.uid;
+        localStorage.setItem('currentUserId', uid);
+        signupBtn.classList.add('hidden');
+        logoutBtn.classList.remove('hidden');
+        const snap = await get(ref(db, "users/" + uid));
+        if (snap.exists()) nameTag.innerText = "Hi, " + snap.val().name;
+        updateCartCount(uid);
+      } else {
+        localStorage.removeItem('currentUserId');
+        signupBtn.classList.remove('hidden');
+        logoutBtn.classList.add('hidden');
+        nameTag.innerText = "";
+        updateCartCount(null);
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const uid = localStorage.getItem('currentUserId');
+      updateCartCount(uid || null);
+    });
+  </script>
+</head>
+<body>
+
+  <header>
+    <div class="container nav-flex">
+      <div class="logo-text">C&N <span>Bakery</span></div>
+      <input type="checkbox" id="nav-toggle" class="nav-toggle">
+      <label for="nav-toggle" class="nav-toggle-label"><span></span></label>
+      <nav>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="menu.html">Menu</a></li>
+          <li><a href="faq.html">FAQ</a></li>
+          
+        </ul>
+        <div class="auth-area">
+          <div class="nav-icons">
+            <div class="cart-wrapper">
+              <i class="fas fa-shopping-cart" title="Cart" onclick="checkAuth(event)"></i>
+              <span id="cart-count">0</span>
+            </div>
+            <div class="user-wrapper">
+              <i class="fas fa-user-circle" title="Account" onclick="checkAuth(event)"></i>
+            </div>
+          </div>
+          <span id="user-name-display"></span>
+          <button id="signup-trigger" class="btn-primary" onclick="openModal()">Sign Up</button>
+          <button id="logout-trigger" class="btn-outline hidden" onclick="handleLogout()">Logout</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+
+  <section class="hero">
+    <div class="hero-ring-bl"></div>
+    <div class="hero-ring-mid"></div>
+    <div class="container hero-flex">
+      <div class="hero-content">
+        <h1>Where Every Bite<br><span>Feels Like Home</span></h1>
+        <p class="subtitle">Delicious homemade cakes baked fresh daily.</p>
+        <div class="cta-buttons">
+          <button class="btn-primary" onclick="checkAuth(event)">Customize Now</button>
+          <button class="btn-outline" onclick="window.location.href='menu.html'">View Menu</button>
+        </div>
+      </div>
+      <div class="hero-image">
+        <div class="image-blob">
+          <img src="../css/bg.jpg" alt="Elegant white cake">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features-showcase">
+    <div class="container features-grid">
+      <div class="feature-card">
+        <i class="fas fa-truck-fast"></i>
+        <h3>Fast Delivery</h3>
+        <p>Freshly baked and delivered to your doorstep in record time.</p>
+      </div>
+      <div class="feature-card">
+        <i class="fas fa-birthday-cake"></i>
+        <h3>Custom Cakes</h3>
+        <p>Your vision, our whisk. We design cakes for your special moments.</p>
+      </div>
+      <div class="feature-card">
+        <i class="fas fa-leaf"></i>
+        <h3>Premium Quality</h3>
+        <p>Only the finest organic ingredients and real butter in every batch.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="featured-cakes">
+    <div class="container">
+      <h2 class="section-title">Our <span>Featured</span> Cakes</h2>
+      <div class="cake-grid">
+        <div class="cake-item">
+          <img src="../css/featured.jpg" alt="White Teal Dream">
+          <h3>White Teal Dream</h3>
+          <p class="cake-desc">Rich chocolate layers with silky truffle ganache and crunchy hazelnut base.</p>
+        </div>
+        <div class="cake-item">
+          <img src="../css/featured2.jpg" alt="Blue Strawberry Bliss">
+          <h3>Blue Strawberry Bliss</h3>
+          <p class="cake-desc">Light vanilla sponge filled with fresh strawberries and whipped cream frosting.</p>
+        </div>
+        <div class="cake-item">
+          <img src="../css/featured3.jpg" alt="Pink Strawberry">
+          <h3>Pink Strawberry</h3>
+          <p class="cake-desc">Classic red velvet with tangy cream cheese frosting and subtle cocoa notes.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── REVIEWS CAROUSEL ─── -->
+  <section class="reviews-section">
+    <div class="container">
+      <h2 class="section-title">What Our <span>Customers</span> Say</h2>
+
+      <div class="reviews-carousel">
+        <button class="carousel-btn carousel-prev" aria-label="Previous review">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+
+        <div class="carousel-track-wrapper">
+          <div class="carousel-track">
+
+            <div class="review-card">
+              <div class="review-quote-icon"><i class="fas fa-quote-left"></i></div>
+              <div class="stars">★★★★★</div>
+              <p>"Best red velvet I've ever had! So moist and the cream cheese frosting is perfect."</p>
+              <div class="reviewer-row">
+                <div class="reviewer-avatar">MD</div>
+                <div class="reviewer">Maria D.</div>
+              </div>
+            </div>
+
+            <div class="review-card">
+              <div class="review-quote-icon"><i class="fas fa-quote-left"></i></div>
+              <div class="stars">★★★★★</div>
+              <p>"Custom cake for my daughter's birthday was a huge hit. Beautiful and delicious!"</p>
+              <div class="reviewer-row">
+                <div class="reviewer-avatar">JR</div>
+                <div class="reviewer">James R.</div>
+              </div>
+            </div>
+
+            <div class="review-card">
+              <div class="review-quote-icon"><i class="fas fa-quote-left"></i></div>
+              <div class="stars">★★★★★</div>
+              <p>"Fast delivery and packaging was excellent. Tiramisu was restaurant quality."</p>
+              <div class="reviewer-row">
+                <div class="reviewer-avatar">SL</div>
+                <div class="reviewer">Sofia L.</div>
+              </div>
+            </div>
+
+            <div class="review-card">
+              <div class="review-quote-icon"><i class="fas fa-quote-left"></i></div>
+              <div class="stars">★★★★★</div>
+              <p>"Finally found an eggless chocolate cake that actually tastes amazing!"</p>
+              <div class="reviewer-row">
+                <div class="reviewer-avatar">RK</div>
+                <div class="reviewer">Raj K.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <button class="carousel-btn carousel-next" aria-label="Next review">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+
+      <div class="carousel-dots"></div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container footer-grid">
+      <div class="footer-about">
+        <h3>C&N <span>Bakery</span></h3>
+        <p>Baking memories since 2019. We pride ourselves on using traditional recipes passed down through generations.</p>
+      </div>
+      <div class="footer-contact">
+        <h3>Contact Us</h3>
+        <p><i class="fas fa-envelope"></i> CandNBakery@gmail.com</p>
+        <p><i class="fas fa-phone"></i> +63 9XX XXX XXXX</p>
+        <div class="social-links">
+          <a href="https://web.facebook.com/SweetdreamsEst.2014" target="_blank">
+            <i class="fab fa-facebook-f"></i> Facebook
+          </a>
+        </div>
+      </div>
+      <div class="footer-links">
+        <h3>Quick Links</h3>
+        <ul>
+          <li><a href="menu.html">Menu</a></li>
+          <li><a href="faq.html">FAQ</a></li>
+          <li><a href="#" onclick="openModal()">Join Family</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 C&N Bakery. Hand-baked with love.</p>
+    </div>
+  </footer>
+
+  <!-- Auth Modal -->
+  <div id="auth-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeModal()">×</span>
+      <div class="modal-header-text">
+        <h2>Sweet Welcome!</h2>
+        <p>Join the C&N Bakery family</p>
+      </div>
+      <div class="tab-switcher">
+        <button class="tab-btn active" data-tab="signup">Sign Up</button>
+        <button class="tab-btn" data-tab="login">Log In</button>
+      </div>
+      <form id="signup-form" class="auth-form active" onsubmit="handleSignup(event)">
+        <div class="form-group"><label>Full Name</label><input type="text" name="name" required></div>
+        <div class="form-group"><label>Email Address</label><input type="email" name="email" required></div>
+        <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
+        <button type="submit" class="btn-primary full-width">Create Account</button>
+      </form>
+      <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
+        <div class="form-group"><label>Email Address</label><input type="email" name="email" required></div>
+        <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
+        <button type="submit" class="btn-primary full-width">Sign In</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const modal = document.getElementById('auth-modal');
+    function openModal()  { modal.classList.add('active'); document.getElementById('nav-toggle').checked = false; }
+    function closeModal() { modal.classList.remove('active'); }
+
+    window.checkAuth = function(event) {
+      const isLoggedIn = !document.getElementById('logout-trigger').classList.contains('hidden');
+      if (!isLoggedIn) { openModal(); return; }
+      const target = event.currentTarget;
+      if (target.classList.contains('fa-shopping-cart'))  window.location.href = 'cart.html';
+      else if (target.classList.contains('fa-user-circle')) window.location.href = 'user.html';
+      else window.location.href = 'cus.html';
+    };
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab + '-form').classList.add('active');
+      });
+    });
+
+    window.onclick = (e) => { if (e.target == modal) closeModal(); };
+
+    /* ── Carousel ── */
+    (function () {
+      const track    = document.querySelector('.carousel-track');
+      const dotsWrap = document.querySelector('.carousel-dots');
+
+      let current = 0;
+
+      function visibleCount() {
+        if (window.innerWidth >= 1024) return 3;
+        if (window.innerWidth >= 640)  return 2;
+        return 1;
+      }
+
+      function maxIndex() {
+        return Math.max(0, track.children.length - visibleCount());
+      }
+
+      function buildDots() {
+        dotsWrap.innerHTML = '';
+        for (let i = 0; i <= maxIndex(); i++) {
+          const btn = document.createElement('button');
+          btn.className = 'dot' + (i === current ? ' active' : '');
+          btn.setAttribute('aria-label', 'Review ' + (i + 1));
+          btn.addEventListener('click', () => goTo(i));
+          dotsWrap.appendChild(btn);
+        }
+      }
+
+      function goTo(index) {
+        current = Math.max(0, Math.min(index, maxIndex()));
+        track.style.transform = `translateX(-${(100 / visibleCount()) * current}%)`;
+        dotsWrap.querySelectorAll('.dot').forEach((d, i) =>
+          d.classList.toggle('active', i === current));
+      }
+
+      document.querySelector('.carousel-prev').addEventListener('click', () => goTo(current - 1));
+      document.querySelector('.carousel-next').addEventListener('click', () => goTo(current + 1));
+
+      let startX = 0;
+      track.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+      track.addEventListener('touchend',   e => {
+        const diff = startX - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 40) goTo(diff > 0 ? current + 1 : current - 1);
+      });
+
+      let timer = setInterval(() => goTo(current < maxIndex() ? current + 1 : 0), 5000);
+      const wrapper = document.querySelector('.carousel-track-wrapper');
+      wrapper.addEventListener('mouseenter', () => clearInterval(timer));
+      wrapper.addEventListener('mouseleave', () => {
+        timer = setInterval(() => goTo(current < maxIndex() ? current + 1 : 0), 5000);
+      });
+
+      buildDots();
+      window.addEventListener('resize', () => { buildDots(); goTo(0); });
+    })();
+  </script>
+</body>
+</html>

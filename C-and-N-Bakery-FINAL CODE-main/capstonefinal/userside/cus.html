@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Customize Your Cake - C&N Bakery</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../css/cus.css">
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCWUJfDwLR5erpExZUoBWW7YJ-aDpT_zy0",
+      authDomain: "candn-bakery.firebaseapp.com",
+      databaseURL: "https://candn-bakery-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "candn-bakery",
+      storageBucket: "candn-bakery.appspot.com",
+      messagingSenderId: "620414447517",
+      appId: "1:620414447517:web:d42c5d50a91ff41e5ac974"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    window.db = db;
+    window.ref = ref;
+    window.onValue = onValue;
+
+    onAuthStateChanged(auth, (user) => {
+      const nameTag = document.getElementById('user-name-display');
+      const logoutBtn = document.getElementById('logout-trigger');
+
+      if (user) {
+        const userRef = ref(db, "users/" + user.uid);
+        
+        get(userRef)
+          .then((snapshot) => {
+            if (snapshot.exists()) {
+              const userData = snapshot.val();
+              nameTag.innerText = "Hi, " + (userData.name || "Guest");
+            } else {
+              nameTag.innerText = "Hi, Guest";
+            }
+            logoutBtn?.classList.remove('hidden');
+          })
+          .catch((error) => {
+            console.error("Error fetching user data:", error);
+            nameTag.innerText = "Hi, Guest";
+            logoutBtn?.classList.remove('hidden');
+          });
+      } else {
+        nameTag.innerText = "";
+        logoutBtn?.classList.add('hidden');
+        window.location.href = 'index.html';
+      }
+    });
+
+    window.handleLogout = () => {
+      signOut(auth)
+        .then(() => console.log("User signed out"))
+        .catch((err) => console.error("Logout error:", err));
+    };
+  </script>
+
+  <style>
+    /* ─── Cart Badge Styles ─── */
+    .cart-wrapper {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .cart-badge {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      background: #825A3C;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 600;
+      min-width: 18px;
+      height: 18px;
+      line-height: 18px;
+      border-radius: 50%;
+      text-align: center;
+      padding: 0 5px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      pointer-events: none;
+    }
+
+    .cart-badge.hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="container nav-flex">
+      <a href="index.html" class="logo-text">C&N <span>Bakery</span></a>
+
+      <input type="checkbox" id="nav-toggle" class="nav-toggle">
+      <label for="nav-toggle" class="nav-toggle-label"><span></span></label>
+
+      <nav class="nav-links" id="nav-menu">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="menu.html">Menu</a></li>
+          <li><a href="faq.html">FAQ</a></li>
+        </ul>
+        <div class="auth-area">
+          <div class="nav-icons">
+            <div class="cart-wrapper">
+              <i class="fas fa-shopping-cart" title="Cart" onclick="location.href='cart.html'"></i>
+              <span id="cart-count" class="cart-badge hidden">0</span>
+            </div>
+            <div class="user-wrapper">
+              <i class="fas fa-user-circle" title="Account" onclick="location.href='user.html'"></i>
+            </div>
+          </div>
+          <span id="user-name-display"></span>
+          <button id="logout-trigger" class="btn-outline hidden" onclick="handleLogout()">Logout</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container cus-container">
+    <div class="cus-card">
+      <div class="form-section">
+        <h2>Design Your <span>Dream Cake</span></h2>
+
+        <div class="selection-group">
+          <label>Number of Layers</label>
+          <select id="layers" onchange="updatePrice()"></select>
+        </div>
+
+        <div class="selection-group">
+          <label>Chiffon Flavor</label>
+          <select id="flavor" onchange="updatePrice()"></select>
+        </div>
+
+        <div class="selection-group">
+          <label>Frosting Kind</label>
+          <select id="frosting" onchange="updatePrice()"></select>
+        </div>
+
+        <div class="selection-group">
+          <label>Design Style</label>
+          <select id="design" onchange="updatePrice()"></select>
+        </div>
+
+        <div class="selection-group">
+          <label>Special Message on Cake <small>(optional)</small></label>
+          <textarea id="message" placeholder="Happy Birthday Mommy! ❤️" maxlength="100"></textarea>
+        </div>
+
+        <div class="price-display">
+          <p>Estimated Total</p>
+          <h3 id="total-price">₱0</h3>
+        </div>
+
+        <button class="btn-primary full-width" onclick="showSummary()">Order Summary</button>
+      </div>
+
+      <div class="preview-section" id="preview-box">
+        <i class="fas fa-birthday-cake"></i>
+        <p>Your reference image will appear here</p>
+        <input type="file" id="cake-ref" accept="image/*" onchange="previewImage(event)">
+        <img id="image-preview" src="" alt="Cake Reference">
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Modal -->
+  <div id="summary-modal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeSummary()">×</span>
+      <h2>Order Summary</h2>
+      <ul class="summary-list" id="summary-details"></ul>
+
+      <div class="price-display">
+        <h3>Total: <span id="modal-total">₱0</span></h3>
+      </div>
+
+      <button class="btn-primary full-width" onclick="addToCart()">Add to Cart</button>
+    </div>
+  </div>
+
+  <script>
+    // ─── Cart Count Badge Logic ───
+    function updateCartCount() {
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      const countEl = document.getElementById('cart-count');
+      if (!countEl) return;
+
+      const totalItems = cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+
+      if (totalItems > 0) {
+        countEl.textContent = totalItems > 99 ? '99+' : totalItems;
+        countEl.classList.remove('hidden');
+      } else {
+        countEl.classList.add('hidden');
+      }
+    }
+
+    // ─── Price & Options Logic ───
+    function updatePrice() {
+      const layers   = document.getElementById('layers')?.selectedOptions[0];
+      const flavor   = document.getElementById('flavor')?.selectedOptions[0];
+      const frosting = document.getElementById('frosting')?.selectedOptions[0];
+      const design   = document.getElementById('design')?.selectedOptions[0];
+
+      const total = (parseInt(layers?.dataset.price   || 0)) +
+                    (parseInt(flavor?.dataset.price   || 0)) +
+                    (parseInt(frosting?.dataset.price || 0)) +
+                    (parseInt(design?.dataset.price   || 0));
+
+      document.getElementById('total-price').innerText = "₱" + total.toLocaleString('en-PH');
+      return total;
+    }
+
+    function renderCustomizationOptions(data) {
+      const mappings = [
+        { key: 'layers',    selectId: 'layers',    placeholder: '-- Select Number of Layers --' },
+        { key: 'flavors',   selectId: 'flavor',    placeholder: '-- Select Chiffon Flavor --' },
+        { key: 'frostings', selectId: 'frosting',  placeholder: '-- Select Frosting Kind --' },
+        { key: 'designs',   selectId: 'design',    placeholder: '-- Select Design Style --' }
+      ];
+
+      for (const { key, selectId, placeholder } of mappings) {
+        const select = document.getElementById(selectId);
+        if (!select) continue;
+
+        select.innerHTML = '';
+
+        const ph = document.createElement('option');
+        ph.value = "";
+        ph.textContent = placeholder;
+        select.appendChild(ph);
+
+        const items = Object.values(data?.[key] || {});
+        items.forEach(opt => {
+          if (opt.enabled !== true) return;
+          const option = document.createElement('option');
+          option.value = opt.name || '';
+          option.textContent = opt.price > 0 ? `${opt.name} (+₱${opt.price})` : opt.name;
+          option.dataset.price = Number(opt.price) || 0;
+          select.appendChild(option);
+        });
+      }
+      updatePrice();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      // Load customization options from Firebase
+      onValue(ref(db, "customization-options"), (snapshot) => {
+        renderCustomizationOptions(snapshot.val());
+      });
+
+      // Update cart count on page load
+      updateCartCount();
+    });
+
+    function previewImage(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function() {
+        const preview = document.getElementById('image-preview');
+        preview.src = reader.result;
+        preview.style.display = "block";
+        document.querySelector('#preview-box i').style.display = "none";
+        document.querySelector('#preview-box p').style.display = "none";
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function showSummary() {
+      const layers   = document.getElementById('layers')?.value   || '—';
+      const flavor   = document.getElementById('flavor')?.value   || '—';
+      const frosting = document.getElementById('frosting')?.value || '—';
+      const design   = document.getElementById('design')?.value   || '—';
+      const message  = document.getElementById('message')?.value.trim() || '—';
+      const total    = document.getElementById('total-price')?.innerText || '₱0';
+
+      document.getElementById('summary-details').innerHTML = `
+        <li><span>Layers:</span> <strong>${layers}</strong></li>
+        <li><span>Flavor:</span> <strong>${flavor}</strong></li>
+        <li><span>Frosting:</span> <strong>${frosting}</strong></li>
+        <li><span>Design:</span> <strong>${design}</strong></li>
+        <li><span>Special Message:</span> <strong>${message}</strong></li>
+      `;
+      document.getElementById('modal-total').innerText = total;
+      document.getElementById('summary-modal').classList.add('active');
+    }
+
+    function closeSummary() {
+      document.getElementById('summary-modal').classList.remove('active');
+    }
+
+    function addToCart() {
+      const price = parseFloat(document.getElementById('total-price').innerText.replace(/[₱,]/g, '')) || 0;
+      const refImage = document.getElementById('image-preview').src || '';
+      const message = document.getElementById('message').value.trim();
+
+      const customCake = {
+        name: "Customized Cake",
+        price: price,
+        quantity: 1,
+        category: "Customize Cake",
+        layers:   document.getElementById('layers')?.value   || '',
+        flavor:   document.getElementById('flavor')?.value   || '',
+        frosting: document.getElementById('frosting')?.value || '',
+        design:   document.getElementById('design')?.value   || '',
+        message:  message,
+        notes:   "",
+        referencePhoto: refImage || 'https://via.placeholder.com/300?text=No+Reference+Photo',
+        image: refImage || 'https://via.placeholder.com/300?text=Custom+Cake',
+        id: "custom-" + Date.now(),
+        addedAt: new Date().toISOString()
+      };
+
+      let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      cart.push(customCake);
+      localStorage.setItem('cart', JSON.stringify(cart));
+
+      console.log("Custom cake added:", customCake);
+      console.log("Current cart:", cart);
+
+      alert("✅ Custom Cake added to cart!");
+      
+      // Update badge immediately before redirect
+      updateCartCount();
+      window.location.href = 'cart.html';
+    }
+  </script>
+</body>
+</html>

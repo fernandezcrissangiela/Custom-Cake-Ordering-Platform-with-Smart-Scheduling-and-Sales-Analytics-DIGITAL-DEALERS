@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - C&N Bakery</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../css/checkout.css">
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header>
+    <div class="container" style="display:flex; justify-content:space-between; align-items:center;">
+        <a href="index.html" class="logo-text">C&N <span>Bakery</span></a>
+        <a href="cart.html" class="back-link">
+            <i class="fas fa-arrow-left"></i> Back to Cart
+        </a>
+    </div>
+</header>
+
+<div class="container">
+    <div class="checkout-grid">
+
+        <!-- ══ LEFT — Info Side ══ -->
+        <div class="info-side">
+
+            <!-- Custom Cake Alert -->
+            <div id="custom-cake-alert" class="custom-notice hidden">
+                <i class="fas fa-info-circle"></i>
+                <strong>Custom Cake in Order:</strong><br>
+                • Requires bakery approval<br>
+                • Lead time: at least 4–7 days<br>
+                • 50% downpayment needed after order confirmation
+            </div>
+
+            <!-- Customer Info -->
+            <div class="section-card">
+                <h2><i class="fas fa-user"></i> Customer Information</h2>
+                <div class="form-group">
+                    <label>Full Name <span style="color:var(--danger);">*</span></label>
+                    <input type="text" id="cust-name" placeholder="Juan Dela Cruz" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number <span style="color:var(--danger);">*</span></label>
+                    <input type="tel" id="cust-phone" placeholder="09123456789" required pattern="[0-9]{11}">
+                </div>
+                <!-- Facebook Profile Link - Now OPTIONAL -->
+                <div class="form-group">
+                    <label>Facebook Profile Link <span style="color:var(--muted);">(optional)</span></label>
+                    <input type="url" id="cust-fb" placeholder="https://facebook.com/yourprofile">
+                </div>
+            </div>
+
+            <!-- Fulfillment Method -->
+            <div class="section-card">
+                <h2><i class="fas fa-truck"></i> Fulfillment Method</h2>
+                <div class="choice-group">
+                    <div class="choice-btn active" data-method="delivery">🚚 Delivery</div>
+                    <div class="choice-btn" data-method="pickup">🏪 Store Pickup</div>
+                </div>
+
+                <div id="address-section" class="form-group">
+                    <label>Delivery Address <span style="color:var(--danger);">*</span></label>
+                    <textarea id="cust-address" rows="3"
+                              placeholder="Street, Barangay, City, Landmark / Notes"
+                              required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label id="date-label">
+                        Delivery / Pickup Date <span style="color:var(--danger);">*</span>
+                    </label>
+                    <input type="date" id="order-date" required>
+                </div>
+            </div>
+
+            <!-- Payment Method -->
+            <div class="section-card">
+                <h2><i class="fas fa-credit-card"></i> Payment Method</h2>
+
+                <div class="payment-method active" data-payment="cod">
+                    <input type="radio" name="pay" id="pay-cod" value="cod" checked>
+                    <label for="pay-cod">
+                        <i class="fas fa-money-bill-wave" style="color:var(--success);"></i>
+                        Cash on Delivery / Pickup
+                    </label>
+                </div>
+
+                <div class="payment-method" data-payment="gcash">
+                    <input type="radio" name="pay" id="pay-gcash" value="gcash">
+                    <label for="pay-gcash">
+                        <i class="fas fa-mobile-alt" style="color:#0275d8;"></i>
+                        GCash
+                    </label>
+                    <div id="gcash-details" class="qr-placeholder">
+                        <strong>SCAN GCASH QR</strong><br>
+                        <div style="margin:12px 0; text-align:center; max-width: 220px; margin-left:auto; margin-right:auto;">
+                            <img src="../css/gcash-qr.jpg" 
+                                 style="width: 100%; height: auto; max-width: 220px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"
+                                 alt="GCash QR Code">
+                        </div>
+                        <small><strong>Note:</strong> Send payment, save screenshot of receipt and message our FB page</small>
+                    </div>
+                </div>
+
+                <div class="payment-method" data-payment="bank">
+                    <input type="radio" name="pay" id="pay-bank" value="bank">
+                    <label for="pay-bank">
+                        <i class="fas fa-university" style="color:var(--primary-dark);"></i>
+                        Bank Transfer
+                    </label>
+                    <div id="bank-details" class="qr-placeholder">
+                        BPI Account: <strong>1234-5678-90</strong><br>
+                        Account Name: <strong>C&amp;N Bakery Corp.</strong>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /info-side -->
+
+        <!-- ══ RIGHT — Summary Side ══ -->
+        <div class="summary-side">
+            <div class="section-card">
+                <h2><i class="fas fa-receipt"></i> Order Summary</h2>
+
+                <div id="summary-items-list"></div>
+
+                <div class="total-row">
+                    <div class="summary-item">
+                        <span>Total Amount</span>
+                        <span id="checkout-total">₱0.00</span>
+                    </div>
+                </div>
+
+                <div id="payment-note">
+                    * Full payment required for regular items &amp; pastries.<br>
+                    * Custom cakes require 50% downpayment after admin approval.
+                </div>
+
+                <button class="btn-checkout" id="btn-place-order" disabled>
+                    <i class="fas fa-shopping-bag"></i> Place Order
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getDatabase, ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCWUJfDwLR5erpExZUoBWW7YJ-aDpT_zy0",
+        authDomain: "candn-bakery.firebaseapp.com",
+        databaseURL: "https://candn-bakery-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "candn-bakery",
+        storageBucket: "candn-bakery.appspot.com",
+        messagingSenderId: "620414447517",
+        appId: "1:620414447517:web:d42c5d50a91ff41e5ac974"
+    };
+
+    //max orders in the schedule
+    const MAX_ORDERS_PER_DAY = 3;
+
+    const app  = initializeApp(firebaseConfig);
+    const db   = getDatabase(app);
+    const auth = getAuth(app);
+
+    let currentUser      = null;
+    let cart             = JSON.parse(localStorage.getItem('checkoutItems') || '[]');
+    let fulfillmentMethod = 'delivery';
+    let selectedPayment  = 'cod';
+    let hasCustomCake    = false;
+    let allOrders        = {};
+
+    onValue(ref(db, 'orders'), (snapshot) => {
+        allOrders = snapshot.val() || {};
+        updateAvailableDates();
+    });
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) currentUser = user;
+        else {
+            alert("Please login to place an order.");
+            window.location.href = "index.html";
+        }
+    });
+
+    function getItemCategory(item) {
+        const name = (item.name || '').toLowerCase().trim();
+        const cat  = (item.category || '').toLowerCase().trim();
+        if (cat.includes('custom') || name.includes('custom')) return "Customize Cake";
+        if (cat.includes('pastry') || ['bread','cookie','tart','pie','donut','muffin','brownie','croissant','eclair'].some(w => name.includes(w))) return "Pastries";
+        if (cat.includes('cake') && !name.includes('custom')) return "Regular Cake";
+        return "Others";
+    }
+
+    function updateButtonState() {
+        const name       = document.getElementById('cust-name').value.trim();
+        const phone      = document.getElementById('cust-phone').value.trim();
+        const fb         = document.getElementById('cust-fb').value.trim();
+        const date       = document.getElementById('order-date').value;
+        const address    = document.getElementById('cust-address').value.trim();
+        const btn        = document.getElementById('btn-place-order');
+        const isDelivery = fulfillmentMethod === 'delivery';
+
+        btn.disabled = !(name && phone.length >= 10 && date && 
+                        (!isDelivery || address.length >= 10));
+    }
+
+    function updateAvailableDates() {
+        const dateInput = document.getElementById('order-date');
+        if (!dateInput) return;
+
+        const dateCounts = {};
+        Object.values(allOrders).forEach(order => {
+            if (order.date && typeof order.date === 'string') {
+                dateCounts[order.date] = (dateCounts[order.date] || 0) + 1;
+            }
+        });
+
+        const disabledDates = new Set(
+            Object.keys(dateCounts).filter(d => dateCounts[d] >= MAX_ORDERS_PER_DAY)
+        );
+
+        dateInput.addEventListener('input', function(e) {
+            if (disabledDates.has(e.target.value)) {
+                e.target.setCustomValidity(`This date is fully booked (max ${MAX_ORDERS_PER_DAY} orders per day). Please choose another date.`);
+            } else {
+                e.target.setCustomValidity("");
+            }
+        });
+
+        dateInput.title = `Some dates may be unavailable (max ${MAX_ORDERS_PER_DAY} orders per day)`;
+    }
+
+    function initCheckout() {
+        const list = document.getElementById('summary-items-list');
+        let total = 0;
+        hasCustomCake = false;
+        list.innerHTML = '';
+
+        if (cart.length === 0) {
+            list.innerHTML = '<p style="text-align:center; color:var(--muted); padding:20px 0;">Your cart is empty.</p>';
+            document.getElementById('btn-place-order').disabled = true;
+            return;
+        }
+
+        cart.forEach(item => {
+            const cat = getItemCategory(item);
+            if (cat === "Customize Cake") hasCustomCake = true;
+            total += item.price * (item.quantity || 1);
+
+            const div = document.createElement('div');
+            div.className = 'summary-item';
+            div.innerHTML = `
+                <span>
+                    ${item.quantity || 1}× ${item.name}
+                    <small>${cat}</small>
+                </span>
+                <span>₱${(item.price * (item.quantity || 1)).toLocaleString('en-PH')}</span>`;
+            list.appendChild(div);
+        });
+
+        document.getElementById('checkout-total').innerText =
+            `₱${total.toLocaleString('en-PH')}`;
+
+        const today   = new Date();
+        const minDays = hasCustomCake ? 4 : 1;
+        const minDate = new Date(today);
+        minDate.setDate(today.getDate() + minDays);
+        document.getElementById('order-date').min = minDate.toISOString().split('T')[0];
+
+        if (hasCustomCake) {
+            document.getElementById('custom-cake-alert').classList.remove('hidden');
+        }
+
+        updateButtonState();
+        updateAvailableDates();
+    }
+
+    // Fulfillment toggle
+    document.querySelectorAll('.choice-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            fulfillmentMethod = btn.dataset.method;
+
+            const addrSection = document.getElementById('address-section');
+            const dateLabel   = document.getElementById('date-label');
+
+            if (fulfillmentMethod === 'pickup') {
+                addrSection.classList.add('hidden');
+                dateLabel.innerHTML = 'Pickup Date <span style="color:var(--danger);">*</span>';
+                document.getElementById('cust-address').removeAttribute('required');
+            } else {
+                addrSection.classList.remove('hidden');
+                dateLabel.innerHTML = 'Delivery Date <span style="color:var(--danger);">*</span>';
+                document.getElementById('cust-address').setAttribute('required', '');
+            }
+            updateButtonState();
+        });
+    });
+
+    // Payment method toggle
+    document.querySelectorAll('.payment-method').forEach(el => {
+        el.addEventListener('click', () => {
+            document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('active'));
+            el.classList.add('active');
+            selectedPayment = el.dataset.payment;
+            document.getElementById('gcash-details').style.display =
+                selectedPayment === 'gcash' ? 'block' : 'none';
+            document.getElementById('bank-details').style.display  =
+                selectedPayment === 'bank'  ? 'block' : 'none';
+        });
+    });
+
+    // Input listeners (Facebook is now optional)
+    ['cust-name','cust-phone','cust-fb','order-date','cust-address'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', updateButtonState);
+    });
+
+    async function placeOrder() {
+        if (!currentUser) return alert("Login session issue. Please refresh and try again.");
+
+        const name    = document.getElementById('cust-name').value.trim();
+        const phone   = document.getElementById('cust-phone').value.trim();
+        const fb      = document.getElementById('cust-fb').value.trim();     
+        const date    = document.getElementById('order-date').value;
+        const address = document.getElementById('cust-address').value.trim();
+        const btn     = document.getElementById('btn-place-order');
+
+        // Updated validation: fb is now optional
+        if (!name || phone.length < 10 || !date ||
+            (fulfillmentMethod === 'delivery' && address.length < 10)) {
+            alert("Please complete all required fields correctly.");
+            return;
+        }
+
+        const ordersOnDate = Object.values(allOrders).filter(o => o.date === date).length;
+        if (ordersOnDate >= MAX_ORDERS_PER_DAY) {
+            alert(`Sorry, this date is fully booked (max ${MAX_ORDERS_PER_DAY} orders per day). Please choose another date.`);
+            return;
+        }
+
+        btn.disabled   = true;
+        btn.innerHTML  = '<i class="fas fa-spinner fa-spin"></i> Submitting…';
+
+        const itemsWithCategory = cart.map(item => {
+            const cd = item.customDetails || {};
+            return {
+                name:           item.name,
+                price:          item.price,
+                quantity:       item.quantity || 1,
+                category:       getItemCategory(item),
+                description:    item.description    || '',
+                layers:         item.layers         || cd.layers   || '',
+                flavor:         item.flavor         || cd.flavor   || '',
+                frosting:       item.frosting       || cd.frosting || '',
+                design:         item.design         || cd.design   || '',
+                message:        item.message        || cd.message  || '',
+                notes:          item.notes          || cd.notes    || '',
+                referencePhoto: item.referencePhoto || cd.referencePhoto || ''
+            };
+        });
+
+        const email = currentUser.email || "";
+
+        const orderData = {
+            userId:        currentUser.uid,
+            email,
+            customerName:  name,
+            phone,
+            facebookLink:  fb || null,                    // Save as null if empty
+            date,
+            address:       fulfillmentMethod === 'pickup' ? "Store Pickup" : address,
+            method:        fulfillmentMethod,
+            paymentMethod: selectedPayment,
+            paymentStatus: hasCustomCake
+              ? 'unpaid'
+              : (selectedPayment === 'cod' ? 'cod' : 'unpaid'),
+            items:         itemsWithCategory,
+            totalAmount:   cart.reduce((sum, i) => sum + (i.price * (i.quantity || 1)), 0),
+            status:        'pending',
+            createdAt:     new Date().toISOString()
+        };
+
+        try {
+            const newOrderRef = push(ref(db, 'orders'));
+            await set(newOrderRef, orderData);
+
+            await set(ref(db, `users/${currentUser.uid}/latestOrder`), {
+                orderId: newOrderRef.key,
+                total:   orderData.totalAmount,
+                date,
+                status:  'pending'
+            });
+
+            // Clear checkout items
+            const checkedOutItems = JSON.parse(localStorage.getItem('checkoutItems') || '[]');
+            let fullCart = JSON.parse(localStorage.getItem('cart') || '[]');
+            checkedOutItems.forEach(ordered => {
+                const idx = fullCart.findIndex(c =>
+                    c.name === ordered.name &&
+                    JSON.stringify(c.customDetails) === JSON.stringify(ordered.customDetails)
+                );
+                if (idx > -1) fullCart.splice(idx, 1);
+            });
+            localStorage.setItem('cart', JSON.stringify(fullCart));
+            localStorage.removeItem('checkoutItems');
+
+            window.location.href = "user.html";
+
+        } catch (err) {
+            console.error("Order error:", err);
+            alert("Something went wrong placing your order.\nError: " + (err.message || "Unknown"));
+            btn.disabled  = false;
+            btn.innerHTML = '<i class="fas fa-shopping-bag"></i> Place Order';
+        }
+    }
+
+    document.getElementById('btn-place-order').addEventListener('click', placeOrder);
+    initCheckout();
+</script>
+
+</body>
+</html>

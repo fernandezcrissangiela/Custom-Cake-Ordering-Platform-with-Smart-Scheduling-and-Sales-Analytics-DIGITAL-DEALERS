@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>C&N Bakery - Schedule</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/schedule.css">
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>emailjs.init("gVHFL_mLh8WReKnbm");</script>
+</head>
+<body>
+
+<!-- Add right after <body>, BEFORE everything else -->
+<script>
+  if (sessionStorage.getItem('adminLoggedIn') !== 'true') {
+    window.location.replace('login.html');
+  }
+</script>
+
+<!-- ========== LOGIN OVERLAY ========== -->
+<div id="login-overlay">
+  <div class="login-box">
+    <h2><i class="fas fa-lock"></i> Admin Portal</h2>
+    <p class="login-sub">Enter your password to access Schedule</p>
+    <input type="password" id="admin-pass" placeholder="Enter password"
+           onkeydown="if(event.key==='Enter') checkLogin()">
+    <button class="btn-main" onclick="checkLogin()">
+      <i class="fas fa-unlock-alt"></i> Unlock Dashboard
+    </button>
+  </div>
+</div>
+
+<!-- ========== HEADER ========== -->
+<header>
+  <a href="admin.html" class="logo-text">C&N</span> Bakery</a>
+  <button class="btn-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+</header>
+
+<div class="container">
+
+  <!-- Navigation -->
+  <div class="nav-tabs">
+    <a href="sales.html"      class="nav-link"><i class="fas fa-chart-line"></i> Sales</a>
+    <a href="orders.html"     class="nav-link"><i class="fas fa-shopping-bag"></i> Orders</a>
+    <a href="schedule.html"   class="nav-link active"><i class="fas fa-calendar-alt"></i> Schedule</a>
+    <a href="admin_menu.html" class="nav-link"><i class="fas fa-birthday-cake"></i> Menu</a>
+    <a href="history.html"    class="nav-link"><i class="fas fa-history"></i> History</a>
+  </div>
+
+  <div id="schedule-sec">
+
+    <!-- Calendar Card -->
+    <div class="admin-card">
+      <div class="calendar-header">
+        <button class="btn-action" onclick="changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+        <h2 id="calendar-month-year">Month Year</h2>
+        <button class="btn-action" onclick="changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
+      </div>
+
+      <div class="cal-legend">
+        <span><span class="legend-dot legend-available"></span> Available</span>
+        <span><span class="legend-dot legend-almost"></span> Almost Full</span>
+        <span><span class="legend-dot legend-full"></span> Full</span>
+        <span><span class="legend-dot legend-past"></span> Past Orders</span>
+      </div>
+
+      <div class="calendar-grid" id="calendar-grid"></div>
+    </div>
+
+    <!-- Daily Schedule Card -->
+    <div class="admin-card">
+      <h2 class="daily-panel-title">
+        <i class="fas fa-clock"></i> Daily Schedule
+      </h2>
+      <div id="day-orders-list">
+        <p>Select a date to view bookings.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========== ORDER DETAIL MODAL ========== -->
+<div id="order-detail-modal">
+  <div class="od-modal-content">
+    <div class="od-modal-header">
+      <strong id="od-modal-title">Order Details</strong>
+      <button class="od-close" onclick="closeOrderModal()">×</button>
+    </div>
+    <div class="od-modal-body" id="od-modal-body"></div>
+    <div class="od-modal-footer" id="od-modal-footer"></div>
+  </div>
+</div>
+
+<!-- ========== LOGIN GUARD ========== -->
+<script>
+  
+  function handleLogout() {
+  sessionStorage.removeItem('adminLoggedIn');
+  window.location.replace('login.html');
+}
+
+  function checkLogin() {
+    const input = document.getElementById('admin-pass');
+    if (input.value === "digitaldealers") {
+      document.getElementById('login-overlay').style.display = 'none';
+      sessionStorage.setItem('adminLoggedIn', 'true');
+    } else {
+      input.style.borderColor = '#c0392b';
+      input.style.boxShadow = '0 0 0 4px rgba(192,57,43,0.15)';
+      input.value = '';
+      input.placeholder = 'Incorrect password. Try again.';
+      setTimeout(() => {
+        input.style.borderColor = '';
+        input.style.boxShadow = '';
+        input.placeholder = 'Enter password';
+      }, 2000);
+      input.focus();
+    }
+  }
+  if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+    document.getElementById('login-overlay').style.display = 'none';
+  }
+
+  window.closeOrderModal = function() {
+    document.getElementById('order-detail-modal').classList.remove('open');
+  };
+
+  document.getElementById('order-detail-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeOrderModal();
+  });
+</script>
+
+<!-- ========== FIREBASE + CALENDAR LOGIC ========== -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { sendDownpaymentEmail } from "./order-email.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCWUJfDwLR5erpExZUoBWW7YJ-aDpT_zy0",
+    authDomain: "candn-bakery.firebaseapp.com",
+    databaseURL: "https://candn-bakery-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "candn-bakery"
+  };
+
+  const MAX_ORDERS_PER_DAY = 3;
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+
+  // ── Downpayment reminder helpers ──────────────────────────────────────────
+
+  /** Returns true if any item in the order is a custom cake. */
+  function hasCustomItem(order) {
+    const items = Array.isArray(order.items) ? order.items : Object.values(order.items || {});
+    return items.some(i => {
+      const cat  = (i.category || '').toLowerCase().trim();
+      const name = (i.name     || '').toLowerCase().trim();
+      return cat.includes('custom') || name.includes('custom');
+    });
+  }
+
+  /**
+   * Returns true if this order needs a downpayment reminder:
+   *  - Has at least one custom cake item
+   *  - Downpayment not yet received (paymentStatus is not 'partial' or 'paid')
+   *  - Pickup/delivery date is within the next 3 days (inclusive)
+   */
+  function needsDownpaymentReminder(order) {
+    if (!hasCustomItem(order)) return false;
+
+    const ps = (order.paymentStatus || '').toLowerCase();
+    if (ps === 'partial' || ps === 'paid') return false;
+
+    const today     = new Date(); today.setHours(0, 0, 0, 0);
+    const orderDate = new Date((order.date || '') + 'T00:00:00');
+    const diffDays  = Math.ceil((orderDate - today) / (1000 * 60 * 60 * 24));
+    return diffDays >= 0 && diffDays <= 3;
+  }
+
+  let currentViewDate = new Date();
+  let allOrders       = {};
+  let selectedDate    = null;
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  function todayMidnight() {
+    const t = new Date();
+    t.setHours(0, 0, 0, 0);
+    return t;
+  }
+
+  function toDateStr(d) {
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  }
+
+  function formatDateLabel(str) {
+    return new Date(str + 'T00:00:00').toLocaleDateString('en-US', {
+      month: 'long', day: 'numeric', year: 'numeric'
+    });
+  }
+
+  onValue(ref(db, 'orders'), (snapshot) => {
+    allOrders = snapshot.val() || {};
+    renderCalendar();
+    if (selectedDate) viewDay(selectedDate);
+  });
+
+  window.changeMonth = (off) => {
+    currentViewDate.setMonth(currentViewDate.getMonth() + off);
+    renderCalendar();
+  };
+
+  function renderCalendar() {
+    const grid  = document.getElementById('calendar-grid');
+    const title = document.getElementById('calendar-month-year');
+    grid.innerHTML = '';
+
+    const y = currentViewDate.getFullYear();
+    const m = currentViewDate.getMonth();
+
+    title.innerText = new Intl.DateTimeFormat('en-US', {
+      month: 'long', year: 'numeric'
+    }).format(currentViewDate);
+
+    ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d => {
+      grid.innerHTML += `<div class="day-label">${d}</div>`;
+    });
+
+    const startDay    = new Date(y, m, 1).getDay();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    const today       = todayMidnight();
+    const todayStr    = toDateStr(today);
+
+    for (let x = 0; x < startDay; x++) grid.innerHTML += `<div></div>`;
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dStr     = `${y}-${pad(m+1)}-${pad(d)}`;
+      const cellDate = new Date(y, m, d);
+      cellDate.setHours(0,0,0,0);
+
+      const isPast     = cellDate < today;
+      const isToday    = dStr === todayStr;
+      const isSelected = dStr === selectedDate;
+
+      const dayOrders    = Object.values(allOrders).filter(o => o.date === dStr);
+      const activeOrders = dayOrders.filter(o => !['cancelled'].includes((o.status||'').toLowerCase()));
+      const orderCount   = activeOrders.length;
+      const isFull       = !isPast && orderCount >= MAX_ORDERS_PER_DAY;
+      const isAlmost     = !isPast && !isFull && orderCount === MAX_ORDERS_PER_DAY - 1;
+
+      let capacityClass = 'ok';
+      if (isFull)        capacityClass = 'full';
+      else if (isAlmost) capacityClass = 'warn';
+
+      const classes = ['cal-day'];
+      if (isPast) {
+        classes.push('past');
+        if (dayOrders.length > 0) classes.push('has-booking');
+      } else {
+        if (isFull)        classes.push('full');
+        else if (isAlmost) classes.push('almost-full');
+        else if (orderCount > 0) classes.push('has-booking');
+      }
+      if (isToday)    classes.push('today');
+      if (isSelected) classes.push('selected');
+
+      let subHtml = '';
+      if (isPast && dayOrders.length > 0) {
+        const done = dayOrders.filter(o =>
+          ['completed','cancelled'].includes((o.status||'').toLowerCase())
+        ).length;
+        subHtml = `<span class="capacity-label warn">${done}/${dayOrders.length} done</span>`;
+      } else if (!isPast && orderCount > 0) {
+        subHtml = `<span class="capacity-label ${capacityClass}">${orderCount}/${MAX_ORDERS_PER_DAY}</span>`;
+        if (isFull) subHtml += `<span class="full-text">FULL</span>`;
+      }
+
+      // ⚠ Downpayment reminder badge — show if any active order on this day needs a reminder
+      const hasUnpaidCustom = !isPast && activeOrders.some(needsDownpaymentReminder);
+      if (hasUnpaidCustom) {
+        subHtml += `<span class="capacity-label warn" title="Custom order — downpayment not yet received">⚠ DP</span>`;
+      }
+
+      const div = document.createElement('div');
+      div.className = classes.join(' ');
+      div.innerHTML = `
+        <span>${d}</span>
+        <div class="dot-container">${subHtml}</div>
+      `;
+
+      // Past days AND available future days are clickable
+      // Only non-past full days are blocked
+      if (isFull && !isPast) {
+        div.style.cursor = 'not-allowed';
+        div.title = `Max capacity reached (${MAX_ORDERS_PER_DAY} orders)`;
+      } else {
+        div.onclick = () => {
+          selectedDate = dStr;
+          renderCalendar();
+          viewDay(dStr);
+        };
+      }
+
+      grid.appendChild(div);
+    }
+  }
+
+  window.viewDay = (date) => {
+    selectedDate = date;
+    const list     = document.getElementById('day-orders-list');
+    const today    = todayMidnight();
+    const cellDate = new Date(date + 'T00:00:00');
+    const isPast   = cellDate < today;
+
+    const orders = Object.values(allOrders).filter(o => o.date === date);
+
+    if (orders.length === 0) {
+      list.innerHTML = `
+        <p style="color:var(--muted); font-style:italic;">
+          <i class="fas fa-calendar-times" style="margin-right:6px;"></i>
+          ${isPast ? 'No orders were placed on' : 'No bookings for'}
+          <strong style="color:var(--brown);"> ${formatDateLabel(date)}</strong>.
+        </p>`;
+      return;
+    }
+
+    const activeCount = orders.filter(o =>
+      !['cancelled'].includes((o.status||'').toLowerCase())
+    ).length;
+
+    const isFull = activeCount >= MAX_ORDERS_PER_DAY;
+
+    list.innerHTML = `
+      <h3>
+        <i class="fas fa-${isPast ? 'history' : 'calendar-check'}"
+           style="color:var(--primary); margin-right:6px;"></i>
+        ${isPast ? 'History for' : 'Bookings for'} ${formatDateLabel(date)}
+        <span class="status-full">
+          ${activeCount}/${MAX_ORDERS_PER_DAY}${isFull && !isPast ? ' — FULL' : ''}
+        </span>
+      </h3>`;
+
+    orders.forEach(o => {
+      // Find the Firebase key for this order
+      const orderId = Object.entries(allOrders).find(([k, v]) => v === o)?.[0] || '';
+      const status  = (o.status || 'pending').toLowerCase();
+      const itemsList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
+      const isDeliveryOrPacking = ['delivery', 'packing'].includes(status);
+      const isDone = ['completed', 'cancelled'].includes(status);
+
+      const card = document.createElement('div');
+      card.className = 'order-card';
+      card.style.cursor = 'pointer';
+      card.title = 'Click to view full order details';
+
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+          <strong>${o.customerName || 'Guest'}</strong>
+          <span class="status-badge status-${status}">${status}</span>
+        </div>
+        <p style="font-size:0.8rem; color:var(--muted); margin-top:5px;">
+          <i class="fas fa-phone" style="margin-right:4px;"></i>${o.phone || 'N/A'}
+          &nbsp;·&nbsp;
+          <i class="fas fa-coins" style="margin-right:3px;"></i>₱${parseFloat(o.totalAmount||0).toLocaleString('en-PH')}
+        </p>
+        <ul>
+          ${itemsList.map(i => `<li>• ${i.quantity||1}× ${i.name}</li>`).join('')}
+        </ul>
+      `;
+
+      card.onclick = () => openOrderModal(orderId);
+      list.appendChild(card);
+    });
+  };
+
+  // ── Order Detail Modal ──
+  window.openOrderModal = (orderId) => {
+    const order = allOrders[orderId];
+    if (!order) return;
+
+    const status    = (order.status || 'pending').toLowerCase();
+    const isDone    = ['completed', 'cancelled'].includes(status);
+    const canComplete = ['delivery', 'packing'].includes(status);
+    const itemsList = Array.isArray(order.items) ? order.items : Object.values(order.items || {});
+
+    document.getElementById('od-modal-title').textContent =
+      `#${orderId.slice(-6)} — ${order.customerName || 'Customer'}`;
+
+    const payColor =
+      order.paymentStatus === 'paid'    ? '#1A6632' :
+      order.paymentStatus === 'partial' ? '#8A6400' : '#922B21';
+
+    document.getElementById('od-modal-body').innerHTML = `
+      <p><strong>Customer:</strong> ${order.customerName || 'N/A'}</p>
+      <p><strong>Phone:</strong> ${order.phone || 'N/A'}</p>
+      <p><strong>Pickup/Delivery Date:</strong> ${order.date || 'N/A'}</p>
+      <p><strong>Total Amount:</strong> ₱${parseFloat(order.totalAmount||0).toLocaleString('en-PH')}</p>
+      <p><strong>Payment Method:</strong> ${order.paymentMethod || 'N/A'}</p>
+      <p><strong>Payment Status:</strong>
+        <span style="font-weight:700; color:${payColor};">
+          ${(order.paymentStatus || 'unpaid').toUpperCase()}
+        </span>
+      </p>
+      <p><strong>Order Status:</strong>
+        <span class="status-badge status-${status}">${status}</span>
+      </p>
+      ${order.completedAt ? `<p><strong>Completed At:</strong> ${new Date(order.completedAt).toLocaleString('en-PH')}</p>` : ''}
+      <hr>
+      <p style="font-weight:700; color:var(--brown); margin-bottom:8px;">
+        <i class="fas fa-box" style="margin-right:6px; color:var(--primary);"></i>Items Ordered:
+      </p>
+      <div class="od-items-list">
+        ${itemsList.map(i => `
+          <div>
+            <strong>${i.quantity||1}×</strong> ${i.name}
+            ${i.flavor    ? `<span style="color:var(--muted);font-size:0.8rem;"> · ${i.flavor}</span>`   : ''}
+            ${i.frosting  ? `<span style="color:var(--muted);font-size:0.8rem;"> · ${i.frosting}</span>` : ''}
+            ${i.design    ? `<span style="color:var(--muted);font-size:0.8rem;"> · ${i.design}</span>`   : ''}
+            ${i.layers    ? `<span style="color:var(--muted);font-size:0.8rem;"> · ${i.layers} layers</span>` : ''}
+          </div>`).join('')}
+      </div>
+      ${order.notes ? `<p style="margin-top:12px;"><strong>Notes:</strong> ${order.notes}</p>` : ''}
+    `;
+
+    const footer = document.getElementById('od-modal-footer');
+    if (canComplete) {
+      footer.innerHTML = `
+        <button class="btn-od-close" onclick="closeOrderModal()">Close</button>
+        <button class="btn-complete" id="btn-mark-complete" onclick="markCompleted('${orderId}')">
+          <i class="fas fa-check-circle"></i> Mark as Completed
+        </button>
+      `;
+    } else {
+      let doneLabel = '';
+      if (status === 'completed') doneLabel = `<span style="color:#1A6632;font-weight:700;font-size:0.88rem;"><i class="fas fa-check-circle"></i> Completed</span>`;
+      if (status === 'cancelled') doneLabel = `<span style="color:#922B21;font-weight:700;font-size:0.88rem;"><i class="fas fa-times-circle"></i> Cancelled</span>`;
+      footer.innerHTML = `
+        <button class="btn-od-close" onclick="closeOrderModal()">Close</button>
+        ${doneLabel}
+      `;
+    }
+
+    // ── Downpayment reminder button ──────────────────────────────────────────
+    // Appended separately so it works regardless of order status
+    if (needsDownpaymentReminder(order)) {
+      const reminderBtn = document.createElement('button');
+      reminderBtn.id        = 'btn-notify-dp';
+      reminderBtn.className = 'btn-complete';
+      reminderBtn.style.cssText = 'background:#d97706; margin-left:8px;';
+      reminderBtn.innerHTML = '<i class="fas fa-bell"></i> Notify Customer (Downpayment)';
+      reminderBtn.onclick   = () => sendDownpaymentReminder(orderId);
+      footer.appendChild(reminderBtn);
+    }
+
+    document.getElementById('order-detail-modal').classList.add('open');
+  };
+
+  // ── Send downpayment reminder email ──────────────────────────────────────
+  window.sendDownpaymentReminder = (orderId) => {
+    const order = allOrders[orderId];
+    if (!order) return;
+
+    const email = order.email || order.customerEmail || '';
+    if (!email) {
+      alert('No email address found for this customer. Please check the order.');
+      return;
+    }
+
+    if (!confirm(`Send a downpayment reminder email to ${order.customerName || 'this customer'} (${email})?`)) return;
+
+    const btn = document.getElementById('btn-notify-dp');
+    if (btn) {
+      btn.disabled   = true;
+      btn.innerHTML  = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+    }
+
+    sendDownpaymentEmail(order, orderId, email)
+      .then(() => {
+        if (btn) {
+          btn.innerHTML = '<i class="fas fa-check"></i> Email Sent!';
+          btn.style.background = '#1A6632';
+        }
+        // Optional: record that a reminder was sent so you don't double-send
+        update(ref(db, `orders/${orderId}`), { reminderSentAt: new Date().toISOString() });
+      })
+      .catch(err => {
+        alert('Failed to send email: ' + err.message);
+        if (btn) {
+          btn.disabled  = false;
+          btn.innerHTML = '<i class="fas fa-bell"></i> Notify Customer (Downpayment)';
+        }
+      });
+  };
+
+  // ── Mark order as Completed (moves to history) ──
+  window.markCompleted = (orderId) => {
+    if (!confirm('Mark this order as completed? It will appear in History.')) return;
+
+    const btn = document.getElementById('btn-mark-complete');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    }
+
+    update(ref(db, `orders/${orderId}`), {
+      status:      'completed',
+      completedAt: new Date().toISOString()
+    })
+    .then(() => {
+      closeOrderModal();
+      if (selectedDate) viewDay(selectedDate);
+    })
+    .catch(err => {
+      alert('Error updating order: ' + err.message);
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check-circle"></i> Mark as Completed';
+      }
+    });
+  };
+
+  renderCalendar();
+</script>
+
+</body>
+</html>

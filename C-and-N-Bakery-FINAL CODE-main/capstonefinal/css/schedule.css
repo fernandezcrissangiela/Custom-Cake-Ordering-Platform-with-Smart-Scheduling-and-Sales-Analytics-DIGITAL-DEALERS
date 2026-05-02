@@ -1,0 +1,582 @@
+/* ============================================================
+   C&N BAKERY — SCHEDULE PAGE STYLES  (redesigned)
+   ============================================================ */
+
+/* ── Layout ── */
+#schedule-sec {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* ── Calendar Header ── */
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  gap: 12px;
+}
+
+.calendar-header h2 {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--brown);
+  margin: 0;
+  flex: 1;
+  text-align: center;
+}
+
+.calendar-header .btn-action {
+  background: var(--cream);
+  border: 1.5px solid var(--border);
+  color: var(--brown);
+  padding: 9px 14px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  transition: var(--transition);
+}
+
+.calendar-header .btn-action:hover {
+  background: var(--primary);
+  color: var(--white);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+/* ── Legend ── */
+.cal-legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  font-size: 0.74rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.cal-legend span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.legend-available {
+  background: #D4EDDA;
+  border: 1px solid #27ae60;
+}
+
+.legend-almost {
+  background: #FFF8E1;
+  border: 1px solid #ffc107;
+}
+
+.legend-full {
+  background: #FADBD8;
+  border: 1px solid #e74c3c;
+}
+
+.legend-past {
+  background: #E8DDD4;
+  border: 1px solid #C9B5A8;
+}
+
+/* ── Calendar Grid ── */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.day-label {
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--muted);
+  padding: 6px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+/* ── Calendar Day Cells ── */
+.cal-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 500;
+  transition: var(--transition);
+  position: relative;
+  border: 1.5px solid transparent;
+  color: var(--text);
+}
+
+.cal-day:hover {
+  background: var(--cream);
+  border-color: var(--border);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.cal-day.has-booking {
+  background: #D4EDDA;
+  font-weight: 700;
+  color: #1A6632;
+  border-color: #b2dfdb;
+}
+
+.cal-day.has-booking:hover {
+  background: #c3e6cb;
+}
+
+.cal-day.almost-full {
+  background: #FFF8E1;
+  border: 1.5px solid #ffc107;
+  color: #8A6400;
+  font-weight: 700;
+}
+
+.cal-day.almost-full:hover {
+  background: #fff3cd;
+}
+
+.cal-day.full {
+  background: #FADBD8;
+  color: #922B21;
+  cursor: not-allowed;
+  opacity: 0.85;
+  border: 1.5px solid #e74c3c;
+}
+
+.cal-day.full:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.cal-day.full span {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.cal-day.today {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(130, 90, 60, 0.18);
+}
+
+.cal-day.selected {
+  border-color: var(--brown);
+  background: var(--secondary);
+  color: var(--brown);
+  font-weight: 700;
+}
+
+.cal-day.past {
+  opacity: 0.55;
+  cursor: pointer;
+  background: #F5F0EB;
+  color: var(--muted);
+  border-color: var(--border);
+}
+
+.cal-day.past:hover {
+  opacity: 0.85;
+  background: var(--beige);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.cal-day.past.has-booking {
+  background: #E8DDD4;
+  color: var(--brown-light);
+  border-color: #C9B5A8;
+  opacity: 0.75;
+}
+
+.cal-day.past.has-booking:hover {
+  opacity: 1;
+  background: var(--secondary);
+  border-color: var(--primary);
+}
+
+.cal-day.past .past-icon {
+  font-size: 0.55rem;
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+/* ── Dot / Capacity ── */
+.dot-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  margin-top: 2px;
+}
+
+.capacity-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.capacity-label.ok {
+  color: #1A6632;
+}
+
+.capacity-label.warn {
+  color: #8A6400;
+}
+
+.capacity-label.full {
+  color: #922B21;
+}
+
+.full-text {
+  font-size: 0.58rem;
+  color: #922B21;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+/* ── Status Full Badge ── */
+.status-full {
+  background: #FADBD8;
+  color: #922B21;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  margin-left: 10px;
+  display: inline-block;
+}
+
+/* ── Daily Schedule Panel ── */
+.daily-panel-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--brown);
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.daily-panel-title i {
+  color: var(--primary);
+}
+
+#day-orders-list p {
+  color: var(--muted);
+  font-style: italic;
+  font-size: 0.91rem;
+}
+
+#day-orders-list h3 {
+  font-size: 0.95rem;
+  color: var(--brown);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* ── Order Card ── */
+.order-card {
+  background: var(--cream);
+  border-radius: var(--radius-sm);
+  padding: 15px;
+  margin-bottom: 12px;
+  border: 1.5px solid var(--border);
+  transition: var(--transition);
+}
+
+.order-card:hover {
+  box-shadow: var(--shadow-sm);
+  border-color: var(--primary);
+  transform: translateX(4px);
+}
+
+.order-card strong {
+  color: var(--brown);
+  font-size: 0.93rem;
+}
+
+.order-card ul {
+  list-style: none;
+  margin-top: 8px;
+  font-size: 0.83rem;
+  color: var(--text-light);
+}
+
+.order-card ul li {
+  padding: 3px 0;
+  border-bottom: 1px dashed var(--border);
+}
+
+.order-card ul li:last-child {
+  border-bottom: none;
+}
+
+/* ── Status Badges ── */
+.status-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  text-transform: capitalize;
+  display: inline-block;
+}
+
+.status-pending {
+  background: #FFF3CD;
+  color: #8A6400;
+}
+
+.status-confirmed {
+  background: #D6EAF8;
+  color: #1A5276;
+}
+
+.status-preparing {
+  background: #E8EAF6;
+  color: #283593;
+}
+
+.status-baking {
+  background: #FFF8E1;
+  color: #8A4B00;
+}
+
+.status-packing {
+  background: #E0F2F1;
+  color: #00695C;
+}
+
+.status-delivery {
+  background: #E8F5E9;
+  color: #2E7D32;
+}
+
+.status-completed {
+  background: #D4EDDA;
+  color: #155724;
+}
+
+.status-cancelled {
+  background: #FADBD8;
+  color: #922B21;
+}
+
+.status-downpayment-received {
+  background: #EDE7F6;
+  color: #4527A0;
+}
+
+/* ── Order Detail Modal ── */
+#order-detail-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(40, 24, 14, 0.62);
+  backdrop-filter: blur(7px);
+  z-index: 2000;
+  justify-content: center;
+  align-items: center;
+}
+
+#order-detail-modal.open {
+  display: flex;
+}
+
+.od-modal-content {
+  background: var(--white);
+  width: 90%;
+  max-width: 500px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  animation: slideUp 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.od-modal-header {
+  background: linear-gradient(135deg, var(--btn-dark-start), var(--btn-dark-end));
+  color: var(--white);
+  padding: 18px 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.od-modal-header strong {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.05rem;
+}
+
+.od-close {
+  font-size: 1.5rem;
+  cursor: pointer;
+  opacity: 0.75;
+  transition: opacity 0.2s;
+  line-height: 1;
+  background: none;
+  border: none;
+  color: white;
+}
+
+.od-close:hover {
+  opacity: 1;
+}
+
+.od-modal-body {
+  padding: 22px;
+  max-height: 65vh;
+  overflow-y: auto;
+}
+
+.od-modal-body p {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  margin-bottom: 7px;
+}
+
+.od-modal-body hr {
+  border: none;
+  border-top: 1.5px solid var(--border);
+  margin: 14px 0;
+}
+
+.od-items-list {
+  background: var(--cream);
+  border-radius: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  margin-top: 8px;
+}
+
+.od-items-list div {
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--border);
+  font-size: 0.87rem;
+  color: var(--text-light);
+}
+
+.od-items-list div:last-child {
+  border-bottom: none;
+}
+
+.od-modal-footer {
+  padding: 14px 22px;
+  border-top: 1.5px solid var(--border);
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.btn-complete {
+  background: linear-gradient(135deg, #27ae60, #1e8449);
+  color: white;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  box-shadow: 0 6px 18px rgba(39, 174, 96, 0.28);
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.btn-complete:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(39, 174, 96, 0.38);
+}
+
+.btn-complete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-od-close {
+  background: var(--cream);
+  border: 1.5px solid var(--border);
+  color: var(--text);
+  padding: 10px 22px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  transition: var(--transition);
+}
+
+.btn-od-close:hover {
+  background: var(--border);
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  #schedule-sec {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-card {
+    padding: 16px;
+  }
+
+  .calendar-grid {
+    gap: 3px;
+  }
+
+  .cal-day {
+    font-size: 0.72rem;
+    border-radius: 8px;
+  }
+
+  .capacity-label {
+    font-size: 0.55rem;
+  }
+
+  .cal-legend {
+    gap: 10px;
+    font-size: 0.7rem;
+  }
+}

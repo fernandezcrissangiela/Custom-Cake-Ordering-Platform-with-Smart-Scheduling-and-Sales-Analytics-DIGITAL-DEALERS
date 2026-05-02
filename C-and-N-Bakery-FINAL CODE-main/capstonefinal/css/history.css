@@ -1,0 +1,528 @@
+/* ============================================================
+   C&N BAKERY — HISTORY PAGE STYLES  (redesigned)
+   ============================================================ */
+
+/* ── Page Title Bar ── */
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.history-header h1 {
+  font-family: 'Poppins', serif;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--brown);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.history-header h1 i {
+  color: var(--primary);
+}
+
+/* ── Summary Stats ── */
+.history-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.h-stat {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 22px 18px;
+  box-shadow: var(--shadow-sm);
+  border-left: 4px solid var(--primary);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.h-stat::after {
+  content: '';
+  position: absolute;
+  top: -18px;
+  right: -18px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(130, 90, 60, 0.05);
+  pointer-events: none;
+}
+
+.h-stat:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow);
+}
+
+.h-stat h4 {
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.h-stat p {
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: var(--brown);
+  line-height: 1;
+}
+
+.h-stat.completed {
+  border-left-color: #27ae60;
+}
+
+.h-stat.cancelled {
+  border-left-color: #e74c3c;
+}
+
+.h-stat.revenue {
+  border-left-color: var(--primary);
+}
+
+.h-stat.total {
+  border-left-color: var(--brown-light);
+}
+
+/* ── Filter / Search Bar ── */
+.history-toolbar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.history-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--white);
+  padding: 11px 16px;
+  border-radius: 50px;
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-xs);
+  transition: var(--transition);
+  flex: 1;
+  min-width: 220px;
+  max-width: 400px;
+}
+
+.history-search:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(130, 90, 60, 0.09);
+}
+
+.history-search i {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.history-search input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: 'Poppins', serif;
+  font-size: 0.9rem;
+  color: var(--text);
+  flex: 1;
+}
+
+.history-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--white);
+  padding: 11px 16px;
+  border-radius: 50px;
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-xs);
+  transition: var(--transition);
+}
+
+.history-filter:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(130, 90, 60, 0.09);
+}
+
+.history-filter select {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.86rem;
+  color: var(--text);
+  cursor: pointer;
+}
+
+/* ── History Table Card ── */
+.history-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  overflow-x: auto;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.87rem;
+  min-width: 640px;
+}
+
+.history-table thead th {
+  background: var(--cream);
+  color: var(--brown);
+  font-weight: 700;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+
+.history-table thead th:first-child {
+  border-radius: 10px 0 0 0;
+}
+
+.history-table thead th:last-child {
+  border-radius: 0 10px 0 0;
+}
+
+.history-table tbody td {
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-light);
+  vertical-align: middle;
+}
+
+.history-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.history-table tbody tr {
+  transition: background 0.18s;
+  cursor: pointer;
+}
+
+.history-table tbody tr:hover td {
+  background: rgba(248, 241, 234, 0.70);
+}
+
+.order-id-cell {
+  font-weight: 700;
+  color: var(--brown);
+  font-size: 0.84rem;
+  font-family: monospace;
+}
+
+.customer-cell strong {
+  color: var(--text);
+  font-size: 0.88rem;
+}
+
+.customer-cell small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.products-cell {
+  max-width: 200px;
+  color: var(--text-light);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.amount-cell {
+  font-weight: 700;
+  color: var(--brown);
+  white-space: nowrap;
+}
+
+.date-cell {
+  white-space: nowrap;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* ── Status Badges ── */
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.status-completed {
+  background: #D4EDDA;
+  color: #155724;
+}
+
+.status-cancelled {
+  background: #FADBD8;
+  color: #922B21;
+}
+
+.status-pending {
+  background: #FFF3CD;
+  color: #8A6400;
+}
+
+.status-confirmed {
+  background: #D6EAF8;
+  color: #1A5276;
+}
+
+.status-preparing {
+  background: #E8EAF6;
+  color: #283593;
+}
+
+.status-baking {
+  background: #FFF8E1;
+  color: #8A4B00;
+}
+
+.status-packing {
+  background: #E0F2F1;
+  color: #00695C;
+}
+
+.status-delivery {
+  background: #E8F5E9;
+  color: #2E7D32;
+}
+
+.status-downpayment-received {
+  background: #EDE7F6;
+  color: #4527A0;
+}
+
+/* ── Payment Badges ── */
+.pay-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.pay-paid {
+  background: #D4EDDA;
+  color: #155724;
+}
+
+.pay-partial {
+  background: #FFF3CD;
+  color: #8A6400;
+}
+
+.pay-unpaid {
+  background: #FADBD8;
+  color: #922B21;
+}
+
+/* ── View Button ── */
+.btn-view {
+  background: var(--cream);
+  border: 1.5px solid var(--border);
+  color: var(--brown);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.77rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  transition: var(--transition);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-view:hover {
+  background: var(--primary);
+  color: var(--white);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+/* ── Empty State ── */
+.history-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--muted);
+}
+
+.history-empty i {
+  font-size: 2.8rem;
+  color: var(--border);
+  margin-bottom: 14px;
+  display: block;
+}
+
+.history-empty p {
+  font-size: 0.93rem;
+}
+
+/* ── Detail Modal ── */
+.h-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(40, 24, 14, 0.62);
+  backdrop-filter: blur(7px);
+  z-index: 2000;
+  justify-content: center;
+  align-items: center;
+}
+
+.h-modal.open {
+  display: flex;
+}
+
+.h-modal-content {
+  background: var(--white);
+  width: 90%;
+  max-width: 520px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  animation: slideUp 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.h-modal-header {
+  background: linear-gradient(135deg, var(--btn-dark-start), var(--btn-dark-end));
+  color: var(--white);
+  padding: 18px 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.h-modal-header strong {
+  font-family: 'Poppins', serif;
+  font-size: 1.05rem;
+}
+
+.h-modal-close {
+  font-size: 1.5rem;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.75);
+  transition: color 0.2s;
+  line-height: 1;
+}
+
+.h-modal-close:hover {
+  color: white;
+}
+
+.h-modal-body {
+  padding: 22px;
+  max-height: 65vh;
+  overflow-y: auto;
+}
+
+.h-modal-body p {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  margin-bottom: 7px;
+}
+
+.h-modal-body hr {
+  border: none;
+  border-top: 1.5px solid var(--border);
+  margin: 14px 0;
+}
+
+.h-modal-body .items-list {
+  background: var(--cream);
+  border-radius: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  margin-top: 8px;
+}
+
+.h-modal-body .items-list div {
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--border);
+  font-size: 0.87rem;
+  color: var(--text-light);
+}
+
+.h-modal-body .items-list div:last-child {
+  border-bottom: none;
+}
+
+.h-modal-footer {
+  padding: 14px 22px;
+  border-top: 1.5px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .history-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .history-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .history-search,
+  .history-filter {
+    max-width: 100%;
+  }
+
+  .history-card {
+    padding: 14px;
+  }
+
+  .history-table {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .history-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .h-stat p {
+    font-size: 1.35rem;
+  }
+}

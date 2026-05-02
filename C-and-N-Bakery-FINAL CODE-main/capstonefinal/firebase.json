@@ -1,0 +1,69 @@
+{
+    "hosting": {
+        "public": ".",
+        "ignore": [
+            "firebase.json",
+            "**/.*",
+            "**/node_modules/**",
+            "firebase-debug.log"
+        ],
+        "rewrites": [
+            {
+                "source": "/",
+                "destination": "/userside/index.html"
+            },
+            {
+                "source": "/index.html",
+                "destination": "/userside/index.html"
+            },
+            {
+                "source": "/menu.html",
+                "destination": "/userside/menu.html"
+            },
+            {
+                "source": "/cart.html",
+                "destination": "/userside/cart.html"
+            },
+            {
+                "source": "/checkout.html",
+                "destination": "/userside/checkout.html"
+            },
+            {
+                "source": "/cus.html",
+                "destination": "/userside/cus.html"
+            },
+            {
+                "source": "/faq.html",
+                "destination": "/userside/faq.html"
+            },
+            {
+                "source": "/user.html",
+                "destination": "/userside/user.html"
+            },
+            {
+                "source": "/admin.html",
+                "destination": "/adminside/admin.html"
+            },
+            {
+                "source": "/sales.html",
+                "destination": "/adminside/sales.html"
+            },
+            {
+                "source": "/orders.html",
+                "destination": "/adminside/orders.html"
+            },
+            {
+                "source": "/schedule.html",
+                "destination": "/adminside/schedule.html"
+            },
+            {
+                "source": "/admin_menu.html",
+                "destination": "/adminside/admin_menu.html"
+            },
+            {
+                "source": "/history.html",
+                "destination": "/adminside/history.html"
+            }
+        ]
+    }
+}

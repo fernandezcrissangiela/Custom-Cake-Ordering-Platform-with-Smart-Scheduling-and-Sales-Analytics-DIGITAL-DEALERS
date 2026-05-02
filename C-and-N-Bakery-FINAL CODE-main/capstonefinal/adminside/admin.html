@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>C&N Bakery</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../css/admin.css" />
+</head>
+<body>
+
+<!-- SESSION GUARD: Add this same block to the TOP of EVERY admin page -->
+<script>
+  if (sessionStorage.getItem('adminLoggedIn') !== 'true') {
+    window.location.replace('login.html');
+  }
+</script>
+
+<header>
+  <a href="admin.html" class="logo-text">C&N <span>Bakery</span></a>
+  <button class="btn-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+</header>
+
+<div class="container">
+  <div class="nav-tabs">
+    <a href="sales.html" class="nav-link"><i class="fas fa-chart-line"></i> Sales</a>
+    <a href="orders.html" class="nav-link"><i class="fas fa-shopping-bag"></i> Orders</a>
+    <a href="schedule.html" class="nav-link"><i class="fas fa-calendar-alt"></i> Schedule</a>
+    <a href="admin_menu.html" class="nav-link"><i class="fas fa-birthday-cake"></i> Menu</a>
+    <a href="history.html" class="nav-link"><i class="fas fa-history"></i> History</a>
+  </div>
+
+  <div class="welcome-card">
+    <i class="fas fa-user-shield"></i>
+    <h1>Welcome to CandN Bakery</h1>
+    <p style="color: var(--muted); margin-top: 15px; font-size: 1.1rem;">
+      Your management hub is ready. Choose a module above to get started.
+    </p>
+  </div>
+</div>
+
+<script>
+  function handleLogout() {
+    sessionStorage.removeItem('adminLoggedIn');
+    window.location.replace('login.html');
+  }
+</script>
+
+</body>
+</html>

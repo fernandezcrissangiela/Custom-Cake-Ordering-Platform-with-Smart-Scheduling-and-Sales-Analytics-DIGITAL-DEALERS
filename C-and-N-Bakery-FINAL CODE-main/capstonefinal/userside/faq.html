@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>C&N Bakery - Frequently Asked Questions</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCWUJfDwLR5erpExZUoBWW7YJ-aDpT_zy0",
+      authDomain: "candn-bakery.firebaseapp.com",
+      databaseURL: "https://candn-bakery-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "candn-bakery",
+      storageBucket: "candn-bakery.appspot.com",
+      messagingSenderId: "620414447517",
+      appId: "1:620414447517:web:d42c5d50a91ff41e5ac974"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    // Cart Count
+    function updateCartCount(uid) {
+      const cartCount = document.getElementById('cart-count');
+      if (!cartCount) return;
+
+      if (!uid) {
+        cartCount.innerText = '0';
+        cartCount.style.display = 'none';
+        return;
+      }
+
+      const cart  = JSON.parse(localStorage.getItem('cart') || '[]');
+      const total = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+      cartCount.innerText     = total;
+      cartCount.style.display = total > 0 ? 'flex' : 'none';
+    }
+
+    window.handleSignup = async function(e) {
+      e.preventDefault();
+      const { name, email, password } = e.target;
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email.value, password.value);
+        const newUid = userCredential.user.uid;
+
+        await set(ref(db, "users/" + newUid), {
+          name:  name.value,
+          email: email.value
+        });
+
+        await signOut(auth);
+
+        const successMsg = document.createElement('p');
+        successMsg.className = 'signup-success-msg';
+        successMsg.style.cssText = 'color:#4CAF50; text-align:center; margin:1rem 0; font-weight:500;';
+        successMsg.textContent = "Account created! Please sign in below.";
+
+        const signupForm = document.getElementById('signup-form');
+        const existing = signupForm.querySelector('.signup-success-msg');
+        if (existing) existing.remove();
+        signupForm.insertBefore(successMsg, signupForm.firstChild);
+
+        document.querySelector('[data-tab="login"]').click();
+        document.querySelector('#login-form input[name="email"]').value = email.value;
+        document.querySelector('#login-form input[name="email"]').focus();
+
+        name.value = ''; email.value = ''; password.value = '';
+      } catch (error) {
+        alert("Signup failed: " + error.message);
+      }
+    };
+
+    window.handleLogin = async function(e) {
+      e.preventDefault();
+      try {
+        await signInWithEmailAndPassword(auth, e.target.email.value, e.target.password.value);
+        closeModal();
+      } catch (error) {
+        alert("Login failed: " + error.message);
+      }
+    };
+
+    window.handleLogout = async () => {
+      localStorage.removeItem('cart');
+      localStorage.removeItem('currentUserId');
+      await signOut(auth);
+      updateCartCount(null);
+    };
+
+    onAuthStateChanged(auth, async (user) => {
+      const signupBtn = document.getElementById('signup-trigger');
+      const logoutBtn = document.getElementById('logout-trigger');
+      const nameTag   = document.getElementById('user-name-display');
+
+      if (user) {
+        const uid = user.uid;
+        localStorage.setItem('currentUserId', uid);
+
+        signupBtn.classList.add('hidden');
+        logoutBtn.classList.remove('hidden');
+
+        const snap = await get(ref(db, "users/" + uid));
+        if (snap.exists()) nameTag.innerText = "Hi, " + snap.val().name;
+
+        updateCartCount(uid);
+      } else {
+        localStorage.removeItem('currentUserId');
+        signupBtn.classList.remove('hidden');
+        logoutBtn.classList.add('hidden');
+        nameTag.innerText = "";
+        updateCartCount(null);
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const uid = localStorage.getItem('currentUserId');
+      updateCartCount(uid || null);
+    });
+  </script>
+
+  <style>
+    /* FAQ Specific Styles */
+    .faq-hero {
+      text-align: center;
+      padding: 100px 20px 80px;
+      background: linear-gradient(135deg, var(--cream) 0%, var(--secondary) 100%);
+    }
+    .faq-hero h1 {
+      font-size: 3.5rem;
+      margin-bottom: 15px;
+    }
+    .faq-hero h1 span {
+      color: var(--primary);
+    }
+    .faq-hero p {
+      font-size: 1.35rem;
+      color: var(--text-light);
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .faq-container {
+      max-width: 850px;
+      margin: 0 auto 100px;
+      padding: 0 20px;
+    }
+
+    .faq-item {
+      background: white;
+      border-radius: var(--radius);
+      margin-bottom: 18px;
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      transition: var(--transition);
+    }
+    .faq-question {
+      width: 100%;
+      padding: 28px 32px;
+      background: none;
+      border: none;
+      text-align: left;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .faq-question:hover {
+      background: var(--beige);
+    }
+    .faq-question::after {
+      content: "＋";
+      font-size: 1.9rem;
+      color: var(--primary);
+      transition: transform 0.4s ease;
+    }
+    .faq-item.active .faq-question::after {
+      transform: rotate(45deg);
+    }
+    .faq-answer {
+      padding: 0 32px;
+      max-height: 0;
+      overflow: hidden;
+      background: #fffafb;
+      line-height: 1.75;
+      transition: max-height 0.5s ease, padding 0.5s ease;
+    }
+    .faq-item.active .faq-answer {
+      max-height: 500px;
+      padding: 28px 32px;
+    }
+
+    /* Make sure FAQ looks good on mobile */
+    @media (max-width: 768px) {
+      .faq-hero h1 { font-size: 2.8rem; }
+      .faq-hero p { font-size: 1.2rem; }
+      .faq-question { font-size: 1.1rem; padding: 22px 25px; }
+      .faq-answer { font-size: 0.98rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="container nav-flex">
+      <div class="logo-text">C&N <span>Bakery</span></div>
+
+      <input type="checkbox" id="nav-toggle" class="nav-toggle">
+      <label for="nav-toggle" class="nav-toggle-label"><span></span></label>
+
+      <nav>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="menu.html">Menu</a></li>
+          <li><a href="faq.html" class="active">FAQ</a></li>
+          <li><a href="cus.html" class="active">Customize</a></li>
+        </ul>
+
+        <div class="auth-area">
+          <div class="nav-icons">
+            <div class="cart-wrapper">
+              <i class="fas fa-shopping-cart" title="Cart" onclick="checkAuth(event)"></i>
+              <span id="cart-count">0</span>
+            </div>
+            <div class="user-wrapper">
+              <i class="fas fa-user-circle" title="Account" onclick="checkAuth(event)"></i>
+            </div>
+          </div>
+          <span id="user-name-display"></span>
+          <button id="signup-trigger" class="btn-primary" onclick="openModal()">Sign Up</button>
+          <button id="logout-trigger" class="btn-outline hidden" onclick="handleLogout()">Logout</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <section class="faq-hero">
+    <div class="container">
+      <h1>Frequently Asked <span>Questions</span></h1>
+      <p>Everything you need to know about ordering delicious homemade cakes from C&N Bakery</p>
+    </div>
+  </section>
+
+  <section class="faq-container">
+    <div class="faq-item">
+      <button class="faq-question">What is C&N Bakery?</button>
+      <div class="faq-answer">
+        C&N Bakery is a family-owned homemade bakery in Quezon City that has been baking fresh cakes and pastries with love since 2019. We use only premium ingredients and traditional recipes passed down through generations.
+      </div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-question">Do you offer delivery?</button>
+      <div class="faq-answer">
+        Yes! We offer fast delivery across Iloilo City. Most orders arrive within 1–3 hours depending on your location and traffic.
+      </div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-question">How long does delivery take?</button>
+      <div class="faq-answer">
+        Standard delivery is 30 minutes within Passi City. 1-2 hours within Iloilo City.
+      </div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-question">Can I customize my cake?</button>
+      <div class="faq-answer">
+        Absolutely! You can fully customize Layers, Flavor, Frosting, Design Style, and even add personalized messages or photos. Just click "Customize Now" on the homepage.
+      </div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-question">How far in advance should I order a custom cake?</button>
+      <div class="faq-answer">
+        For standard custom cakes we recommend ordering at least 48 hours in advance. For very detailed or large designs, please order 3–5 days ahead.
+      </div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-question">What payment methods do you accept?</button>
+      <div class="faq-answer">
+        We accept GCash, Bank Transfer (PNB), and Cash on Delivery (COD) within Iloilo City.
+      </div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-question">Can I pick up my order instead of delivery?</button>
+      <div class="faq-answer">
+        Yes! Free pickup is available at our stall in Passi Public Market. Just choose "Pickup" during checkout and we'll give you the exact address and time.
+      </div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-question">What is your cancellation policy?</button>
+      <div class="faq-answer">
+        Orders may be cancelled up to 3 days in advance for customized cakes. Once a down payment has been made, it is non-refundable. Cancellation is no longer allowed once the baking process has started.
+      </div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-question">How can I contact customer support?</button>
+      <div class="faq-answer">
+        You can reach us anytime via:<br>
+        <strong>Email:</strong> CandNBakery@gmail.com<br>
+        <strong>Phone:</strong> +63 9XX XXX XXXX<br>
+        We usually reply within minutes during business hours (8 AM – 8 PM).
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container footer-grid">
+      <div class="footer-about">
+        <h3>C&N <span>Bakery</span></h3>
+        <p>Baking memories since 2019. We pride ourselves on using traditional recipes passed down through generations.</p>
+      </div>
+      <div class="footer-contact">
+        <h3>Contact Us</h3>
+        <p><i class="fas fa-envelope"></i> CandNBakery@gmail.com</p>
+        <p><i class="fas fa-phone"></i> 09814535981</p>
+        <div class="social-links">
+          <a href="https://web.facebook.com/SweetdreamsEst.2014" target="_blank">
+            <i class="fab fa-facebook-f"></i> Facebook
+          </a>
+        </div>
+      </div>
+      <div class="footer-links">
+        <h3>Quick Links</h3>
+        <ul>
+          <li><a href="menu.html">Menu</a></li>
+          <li><a href="faq.html">FAQ</a></li>
+          <li><a href="#" onclick="openModal()">Join Family</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 C&N Bakery. Hand-baked with love.</p>
+    </div>
+  </footer>
+
+  <!-- Auth Modal -->
+  <div id="auth-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeModal()">×</span>
+      <div class="modal-header-text">
+        <h2>Sweet Welcome!</h2>
+        <p>Join the C&N Bakery family</p>
+      </div>
+      <div class="tab-switcher">
+        <button class="tab-btn active" data-tab="signup">Sign Up</button>
+        <button class="tab-btn" data-tab="login">Log In</button>
+      </div>
+      <form id="signup-form" class="auth-form active" onsubmit="handleSignup(event)">
+        <div class="form-group"><label>Full Name</label><input type="text" name="name" required></div>
+        <div class="form-group"><label>Email Address</label><input type="email" name="email" required></div>
+        <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
+        <button type="submit" class="btn-primary full-width">Create Account</button>
+      </form>
+      <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
+        <div class="form-group"><label>Email Address</label><input type="email" name="email" required></div>
+        <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
+        <button type="submit" class="btn-primary full-width">Sign In</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const modal = document.getElementById('auth-modal');
+    function openModal()  { 
+      modal.classList.add('active'); 
+      document.getElementById('nav-toggle').checked = false; 
+    }
+    function closeModal() { modal.classList.remove('active'); }
+
+    window.checkAuth = function(event) {
+      const isLoggedIn = !document.getElementById('logout-trigger').classList.contains('hidden');
+      if (!isLoggedIn) { 
+        openModal(); 
+        return; 
+      }
+      const target = event.currentTarget;
+      if (target.classList.contains('fa-shopping-cart')) window.location.href = 'cart.html';
+      else if (target.classList.contains('fa-user-circle')) window.location.href = 'user.html';
+      else window.location.href = 'cus.html';
+    };
+
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab + '-form').classList.add('active');
+      });
+    });
+
+    // FAQ Accordion
+    document.querySelectorAll('.faq-question').forEach(question => {
+      question.addEventListener('click', () => {
+        const item = question.parentElement;
+        document.querySelectorAll('.faq-item').forEach(other => {
+          if (other !== item) other.classList.remove('active');
+        });
+        item.classList.toggle('active');
+      });
+    });
+
+    // Close modal when clicking outside
+    window.onclick = (e) => { 
+      if (e.target == modal) closeModal(); 
+    };
+  </script>
+</body>
+</html>

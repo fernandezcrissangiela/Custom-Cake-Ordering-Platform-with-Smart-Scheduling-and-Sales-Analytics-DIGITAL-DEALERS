@@ -1,0 +1,159 @@
+/* ============================================================
+   C&N BAKERY — SALES PAGE STYLES  (redesigned)
+   ============================================================ */
+
+/* ── Page Title ── */
+.page-title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.page-title-bar h1 {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.30rem;
+  font-weight: 700;
+  color: var(--brown);
+}
+
+.page-title-bar h1 span {
+  color: var(--primary);
+}
+
+/* ── Stat boxes ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+  gap: 18px;
+  margin-bottom: 26px;
+}
+
+.stat-box {
+  background: var(--white);
+  padding: 24px 20px;
+  border-radius: var(--radius);
+  text-align: center;
+  border-left: 4px solid var(--primary);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-box::after {
+  content: '';
+  position: absolute;
+  top: -22px;
+  right: -22px;
+  width: 80px;
+  height: 80px;
+  background: rgba(130, 90, 60, 0.05);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.stat-box:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow);
+  border-left-color: var(--primary-dark);
+}
+
+.stat-box h3 {
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.9px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.stat-box p {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--brown);
+  line-height: 1;
+}
+
+.stat-trend {
+  margin-top: 8px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.stat-trend.up {
+  color: #27ae60;
+}
+
+.stat-trend.down {
+  color: #c0392b;
+}
+
+.stat-trend.flat {
+  color: var(--muted);
+}
+
+/* ── Charts ── */
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 22px;
+  margin-bottom: 26px;
+}
+
+.chart-card {
+  background: var(--white);
+  padding: 26px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.chart-card:hover {
+  box-shadow: var(--shadow);
+}
+
+.chart-card h3 {
+  font-family: 'Poppins', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--brown);
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chart-card h3 i {
+  color: var(--primary);
+  font-size: 1rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .stat-box p {
+    font-size: 1.3rem;
+  }
+
+  .chart-card {
+    padding: 16px;
+  }
+}

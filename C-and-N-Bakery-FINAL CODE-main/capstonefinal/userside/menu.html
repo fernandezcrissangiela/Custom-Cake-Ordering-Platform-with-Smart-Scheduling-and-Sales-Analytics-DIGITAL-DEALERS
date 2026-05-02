@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>C&N Bakery - Our Sweet Menu</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../css/menu.css">
+
+  <style>
+   .skeleton { background: #f8f8f8; border-radius: 12px; overflow: hidden; }
+    .skeleton-img { height: 220px; background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%); background-size: 200% 100%; animation: loading 1.8s infinite; }
+    .skeleton-text, .skeleton-btn { height: 18px; margin: 14px 16px; background: #e0e0e0; border-radius: 6px; }
+    .skeleton-btn { height: 46px; margin: 16px; }
+    @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    .error-msg { 
+      grid-column: 1 / -1; 
+      text-align: center; 
+      padding: 120px 20px; 
+      color: #d32f2f; 
+      font-size: 1.15rem; 
+      font-weight: 500;
+    }
+
+    .no-products {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 80px 20px;
+      color: #777;
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="container nav-flex">
+      <a href="index.html" class="logo-text">C&N <span>Bakery</span></a>
+
+      <input type="checkbox" id="nav-toggle" class="nav-toggle">
+      <label for="nav-toggle" class="nav-toggle-label"><span></span></label>
+
+      <nav class="nav-links" id="nav-menu">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="menu.html" class="active">Menu</a></li>
+          <li><a href="faq.html">FAQ</a></li>
+        </ul>
+        <div class="auth-area">
+          <div class="nav-icons">
+            <div class="cart-wrapper">
+              <i class="fas fa-shopping-cart" title="Cart" onclick="checkAuth(event)"></i>
+              <span id="cart-count-header">0</span>
+            </div>
+            <div class="user-wrapper">
+              <i class="fas fa-user-circle" title="Account" onclick="checkAuth(event)"></i>
+            </div>
+          </div>
+          <span id="user-name-display"></span>
+          <button id="signup-trigger" class="btn-primary" onclick="window.location.href='index.html'">Sign Up</button>
+          <button id="logout-trigger" class="btn-outline hidden" onclick="handleLogout()">Logout</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="menu-header">
+      <h1>Our <span>Sweet Menu</span></h1>
+      <p class="subtitle">Freshly baked daily with love • Choose your favorites!</p>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-box">
+        <label><i class="fas fa-coins"></i> Budget Range:</label>
+        <div class="price-range-buttons">
+          <button class="price-filter-btn active" data-min="0" data-max="999999">Any</button>
+          <button class="price-filter-btn" data-min="0" data-max="199">₱0 – ₱199</button>
+          <button class="price-filter-btn" data-min="200" data-max="500">₱200 – ₱500</button>
+          <button class="price-filter-btn" data-min="501" data-max="999999">₱501+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="categories" id="category-buttons">
+      <span style="color:var(--muted); font-size:0.9rem;"><i class="fas fa-spinner fa-spin"></i> Loading categories…</span>
+    </div>
+
+    <div class="product-grid" id="product-grid"></div>
+  </div>
+
+  <!-- Product Detail Modal -->
+  <div id="productModal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close" id="closeModal">×</span>
+      <img id="modalImg" src="" alt="Product" loading="lazy">
+      <div class="modal-body">
+        <h2 id="modalTitle"></h2>
+        <div class="modal-price" id="modalPrice"></div>
+        <p class="modal-desc" id="modalDesc"></p>
+        <button id="modalAddToCart" class="btn-primary full-width">Add to Cart</button>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCWUJfDwLR5erpExZUoBWW7YJ-aDpT_zy0",
+    authDomain: "candn-bakery.firebaseapp.com",
+    databaseURL: "https://candn-bakery-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "candn-bakery",
+    storageBucket: "candn-bakery.appspot.com",
+    messagingSenderId: "620414447517",
+    appId: "1:620414447517:web:d42c5d50a91ff41e5ac974"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  const grid = document.getElementById('product-grid');
+  let productsByCategory = { cakes: [], pastries: [], custom: [] };
+  let currentSelectedProduct = null;
+
+  // ==================== CART FUNCTIONS ====================
+  const getCart = () => JSON.parse(localStorage.getItem('cart') || '[]');
+
+  const updateCartCount = () => {
+    const countEl = document.getElementById('cart-count-header');
+    if (!countEl) return;
+
+    const isLoggedIn = !document.getElementById('logout-trigger').classList.contains('hidden');
+
+    if (!isLoggedIn) {
+      countEl.textContent = '0';
+      countEl.style.display = 'none';
+      return;
+    }
+
+    const total = getCart().reduce((sum, item) => sum + (item.quantity || 1), 0);
+    countEl.textContent = total;
+    countEl.style.display = total > 0 ? 'flex' : 'none';
+  };
+
+  const saveCart = (cart) => {
+    localStorage.setItem('cart', JSON.stringify(cart));
+    updateCartCount();
+  };
+
+  // ==================== AUTH & UI ====================
+  onAuthStateChanged(auth, async (user) => {
+    const signupBtn = document.getElementById('signup-trigger');
+    const logoutBtn = document.getElementById('logout-trigger');
+    const nameTag   = document.getElementById('user-name-display');
+
+    if (user) {
+      signupBtn?.classList.add('hidden');
+      logoutBtn?.classList.remove('hidden');
+      try {
+        const snap = await get(ref(db, "users/" + user.uid));
+        if (snap.exists()) {
+          nameTag.innerText = "Hi, " + (snap.val().name || "Guest");
+        }
+      } catch {}
+    } else {
+      signupBtn?.classList.remove('hidden');
+      logoutBtn?.classList.add('hidden');
+      nameTag.innerText = "";
+    }
+
+    updateCartCount();
+  });
+
+  window.handleLogout = () => signOut(auth).catch(err => console.error("Logout error:", err));
+
+  window.checkAuth = (e) => {
+    const isLoggedIn = !document.getElementById('logout-trigger').classList.contains('hidden');
+    if (!isLoggedIn) {
+      alert("Please sign in to continue.");
+      window.location.href = 'index.html';
+      return;
+    }
+    const target = e.currentTarget;
+    if (target.classList.contains('fa-shopping-cart')) {
+      window.location.href = 'cart.html';
+    } else if (target.classList.contains('fa-user-circle')) {
+      window.location.href = 'user.html';
+    }
+  };
+
+  // ==================== ADD TO CART ====================
+  const addToCart = (product) => {
+    if (!auth.currentUser) {
+      alert("Please sign in to add items to your cart.");
+      window.location.href = 'index.html';
+      return;
+    }
+
+    let cart = getCart();
+    const catObj = allCategories.find(c => c.key === product.category);
+    const category = catObj ? catObj.displayName : (product.category || "Others");
+
+    const item = {
+      ...product,
+      category,
+      id: product.id || Date.now().toString()
+    };
+
+    const existing = cart.find(i => i.id === item.id);
+    if (existing) {
+      existing.quantity = (existing.quantity || 1) + 1;
+    } else {
+      cart.push({ ...item, quantity: 1 });
+    }
+
+    saveCart(cart);
+
+    document.querySelectorAll(`.btn-add[data-id="${product.id}"]`).forEach(btn => {
+      const original = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-check"></i> Added';
+      btn.disabled = true;
+      setTimeout(() => {
+        btn.innerHTML = original;
+        btn.disabled = false;
+      }, 1400);
+    });
+  };
+
+  // ==================== MODAL ====================
+  const modal = document.getElementById('productModal');
+  const openProductModal = (product) => {
+    currentSelectedProduct = product;
+    document.getElementById('modalImg').src = product.image || `https://via.placeholder.com/420x300?text=${encodeURIComponent(product.name)}`;
+    document.getElementById('modalImg').alt = product.name;
+    document.getElementById('modalTitle').textContent = product.name;
+    document.getElementById('modalPrice').textContent = `₱${Number(product.price).toFixed(2)}`;
+    document.getElementById('modalDesc').textContent = product.description || "Freshly baked daily with love and the finest ingredients.";
+    modal.classList.add('active');
+  };
+
+  document.getElementById('closeModal').onclick = () => modal.classList.remove('active');
+  document.getElementById('modalAddToCart').onclick = () => {
+    if (currentSelectedProduct) addToCart(currentSelectedProduct);
+    modal.classList.remove('active');
+  };
+
+  // ==================== RENDER & FETCH ====================
+  function showSkeletons(count = 8) {
+    grid.innerHTML = '';
+    for (let i = 0; i < count; i++) {
+      grid.innerHTML += `
+        <div class="cake-item skeleton">
+          <div class="skeleton-img"></div>
+          <div class="skeleton-text"></div>
+          <div class="skeleton-text" style="width:65%"></div>
+          <div class="skeleton-btn"></div>
+        </div>`;
+    }
+  }
+
+  function renderProducts(category) {
+    const activePriceBtn = document.querySelector('.price-filter-btn.active');
+    const minPrice = parseFloat(activePriceBtn?.dataset.min || 0);
+    const maxPrice = parseFloat(activePriceBtn?.dataset.max || Infinity);
+
+    const items = (productsByCategory[category] || []).filter(p => {
+      return p.price >= minPrice && p.price <= maxPrice;
+    });
+
+    grid.innerHTML = items.length === 0 
+      ? '<p class="no-products">No products found in this price range.</p>'
+      : '';
+
+    items.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'cake-item';
+      card.innerHTML = `
+        <img src="${p.image || `https://via.placeholder.com/300x250?text=${encodeURIComponent(p.name)}`}" 
+             alt="${p.name}" loading="lazy">
+        <h3>${p.name}</h3>
+        <p class="card-desc">${p.description || "Freshly baked daily with love and the finest ingredients."}</p>
+        <p class="price">₱${Number(p.price).toFixed(2)}</p>
+        <button class="btn-primary btn-add" data-id="${p.id}">Add to Cart</button>
+      `;
+      card.addEventListener('click', e => {
+        if (!e.target.closest('button')) openProductModal(p);
+      });
+      grid.appendChild(card);
+    });
+  }
+
+  async function fetchCategory(category) {
+    showSkeletons();
+    try {
+      const snap = await get(ref(db, `products/${category}`));
+      productsByCategory[category] = snap.exists()
+        ? Object.entries(snap.val()).map(([id, val]) => ({ id, ...val, category }))
+        : [];
+      renderProducts(category);
+    } catch (err) {
+      grid.innerHTML = `<p class="error-msg">Failed to load ${category}: ${err.message}</p>`;
+      console.error(err);
+    }
+  }
+
+  // ==================== DYNAMIC CATEGORIES ====================
+  let allCategories = []; // { key, displayName }
+
+  async function loadCategories() {
+    const btnContainer = document.getElementById('category-buttons');
+    try {
+      const snap = await get(ref(db, 'categories'));
+      allCategories = [];
+      if (snap.exists()) {
+        snap.forEach(child => {
+          allCategories.push({ key: child.key, displayName: child.val().displayName || child.key });
+        });
+      }
+
+      if (allCategories.length === 0) {
+        btnContainer.innerHTML = '<span style="color:var(--muted);">No categories available.</span>';
+        return;
+      }
+
+      btnContainer.innerHTML = '';
+      allCategories.forEach((cat, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'category-btn' + (i === 0 ? ' active' : '');
+        btn.dataset.category = cat.key;
+        btn.textContent = cat.displayName;
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          fetchCategory(cat.key);
+        });
+        btnContainer.appendChild(btn);
+      });
+
+      // Load the first category automatically
+      fetchCategory(allCategories[0].key);
+    } catch (err) {
+      btnContainer.innerHTML = `<span style="color:#c0392b;">Failed to load categories: ${err.message}</span>`;
+    }
+  }
+
+  // ==================== EVENT LISTENERS ====================
+  document.querySelectorAll('.price-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.price-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const activeCat = document.querySelector('.category-btn.active')?.dataset.category;
+      if (activeCat) renderProducts(activeCat);
+    });
+  });
+
+  grid.addEventListener('click', e => {
+    const btn = e.target.closest('.btn-add');
+    if (!btn) return;
+    e.stopPropagation();
+    const id = btn.dataset.id;
+    const activeCat = document.querySelector('.category-btn.active')?.dataset.category;
+    const product = productsByCategory[activeCat]?.find(p => p.id === id);
+    if (product) addToCart(product);
+  });
+
+  // ==================== INITIALIZE ====================
+  loadCategories();
+</script>
+</body>
+</html>
