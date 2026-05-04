@@ -125,88 +125,7 @@
     });
   </script>
 
-  <style>
-    /* FAQ Specific Styles */
-    .faq-hero {
-      text-align: center;
-      padding: 100px 20px 80px;
-      background: linear-gradient(135deg, var(--cream) 0%, var(--secondary) 100%);
-    }
-    .faq-hero h1 {
-      font-size: 3.5rem;
-      margin-bottom: 15px;
-    }
-    .faq-hero h1 span {
-      color: var(--primary);
-    }
-    .faq-hero p {
-      font-size: 1.35rem;
-      color: var(--text-light);
-      max-width: 700px;
-      margin: 0 auto;
-    }
-
-    .faq-container {
-      max-width: 850px;
-      margin: 0 auto 100px;
-      padding: 0 20px;
-    }
-
-    .faq-item {
-      background: white;
-      border-radius: var(--radius);
-      margin-bottom: 18px;
-      box-shadow: var(--shadow-sm);
-      overflow: hidden;
-      transition: var(--transition);
-    }
-    .faq-question {
-      width: 100%;
-      padding: 28px 32px;
-      background: none;
-      border: none;
-      text-align: left;
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: var(--text);
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .faq-question:hover {
-      background: var(--beige);
-    }
-    .faq-question::after {
-      content: "＋";
-      font-size: 1.9rem;
-      color: var(--primary);
-      transition: transform 0.4s ease;
-    }
-    .faq-item.active .faq-question::after {
-      transform: rotate(45deg);
-    }
-    .faq-answer {
-      padding: 0 32px;
-      max-height: 0;
-      overflow: hidden;
-      background: #fffafb;
-      line-height: 1.75;
-      transition: max-height 0.5s ease, padding 0.5s ease;
-    }
-    .faq-item.active .faq-answer {
-      max-height: 500px;
-      padding: 28px 32px;
-    }
-
-    /* Make sure FAQ looks good on mobile */
-    @media (max-width: 768px) {
-      .faq-hero h1 { font-size: 2.8rem; }
-      .faq-hero p { font-size: 1.2rem; }
-      .faq-question { font-size: 1.1rem; padding: 22px 25px; }
-      .faq-answer { font-size: 0.98rem; }
-    }
-  </style>
+  <link rel="stylesheet" href="../css/faq.css">
 </head>
 <body>
 
@@ -221,8 +140,8 @@
         <ul>
           <li><a href="index.html">Home</a></li>
           <li><a href="menu.html">Menu</a></li>
-          <li><a href="cus.html">Customize Cake</a></li>
-          <li><a href="faq.html">FAQ</a></li>
+          <li><a href="faq.html" class="active">FAQ</a></li>
+          <li><a href="cus.html" class="active">Customize</a></li>
         </ul>
 
         <div class="auth-area">
@@ -310,6 +229,9 @@
     </div>
   </section>
 
+  <!-- Carousel dots (mobile only) -->
+  <div class="faq-dots" id="faq-dots"></div>
+
   <footer>
     <div class="container footer-grid">
       <div class="footer-about">
@@ -396,9 +318,10 @@
       });
     });
 
-    // FAQ Accordion
+    // FAQ Accordion - desktop only
     document.querySelectorAll('.faq-question').forEach(question => {
       question.addEventListener('click', () => {
+        if (window.innerWidth <= 768) return; // skip on mobile carousel
         const item = question.parentElement;
         document.querySelectorAll('.faq-item').forEach(other => {
           if (other !== item) other.classList.remove('active');
@@ -406,6 +329,33 @@
         item.classList.toggle('active');
       });
     });
+
+    // Carousel dot indicators
+    function initDots() {
+      const container = document.querySelector('.faq-container');
+      const dotsEl    = document.getElementById('faq-dots');
+      const items     = document.querySelectorAll('.faq-item');
+      if (!dotsEl || !container || window.innerWidth > 768) return;
+
+      dotsEl.innerHTML = '';
+      items.forEach((_, i) => {
+        const dot = document.createElement('div');
+        dot.className = 'faq-dot' + (i === 0 ? ' active' : '');
+        dotsEl.appendChild(dot);
+      });
+
+      container.addEventListener('scroll', () => {
+        const scrollLeft = container.scrollLeft;
+        const itemWidth  = items[0].offsetWidth + 16;
+        const idx = Math.round(scrollLeft / itemWidth);
+        document.querySelectorAll('.faq-dot').forEach((d, i) => {
+          d.classList.toggle('active', i === idx);
+        });
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', initDots);
+    window.addEventListener('resize', initDots);
 
     // Close modal when clicking outside
     window.onclick = (e) => { 
