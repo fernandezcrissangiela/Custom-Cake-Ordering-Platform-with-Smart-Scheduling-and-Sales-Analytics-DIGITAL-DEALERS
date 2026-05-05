@@ -70,11 +70,6 @@
     </div>
 
     <div class="product-grid" id="product-grid"></div>
-    <div class="carousel-controls" id="carousel-controls">
-      <button class="carousel-btn" id="carousel-prev"><i class="fas fa-chevron-left"></i></button>
-      <div class="carousel-dots" id="carousel-dots"></div>
-      <button class="carousel-btn" id="carousel-next"><i class="fas fa-chevron-right"></i></button>
-    </div>
   </div>
 
   <!-- Product Detail Modal -->
@@ -259,7 +254,7 @@
       return p.price >= minPrice && p.price <= maxPrice;
     });
 
-    grid.innerHTML = items.length === 0 
+    grid.innerHTML = items.length === 0
       ? '<p class="no-products">No products found in this price range.</p>'
       : '';
 
@@ -267,7 +262,7 @@
       const card = document.createElement('div');
       card.className = 'cake-item';
       card.innerHTML = `
-        <img src="${p.image || `https://via.placeholder.com/300x250?text=${encodeURIComponent(p.name)}`}" 
+        <img src="${p.image || `https://via.placeholder.com/300x250?text=${encodeURIComponent(p.name)}`}"
              alt="${p.name}" loading="lazy">
         <h3>${p.name}</h3>
         <p class="card-desc">${p.description || "Freshly baked daily with love and the finest ingredients."}</p>
@@ -280,8 +275,7 @@
       grid.appendChild(card);
     });
 
-    // Init carousel after render
-    setTimeout(initCarousel, 50);
+    
   }
 
   async function fetchCategory(category) {
@@ -356,89 +350,6 @@
     const activeCat = document.querySelector('.category-btn.active')?.dataset.category;
     const product = productsByCategory[activeCat]?.find(p => p.id === id);
     if (product) addToCart(product);
-  });
-
-  // ==================== CAROUSEL (mobile only) ====================
-  let carouselIndex = 0;
-
-  function isMobile() {
-    return window.innerWidth <= 600;
-  }
-
-  function initCarousel() {
-    if (!isMobile()) return;
-    const items = grid.querySelectorAll('.cake-item');
-    if (items.length === 0) return;
-
-    carouselIndex = 0;
-
-    const dotsEl = document.getElementById('carousel-dots');
-    const prevBtn = document.getElementById('carousel-prev');
-    const nextBtn = document.getElementById('carousel-next');
-    const controls = document.getElementById('carousel-controls');
-
-    if (items.length <= 1) {
-      controls.style.display = 'none';
-      return;
-    }
-
-    controls.style.display = 'flex';
-    dotsEl.innerHTML = '';
-
-    items.forEach((_, i) => {
-      const dot = document.createElement('span');
-      dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
-      dot.addEventListener('click', () => goTo(i));
-      dotsEl.appendChild(dot);
-    });
-
-    updateCarousel(items);
-
-    prevBtn.onclick = () => { carouselIndex = Math.max(0, carouselIndex - 1); updateCarousel(items); };
-    nextBtn.onclick = () => { carouselIndex = Math.min(items.length - 1, carouselIndex + 1); updateCarousel(items); };
-
-    // Touch swipe support
-    let touchStartX = 0;
-    grid.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
-    grid.addEventListener('touchend', e => {
-      const diff = touchStartX - e.changedTouches[0].clientX;
-      if (Math.abs(diff) > 40) {
-        if (diff > 0) carouselIndex = Math.min(items.length - 1, carouselIndex + 1);
-        else carouselIndex = Math.max(0, carouselIndex - 1);
-        updateCarousel(items);
-      }
-    }, { passive: true });
-  }
-
-  function goTo(index) {
-    const items = grid.querySelectorAll('.cake-item');
-    carouselIndex = index;
-    updateCarousel(items);
-  }
-
-  function updateCarousel(items) {
-    const prevBtn = document.getElementById('carousel-prev');
-    const nextBtn = document.getElementById('carousel-next');
-    const dots = document.querySelectorAll('.carousel-dot');
-
-    items.forEach((item, i) => {
-      item.style.display = i === carouselIndex ? 'flex' : 'none';
-    });
-
-    dots.forEach((d, i) => d.classList.toggle('active', i === carouselIndex));
-    if (prevBtn) prevBtn.disabled = carouselIndex === 0;
-    if (nextBtn) nextBtn.disabled = carouselIndex === items.length - 1;
-  }
-
-  // Re-init on resize
-  window.addEventListener('resize', () => {
-    const items = grid.querySelectorAll('.cake-item');
-    if (!isMobile()) {
-      items.forEach(item => item.style.display = '');
-      document.getElementById('carousel-controls').style.display = 'none';
-    } else {
-      initCarousel();
-    }
   });
 
   // ==================== INITIALIZE ====================

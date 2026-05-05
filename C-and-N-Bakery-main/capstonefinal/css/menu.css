@@ -390,101 +390,208 @@ nav a.active {
     transform: translateY(-2px);
 }
 
-/* PRODUCT GRID */
+/* ==================== PRODUCT GRID (Desktop) ==================== */
 .product-grid {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 30px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
     margin-bottom: 80px;
 }
 
-.cake-item {
-    width: calc(33.333% - 20px);
-    max-width: 360px;
-    min-width: 260px;
-}
-
 @media (max-width: 992px) {
-    .cake-item {
-        width: calc(50% - 15px);
-    }
-}
-
-@media (max-width: 580px) {
     .product-grid {
-        gap: 16px;
-    }
-
-    .cake-item {
-        width: calc(50% - 8px);
-        min-width: 0;
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
 .cake-item {
     background: white;
-    border-radius: var(--radius);
+    border-radius: 18px;
     overflow: hidden;
     box-shadow: var(--shadow-sm);
     transition: var(--transition);
     cursor: pointer;
-    text-align: center;
     display: flex;
     flex-direction: column;
 }
 
 .cake-item:hover {
-    transform: translateY(-8px);
+    transform: translateY(-6px);
     box-shadow: var(--shadow);
 }
 
-/* Fixed-size image container — keeps all cards uniform regardless of image dimensions */
-.card-img-wrap {
+.cake-item img {
     width: 100%;
-    height: 240px;
-    overflow: hidden;
-    flex-shrink: 0;
-    background: var(--cream);
-}
-
-.card-img-wrap img {
-    width: 100%;
-    height: 100%;
+    height: 220px;
     object-fit: cover;
     display: block;
     transition: transform 0.5s ease;
+    flex-shrink: 0;
 }
 
-.cake-item:hover .card-img-wrap img {
-    transform: scale(1.06);
-}
-
-/* Card body fills remaining height so button always sits at bottom */
-.card-body {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    padding: 0 0 24px;
+.cake-item:hover img {
+    transform: scale(1.05);
 }
 
 .cake-item h3 {
-    font-size: 1.2rem;
-    margin: 16px 16px 8px;
+    font-size: 1.1rem;
+    margin: 14px 14px 6px;
     color: var(--brown);
 }
 
-.cake-item .price {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: var(--primary-dark);
-    margin: 0 16px 12px;
+.card-desc {
+    font-size: 0.82rem;
+    color: #888;
+    margin: 0 14px 8px;
+    line-height: 1.5;
+    display: -webkit-box;
+    --webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-/* Push button to bottom */
-.cake-item .btn-primary {
-    margin: auto 20px 0;
-    width: calc(100% - 40px);
+.cake-item .price {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin: 0 14px 12px;
+}
+
+.cake-item .btn-add {
+    margin: auto 14px 14px;
+    width: calc(100% - 28px);
+    padding: 10px 16px;
+    font-size: 0.88rem;
+    border-radius: 50px;
+}
+
+/* ==================== MOBILE PRODUCT GRID — compact 2-column ==================== */
+@media (max-width: 600px) {
+
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 40px;
+        overflow: visible; /* no carousel on mobile, just grid */
+    }
+
+    /* Carousel controls hidden — we use the grid instead */
+    .carousel-controls {
+        display: none !important;
+    }
+
+    .cake-item {
+        border-radius: 14px;
+        box-shadow: 0 4px 14px rgba(103, 72, 49, 0.13);
+    }
+
+    .cake-item img {
+        height: 130px;
+        object-fit: cover;
+    }
+
+    .cake-item h3 {
+        font-size: 0.78rem;
+        margin: 8px 8px 3px;
+        line-height: 1.3;
+    }
+
+    .card-desc {
+        display: none; /* hide description to keep cards compact */
+    }
+
+    .cake-item .price {
+        font-size: 0.82rem;
+        font-weight: 700;
+        margin: 0 8px 6px;
+    }
+
+    .cake-item .btn-add {
+        margin: auto 8px 8px;
+        width: calc(100% - 16px);
+        padding: 7px 10px;
+        font-size: 0.72rem;
+        border-radius: 50px;
+    }
+
+    /* Filter box on mobile */
+    .filter-section {
+        padding: 0 10px;
+        margin-bottom: 20px;
+    }
+
+    .filter-box {
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 14px;
+        border-radius: 16px;
+        width: 100%;
+    }
+
+    .filter-box label {
+        font-size: 0.9rem;
+    }
+
+    .price-range-buttons {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 6px;
+        width: 100%;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        -webkit-overflow-scrolling: touch;
+        justify-content: center;
+    }
+
+    .price-range-buttons::-webkit-scrollbar {
+        display: none;
+    }
+
+    .price-filter-btn {
+        padding: 6px 12px;
+        font-size: 0.76rem;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    /* Category buttons */
+    .categories {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 18px;
+        padding: 4px 0 10px;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .categories::-webkit-scrollbar {
+        display: none;
+    }
+
+    .category-btn {
+        flex-shrink: 0;
+        padding: 8px 18px;
+        font-size: 0.82rem;
+    }
+
+    /* Menu header */
+    .menu-header {
+        padding: 70px 0 24px;
+    }
+
+    .menu-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .subtitle {
+        font-size: 0.9rem;
+    }
 }
 
 /* MODAL */
@@ -533,35 +640,36 @@ nav a.active {
 
 .modal-content img {
     width: 100%;
-    height: 280px;
+    height: 260px;
     object-fit: cover;
 }
 
 .modal-body {
-    padding: 30px;
+    padding: 28px;
     text-align: center;
 }
 
 .modal-body h2 {
-    font-size: 1.8rem;
-    margin-bottom: 12px;
+    font-size: 1.6rem;
+    margin-bottom: 10px;
     color: var(--brown);
 }
 
 .modal-price {
-    font-size: 1.6rem;
+    font-size: 1.4rem;
     font-weight: 700;
     color: var(--primary-dark);
-    margin: 8px 0 16px;
+    margin: 8px 0 14px;
 }
 
 .modal-desc {
     color: var(--text-light);
-    margin-bottom: 24px;
+    margin-bottom: 22px;
     line-height: 1.6;
+    font-size: 0.95rem;
 }
 
-/* ─── RESPONSIVE ─── */
+/* ─── RESPONSIVE (tablet/nav) ─── */
 @media (max-width: 992px) {
     .menu-header h1 {
         font-size: 2.6rem;
@@ -632,207 +740,11 @@ nav a.active {
     }
 
     .menu-header {
-        padding: 80px 0 40px;
+        padding: 80px 0 36px;
     }
 
     .menu-header h1 {
         font-size: 2.4rem;
-    }
-}
-
-/* ==================== MOBILE CAROUSEL ==================== */
-@media (max-width: 600px) {
-    .product-grid {
-        display: flex;
-        flex-wrap: nowrap;
-        overflow: hidden;
-        gap: 0;
-        margin-bottom: 0;
-        position: relative;
-    }
-
-    .product-grid-track {
-        display: flex;
-        transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-        width: 100%;
-    }
-
-    .cake-item {
-        flex: 0 0 100%;
-        width: 100%;
-        max-width: 100%;
-        min-width: 0;
-        border-radius: 20px;
-    }
-
-    .carousel-controls {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 16px;
-        padding: 20px 0 40px;
-        margin-top: 12px;
-    }
-
-    .carousel-btn {
-        background: var(--primary);
-        color: white;
-        border: none;
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        font-size: 1.1rem;
-        cursor: pointer;
-        box-shadow: 0 4px 14px rgba(103, 72, 49, 0.3);
-        transition: all 0.25s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .carousel-btn:disabled {
-        background: #d0bfb5;
-        box-shadow: none;
-        cursor: default;
-    }
-
-    .carousel-btn:not(:disabled):hover {
-        transform: scale(1.1);
-        box-shadow: 0 6px 20px rgba(103, 72, 49, 0.4);
-    }
-
-    .carousel-dots {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-    }
-
-    .carousel-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #d0bfb5;
-        transition: all 0.25s ease;
-        cursor: pointer;
-    }
-
-    .carousel-dot.active {
-        background: var(--primary);
-        width: 24px;
-        border-radius: 4px;
-    }
-
-    /* Fix button sizing on mobile */
-    .cake-item .btn-primary.btn-add {
-        width: auto;
-        margin: auto auto 0;
-        padding: 11px 28px;
-        font-size: 0.9rem;
-    }
-
-    .btn-primary,
-    .btn-outline {
-        padding: 11px 24px;
-        font-size: 0.9rem;
-    }
-}
-
-/* Hide carousel controls on desktop */
-.carousel-controls {
-    display: none;
-}
-
-/* ==================== MOBILE FILTER & BUTTON FIXES ==================== */
-@media (max-width: 600px) {
-
-    /* --- Budget Filter Box --- */
-    .filter-section {
-        padding: 0 12px;
-    }
-
-    .filter-box {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-        padding: 14px 16px;
-        border-radius: 20px;
-        width: 100%;
-        max-width: 100%;
-        box-sizing: border-box;
-    }
-
-    .filter-box label {
-        font-size: 0.95rem;
-    }
-
-    .price-range-buttons {
-        display: flex;
-        flex-wrap: nowrap;
-        gap: 6px;
-        justify-content: center;
-        width: 100%;
-        overflow-x: auto;
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-    }
-
-    .price-range-buttons::-webkit-scrollbar {
-        display: none;
-    }
-
-    .price-filter-btn {
-        padding: 7px 10px;
-        font-size: 0.78rem;
-        white-space: nowrap;
-        flex-shrink: 0;
-    }
-
-    /* --- Category Buttons: centered --- */
-    .categories {
-        display: flex;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        justify-content: center;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 28px;
-        padding: 4px 0 12px;
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .categories::-webkit-scrollbar {
-        display: none;
-    }
-
-    .category-btn {
-        flex-shrink: 0;
-        padding: 10px 20px;
-        font-size: 0.88rem;
-        white-space: nowrap;
-    }
-
-    /* --- Menu header --- */
-    .menu-header h1 {
-        font-size: 2rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .price-filter-btn {
-        padding: 7px 12px;
-        font-size: 0.8rem;
-    }
-
-    .card-img-wrap {
-        height: 190px;
-    }
-
-    .category-btn {
-        padding: 9px 16px;
-        font-size: 0.85rem;
     }
 }
 
@@ -841,17 +753,9 @@ nav a.active {
     width: 100%;
 }
 
-.card-desc {
-    font-size: 0.82rem;
-    color: #888;
-    margin: 0 16px 10px;
-    line-height: 1.5;
-    display: -webkit-box;
-    --webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    flex-shrink: 0;
+/* Hide carousel controls by default (desktop) */
+.carousel-controls {
+    display: none;
 }
 
 /* ==================== SKELETONS ==================== */
@@ -862,7 +766,7 @@ nav a.active {
 }
 
 .skeleton-img {
-    height: 220px;
+    height: 180px;
     background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
     background-size: 200% 100%;
     animation: loading 1.8s infinite;
@@ -870,41 +774,36 @@ nav a.active {
 
 .skeleton-text,
 .skeleton-btn {
-    height: 18px;
-    margin: 14px 16px;
+    height: 16px;
+    margin: 12px 14px;
     background: #e0e0e0;
     border-radius: 6px;
 }
 
 .skeleton-btn {
-    height: 46px;
-    margin: 16px;
+    height: 38px;
+    margin: 12px 14px;
 }
 
 @keyframes loading {
-    0% {
-        background-position: 200% 0;
-    }
-
-    100% {
-        background-position: -200% 0;
-    }
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
 }
 
 /* ==================== ERROR / EMPTY STATES ==================== */
 .error-msg {
     grid-column: 1 / -1;
     text-align: center;
-    padding: 120px 20px;
+    padding: 80px 20px;
     color: #d32f2f;
-    font-size: 1.15rem;
+    font-size: 1.1rem;
     font-weight: 500;
 }
 
 .no-products {
     grid-column: 1 / -1;
     text-align: center;
-    padding: 80px 20px;
+    padding: 60px 20px;
     color: #777;
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
