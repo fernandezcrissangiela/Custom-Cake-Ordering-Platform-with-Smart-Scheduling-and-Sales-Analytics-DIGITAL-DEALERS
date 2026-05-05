@@ -172,6 +172,24 @@
       }
 
       // ── Load Reviews from Firebase ──
+      // safeReinit: waits for the carousel script (non-module, end of body) to be ready
+      function safeReinit() {
+        if (typeof window.reinitCarousel === 'function') {
+          window.reinitCarousel();
+        } else {
+          // Module scripts can run before body-end classic scripts — poll briefly
+          let attempts = 0;
+          const poll = setInterval(() => {
+            if (typeof window.reinitCarousel === 'function') {
+              clearInterval(poll);
+              window.reinitCarousel();
+            } else if (++attempts > 20) {
+              clearInterval(poll);
+            }
+          }, 50);
+        }
+      }
+
       const track = document.getElementById('reviews-track');
       if (track) {
         onValue(ref(db, 'reviews'), (snapshot) => {
@@ -179,7 +197,7 @@
           if (!snapshot.exists()) {
             track.innerHTML = `<div class="review-card" style="min-width:100%;text-align:center;color:var(--text-light);font-style:italic;padding:3rem;">
               No reviews yet — be the first to share your experience! 🎂</div>`;
-            if (typeof reinitCarousel === 'function') reinitCarousel();
+            safeReinit();
             return;
           }
           const reviews = [];
@@ -200,7 +218,7 @@
               </div>`;
             track.appendChild(card);
           });
-          if (typeof reinitCarousel === 'function') reinitCarousel();
+          safeReinit();
         });
       }
     });
