@@ -1,13 +1,12 @@
 NEED TO DO!!
-
-1. INDEX.HTML
-- featured cakes (connected from admin)
-- review feedbacks
+1. ADD EMAIL AND PASSWORD FOR admin
+- add settings for the admin (email/password)
 
 2. MOBILE CAROUSEL STYLE
 - cart.html
 - index.html
 - user.html
+- all for the admin side
 
 3.ADD FOOTERS
 - cus.html
