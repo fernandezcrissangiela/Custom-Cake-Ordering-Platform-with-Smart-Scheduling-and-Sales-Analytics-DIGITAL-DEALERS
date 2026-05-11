@@ -26,51 +26,145 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    // Cart Count
-    function updateCartCount(uid) {
-      const cartCount = document.getElementById('cart-count');
-      if (!cartCount) return;
+    // ============================================================
+    // OOP: ENCAPSULATION
+    // CartManager encapsulates all cart-related state and logic
+    // behind a clean interface. External code never touches
+    // localStorage directly — only CartManager does.
+    // ============================================================
+    class CartManager { // OOP - Encapsulation
+      #storageKey = 'cart'; // private field — hides internal detail
 
-      if (!uid) {
-        cartCount.innerText = '0';
-        cartCount.style.display = 'none';
-        return;
+      getCart() {
+        return JSON.parse(localStorage.getItem(this.#storageKey) || '[]');
       }
 
-      const cart  = JSON.parse(localStorage.getItem('cart') || '[]');
-      const total = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
-      cartCount.innerText     = total;
-      cartCount.style.display = total > 0 ? 'flex' : 'none';
+      getTotalQuantity() {
+        return this.getCart().reduce((sum, item) => sum + (item.quantity || 1), 0);
+      }
+
+      updateCartCountUI(uid) {
+        const cartCount = document.getElementById('cart-count');
+        if (!cartCount) return;
+
+        if (!uid) {
+          cartCount.innerText = '0';
+          cartCount.style.display = 'none';
+          return;
+        }
+
+        const total = this.getTotalQuantity();
+        cartCount.innerText = total;
+        cartCount.style.display = total > 0 ? 'flex' : 'none';
+      }
     }
 
+    // ============================================================
+    // OOP: ABSTRACTION
+    // AuthHandler abstracts away Firebase signup/login/logout
+    // complexity. Callers just call .signup(), .login(), .logout()
+    // without knowing any Firebase internals.
+    // ============================================================
+    class AuthHandler { // OOP - Abstraction
+      #auth;
+      #db;
+      #cartManager;
+
+      constructor(authInstance, dbInstance, cartManager) {
+        this.#auth = authInstance;
+        this.#db = dbInstance;
+        this.#cartManager = cartManager;
+      }
+
+      async signup(name, email, password) {
+        const userCredential = await createUserWithEmailAndPassword(this.#auth, email, password);
+        const newUid = userCredential.user.uid;
+        await set(ref(this.#db, "users/" + newUid), { name, email });
+        await signOut(this.#auth);
+      }
+
+      async login(email, password) {
+        await signInWithEmailAndPassword(this.#auth, email, password);
+      }
+
+      async logout() {
+        localStorage.removeItem('cart');
+        localStorage.removeItem('currentUserId');
+        await signOut(this.#auth);
+        this.#cartManager.updateCartCountUI(null);
+      }
+
+      onStateChanged(callback) {
+        onAuthStateChanged(this.#auth, callback);
+      }
+
+      async getUserName(uid) {
+        const snap = await get(ref(this.#db, "users/" + uid));
+        return snap.exists() ? snap.val().name : null;
+      }
+    }
+
+    // ============================================================
+    // OOP: ABSTRACTION
+    // UIController abstracts all DOM manipulation for the navbar
+    // and modal. Other classes don't touch the DOM directly.
+    // ============================================================
+    class UIController { // OOP - Abstraction
+      showLoggedIn(name) {
+        document.getElementById('signup-trigger')?.classList.add('hidden');
+        document.getElementById('logout-trigger')?.classList.remove('hidden');
+        const nameTag = document.getElementById('user-name-display');
+        if (nameTag) nameTag.innerText = "Hi, " + name;
+      }
+
+      showLoggedOut() {
+        document.getElementById('signup-trigger')?.classList.remove('hidden');
+        document.getElementById('logout-trigger')?.classList.add('hidden');
+        const nameTag = document.getElementById('user-name-display');
+        if (nameTag) nameTag.innerText = "";
+      }
+
+      openModal() {
+        document.getElementById('auth-modal')?.classList.add('active');
+        document.getElementById('nav-toggle').checked = false;
+      }
+
+      closeModal() {
+        document.getElementById('auth-modal')?.classList.remove('active');
+      }
+
+      showSignupSuccess(form, email) {
+        const existing = form.querySelector('.signup-success-msg');
+        if (existing) existing.remove();
+        const msg = document.createElement('p');
+        msg.className = 'signup-success-msg';
+        msg.style.cssText = 'color:#4CAF50;text-align:center;margin:1rem 0;font-weight:500;';
+        msg.textContent = "Account created! Please sign in below.";
+        form.insertBefore(msg, form.firstChild);
+
+        document.querySelector('[data-tab="login"]').click();
+        const emailInput = document.querySelector('#login-form input[name="email"]');
+        if (emailInput) { emailInput.value = email; emailInput.focus(); }
+      }
+    }
+
+    // ============================================================
+    // INSTANTIATE — wire everything together
+    // ============================================================
+    const cartManager = new CartManager();  // OOP - Encapsulation
+    const uiController = new UIController(); // OOP - Abstraction
+    const authHandler = new AuthHandler(auth, db, cartManager); // OOP - Abstraction
+
+    // ============================================================
+    // GLOBAL EVENT HANDLERS (called from HTML onsubmit/onclick)
+    // These are thin wrappers that delegate to the OOP classes.
+    // ============================================================
     window.handleSignup = async function(e) {
       e.preventDefault();
       const { name, email, password } = e.target;
       try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email.value, password.value);
-        const newUid = userCredential.user.uid;
-
-        await set(ref(db, "users/" + newUid), {
-          name:  name.value,
-          email: email.value
-        });
-
-        await signOut(auth);
-
-        const successMsg = document.createElement('p');
-        successMsg.className = 'signup-success-msg';
-        successMsg.style.cssText = 'color:#4CAF50; text-align:center; margin:1rem 0; font-weight:500;';
-        successMsg.textContent = "Account created! Please sign in below.";
-
-        const signupForm = document.getElementById('signup-form');
-        const existing = signupForm.querySelector('.signup-success-msg');
-        if (existing) existing.remove();
-        signupForm.insertBefore(successMsg, signupForm.firstChild);
-
-        document.querySelector('[data-tab="login"]').click();
-        document.querySelector('#login-form input[name="email"]').value = email.value;
-        document.querySelector('#login-form input[name="email"]').focus();
-
+        await authHandler.signup(name.value, email.value, password.value); // OOP - Abstraction (hides Firebase details)
+        uiController.showSignupSuccess(document.getElementById('signup-form'), email.value);
         name.value = ''; email.value = ''; password.value = '';
       } catch (error) {
         alert("Signup failed: " + error.message);
@@ -80,48 +174,40 @@
     window.handleLogin = async function(e) {
       e.preventDefault();
       try {
-        await signInWithEmailAndPassword(auth, e.target.email.value, e.target.password.value);
-        closeModal();
+        await authHandler.login(e.target.email.value, e.target.password.value); // OOP - Abstraction
+        uiController.closeModal();
       } catch (error) {
         alert("Login failed: " + error.message);
       }
     };
 
     window.handleLogout = async () => {
-      localStorage.removeItem('cart');
-      localStorage.removeItem('currentUserId');
-      await signOut(auth);
-      updateCartCount(null);
+      await authHandler.logout(); // OOP - Abstraction
+      uiController.showLoggedOut();
     };
 
-    onAuthStateChanged(auth, async (user) => {
-      const signupBtn = document.getElementById('signup-trigger');
-      const logoutBtn = document.getElementById('logout-trigger');
-      const nameTag   = document.getElementById('user-name-display');
+    window.openModal  = () => uiController.openModal();  // OOP - Abstraction
+    window.closeModal = () => uiController.closeModal(); // OOP - Abstraction
 
+    // ============================================================
+    // AUTH STATE LISTENER — reacts to Firebase auth changes
+    // ============================================================
+    authHandler.onStateChanged(async (user) => { // OOP - Abstraction
       if (user) {
-        const uid = user.uid;
-        localStorage.setItem('currentUserId', uid);
-
-        signupBtn.classList.add('hidden');
-        logoutBtn.classList.remove('hidden');
-
-        const snap = await get(ref(db, "users/" + uid));
-        if (snap.exists()) nameTag.innerText = "Hi, " + snap.val().name;
-
-        updateCartCount(uid);
+        localStorage.setItem('currentUserId', user.uid);
+        const name = await authHandler.getUserName(user.uid);
+        if (name) uiController.showLoggedIn(name);
+        cartManager.updateCartCountUI(user.uid); // OOP - Encapsulation
       } else {
         localStorage.removeItem('currentUserId');
-        signupBtn.classList.remove('hidden');
-        logoutBtn.classList.add('hidden');
-        nameTag.innerText = "";
-        updateCartCount(null);
+        uiController.showLoggedOut();
+        cartManager.updateCartCountUI(null); // OOP - Encapsulation
       }
     });
 
     document.addEventListener('DOMContentLoaded', () => {
       const uid = localStorage.getItem('currentUserId');
-      updateCartCount(uid || null);
+      cartManager.updateCartCountUI(uid || null); // OOP - Encapsulation
     });
   </script>
 
@@ -289,19 +375,98 @@
   </div>
 
   <script>
-    const modal = document.getElementById('auth-modal');
-    function openModal()  { 
-      modal.classList.add('active'); 
-      document.getElementById('nav-toggle').checked = false; 
+    // ============================================================
+    // OOP: ENCAPSULATION
+    // FAQAccordion encapsulates accordion state (which item is open)
+    // and the carousel dot-indicator logic in one cohesive object.
+    // Nothing outside this class touches .active classes directly.
+    // ============================================================
+    class FAQAccordion { // OOP - Encapsulation
+      #items;
+
+      constructor(selector) {
+        this.#items = document.querySelectorAll(selector);
+        this.#bindEvents();
+      }
+
+      #bindEvents() {
+        this.#items.forEach(item => {
+          const question = item.querySelector('.faq-question');
+          if (question) {
+            question.addEventListener('click', () => this.#toggle(item));
+          }
+        });
+      }
+
+      #toggle(targetItem) {
+        if (window.innerWidth <= 768) return; // skip on mobile carousel
+        this.#items.forEach(item => {
+          if (item !== targetItem) item.classList.remove('active');
+        });
+        targetItem.classList.toggle('active');
+      }
     }
-    function closeModal() { modal.classList.remove('active'); }
+
+    // ============================================================
+    // OOP: ENCAPSULATION
+    // CarouselDots encapsulates the mobile dot-indicator behavior.
+    // All scroll-tracking state is private inside this class.
+    // ============================================================
+    class CarouselDots { // OOP - Encapsulation
+      #container;
+      #dotsEl;
+      #items;
+
+      constructor(containerSelector, dotsSelector, itemSelector) {
+        this.#container = document.querySelector(containerSelector);
+        this.#dotsEl    = document.querySelector(dotsSelector);
+        this.#items     = document.querySelectorAll(itemSelector);
+      }
+
+      init() {
+        if (!this.#dotsEl || !this.#container || window.innerWidth > 768) return;
+
+        this.#dotsEl.innerHTML = '';
+        this.#items.forEach((_, i) => {
+          const dot = document.createElement('div');
+          dot.className = 'faq-dot' + (i === 0 ? ' active' : '');
+          this.#dotsEl.appendChild(dot);
+        });
+
+        this.#container.addEventListener('scroll', () => this.#updateActiveDot());
+      }
+
+      #updateActiveDot() {
+        const scrollLeft = this.#container.scrollLeft;
+        const itemWidth  = this.#items[0].offsetWidth + 16;
+        const idx = Math.round(scrollLeft / itemWidth);
+        this.#dotsEl.querySelectorAll('.faq-dot').forEach((d, i) => {
+          d.classList.toggle('active', i === idx);
+        });
+      }
+    }
+
+    // ============================================================
+    // INSTANTIATE
+    // ============================================================
+    const accordion   = new FAQAccordion('.faq-item');         // OOP - Encapsulation
+    const carouselDots = new CarouselDots('.faq-container', '#faq-dots', '.faq-item'); // OOP - Encapsulation
+
+    document.addEventListener('DOMContentLoaded', () => carouselDots.init());
+    window.addEventListener('resize', () => carouselDots.init());
+
+    // ============================================================
+    // Modal and auth-check helpers (thin wrappers; logic lives in
+    // the module-scoped OOP classes above via window.* exposure)
+    // ============================================================
+    const modal = document.getElementById('auth-modal');
+
+    // openModal / closeModal / handleLogout are already set by the
+    // module script above via window.openModal etc.
 
     window.checkAuth = function(event) {
       const isLoggedIn = !document.getElementById('logout-trigger').classList.contains('hidden');
-      if (!isLoggedIn) { 
-        openModal(); 
-        return; 
-      }
+      if (!isLoggedIn) { openModal(); return; }
       const target = event.currentTarget;
       if (target.classList.contains('fa-shopping-cart')) window.location.href = 'cart.html';
       else if (target.classList.contains('fa-user-circle')) window.location.href = 'user.html';
@@ -318,49 +483,8 @@
       });
     });
 
-    // FAQ Accordion - desktop only
-    document.querySelectorAll('.faq-question').forEach(question => {
-      question.addEventListener('click', () => {
-        if (window.innerWidth <= 768) return; // skip on mobile carousel
-        const item = question.parentElement;
-        document.querySelectorAll('.faq-item').forEach(other => {
-          if (other !== item) other.classList.remove('active');
-        });
-        item.classList.toggle('active');
-      });
-    });
-
-    // Carousel dot indicators
-    function initDots() {
-      const container = document.querySelector('.faq-container');
-      const dotsEl    = document.getElementById('faq-dots');
-      const items     = document.querySelectorAll('.faq-item');
-      if (!dotsEl || !container || window.innerWidth > 768) return;
-
-      dotsEl.innerHTML = '';
-      items.forEach((_, i) => {
-        const dot = document.createElement('div');
-        dot.className = 'faq-dot' + (i === 0 ? ' active' : '');
-        dotsEl.appendChild(dot);
-      });
-
-      container.addEventListener('scroll', () => {
-        const scrollLeft = container.scrollLeft;
-        const itemWidth  = items[0].offsetWidth + 16;
-        const idx = Math.round(scrollLeft / itemWidth);
-        document.querySelectorAll('.faq-dot').forEach((d, i) => {
-          d.classList.toggle('active', i === idx);
-        });
-      });
-    }
-
-    document.addEventListener('DOMContentLoaded', initDots);
-    window.addEventListener('resize', initDots);
-
     // Close modal when clicking outside
-    window.onclick = (e) => { 
-      if (e.target == modal) closeModal(); 
-    };
+    window.onclick = (e) => { if (e.target == modal) closeModal(); };
   </script>
 </body>
 </html>
