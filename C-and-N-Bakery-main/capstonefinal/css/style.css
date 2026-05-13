@@ -372,10 +372,31 @@ nav a:hover {
     color: var(--primary);
 }
 
+.cake-slider-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    min-width: 0;
+}
+
+.cake-slider-track-wrapper {
+    overflow: hidden;
+    flex: 1;
+    min-width: 0;
+}
+
+/* Desktop & tablet: normal grid (no transform needed) */
 .cake-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 30px;
+    transition: transform 0.52s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Hide slider buttons on desktop/tablet */
+.cake-slider-btn {
+    display: none;
 }
 
 .cake-loading {
@@ -393,6 +414,32 @@ nav a:hover {
     margin-bottom: 12px;
 }
 
+/* Pill dots for cake slider */
+.cake-slider-dots {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    gap: 7px;
+    margin-top: 22px;
+}
+
+.cake-slider-dots .cake-dot {
+    height: 8px;
+    width: 8px;
+    border-radius: 4px;
+    background: rgba(130, 90, 60, 0.22);
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cake-slider-dots .cake-dot.active {
+    background: #825A3C;
+    width: 26px;
+    border-radius: 4px;
+}
+
 @media (max-width: 900px) {
     .cake-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -400,8 +447,79 @@ nav a:hover {
 }
 
 @media (max-width: 560px) {
+
+    /* Switch to scroll-snap slider mode */
+    .cake-slider-track-wrapper {
+        overflow-x: scroll;
+        overflow-y: hidden;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        /* Firefox */
+        width: 100%;
+        min-width: 0;
+    }
+
+    .cake-slider-track-wrapper::-webkit-scrollbar {
+        display: none;
+        /* Chrome/Safari */
+    }
+
     .cake-grid {
-        grid-template-columns: 1fr;
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 0;
+        width: 100%;
+        will-change: scroll-position;
+    }
+
+    .cake-item {
+        flex: 0 0 100%;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        scroll-snap-align: start;
+        scroll-snap-stop: always;
+    }
+
+    /* Show nav buttons */
+    .cake-slider-btn {
+        display: flex;
+        flex-shrink: 0;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid #825A3C;
+        background: #FFFFFF;
+        color: #825A3C;
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.78rem;
+        box-shadow: 0 4px 14px rgba(103, 72, 49, 0.13);
+        transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .cake-slider-btn:hover {
+        background: #825A3C;
+        color: #FFFFFF;
+        transform: scale(1.1);
+    }
+
+    .cake-slider-btn:active {
+        transform: scale(0.95);
+    }
+
+    /* Show dots */
+    .cake-slider-dots {
+        display: flex;
+    }
+}
+
+/* Hide buttons at very small screens where dots handle navigation */
+@media (max-width: 360px) {
+    .cake-slider-btn {
+        display: none;
     }
 }
 

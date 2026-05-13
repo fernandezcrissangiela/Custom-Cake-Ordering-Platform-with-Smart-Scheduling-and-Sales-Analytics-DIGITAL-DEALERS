@@ -204,6 +204,7 @@
             `;
             grid.appendChild(item);
           });
+          if (typeof window.reinitCakeSlider === 'function') window.reinitCakeSlider();
         });
       }
 
@@ -337,12 +338,23 @@
   <section class="featured-cakes">
     <div class="container">
       <h2 class="section-title">Our <span>Featured</span> Cakes</h2>
-      <div class="cake-grid" id="featured-cakes-grid">
-        <!-- Skeleton placeholders shown instantly while Firebase loads -->
-        <div class="cake-item cake-skeleton"><div class="sk-line skeleton-img"></div><div class="sk-line skeleton-title"></div><div class="sk-line skeleton-desc"></div></div>
-        <div class="cake-item cake-skeleton"><div class="sk-line skeleton-img"></div><div class="sk-line skeleton-title"></div><div class="sk-line skeleton-desc"></div></div>
-        <div class="cake-item cake-skeleton"><div class="sk-line skeleton-img"></div><div class="sk-line skeleton-title"></div><div class="sk-line skeleton-desc"></div></div>
+      <div class="cake-slider-wrapper">
+        <button class="cake-slider-btn cake-slider-prev" aria-label="Previous cake">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <div class="cake-slider-track-wrapper">
+          <div class="cake-grid" id="featured-cakes-grid">
+            <!-- Skeleton placeholders shown instantly while Firebase loads -->
+            <div class="cake-item cake-skeleton"><div class="sk-line skeleton-img"></div><div class="sk-line skeleton-title"></div><div class="sk-line skeleton-desc"></div></div>
+            <div class="cake-item cake-skeleton"><div class="sk-line skeleton-img"></div><div class="sk-line skeleton-title"></div><div class="sk-line skeleton-desc"></div></div>
+            <div class="cake-item cake-skeleton"><div class="sk-line skeleton-img"></div><div class="sk-line skeleton-title"></div><div class="sk-line skeleton-desc"></div></div>
+          </div>
+        </div>
+        <button class="cake-slider-btn cake-slider-next" aria-label="Next cake">
+          <i class="fas fa-chevron-right"></i>
+        </button>
       </div>
+      <div class="cake-slider-dots"></div>
     </div>
   </section>
 
@@ -535,6 +547,74 @@
       buildDots();
       window.addEventListener('resize', () => { buildDots(); goTo(0); });
       window.reinitCarousel = () => { buildDots(); goTo(0); };
+    })();
+
+    /* ── Featured Cakes Mobile Slider ── */
+    (function () {
+      function isMobile() { return window.innerWidth <= 560; }
+
+      const dotsWrap  = document.querySelector('.cake-slider-dots');
+      const prevBtn   = document.querySelector('.cake-slider-prev');
+      const nextBtn   = document.querySelector('.cake-slider-next');
+      const trackWrap = document.querySelector('.cake-slider-track-wrapper');
+      let current = 0;
+
+      function getItems() {
+        return Array.from(document.querySelectorAll('#featured-cakes-grid .cake-item'));
+      }
+
+      function buildCakeDots() {
+        dotsWrap.innerHTML = '';
+        if (!isMobile()) return;
+        getItems().forEach((_, i) => {
+          const btn = document.createElement('button');
+          btn.className = 'cake-dot' + (i === current ? ' active' : '');
+          btn.setAttribute('aria-label', 'Cake ' + (i + 1));
+          btn.addEventListener('click', () => goToCake(i));
+          dotsWrap.appendChild(btn);
+        });
+      }
+
+      function updateDots() {
+        dotsWrap.querySelectorAll('.cake-dot').forEach((d, i) =>
+          d.classList.toggle('active', i === current));
+      }
+
+      function goToCake(index) {
+        const items = getItems();
+        if (!items.length) return;
+        current = Math.max(0, Math.min(index, items.length - 1));
+        if (isMobile()) {
+          // Scroll the track wrapper so the target item is at the left edge
+          trackWrap.scrollTo({ left: current * trackWrap.offsetWidth, behavior: 'smooth' });
+        }
+        updateDots();
+      }
+
+      prevBtn.addEventListener('click', () => goToCake(current - 1));
+      nextBtn.addEventListener('click', () => goToCake(current + 1));
+
+      // Sync dot when user manually swipes
+      trackWrap.addEventListener('scroll', () => {
+        if (!isMobile()) return;
+        const idx = Math.round(trackWrap.scrollLeft / trackWrap.offsetWidth);
+        if (idx !== current) { current = idx; updateDots(); }
+      }, { passive: true });
+
+      window.addEventListener('resize', () => {
+        current = 0;
+        trackWrap.scrollLeft = 0;
+        buildCakeDots();
+      });
+
+      // Re-init after Firebase loads cakes
+      window.reinitCakeSlider = () => {
+        current = 0;
+        trackWrap.scrollLeft = 0;
+        buildCakeDots();
+      };
+
+      buildCakeDots();
     })();
   </script>
 </body>
