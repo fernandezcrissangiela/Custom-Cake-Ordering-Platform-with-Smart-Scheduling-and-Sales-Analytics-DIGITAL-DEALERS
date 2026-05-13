@@ -330,7 +330,7 @@ nav a:hover {
 
 .features-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 30px;
 }
 
@@ -357,6 +357,53 @@ nav a:hover {
     margin-bottom: 18px;
 }
 
+@media (max-width: 640px) {
+    .features-showcase {
+        padding: 32px 0;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .feature-card {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 20px;
+        border-radius: 16px;
+        text-align: left;
+        box-shadow: 0 2px 10px rgba(103, 72, 49, 0.08);
+    }
+
+    .feature-card i {
+        font-size: 1.6rem;
+        margin-bottom: 0;
+        flex-shrink: 0;
+        width: 44px;
+        height: 44px;
+        background: var(--secondary);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .feature-card h3 {
+        font-size: 0.95rem;
+        margin-bottom: 2px;
+    }
+
+    .feature-card p {
+        font-size: 0.78rem;
+        line-height: 1.4;
+        color: var(--text-light);
+        margin: 0;
+    }
+}
+
 .featured-cakes {
     padding: 90px 0;
     background: var(--beige);
@@ -370,6 +417,13 @@ nav a:hover {
 
 .section-title span {
     color: var(--primary);
+}
+
+@media (max-width: 560px) {
+    .section-title {
+        font-size: 1.6rem;
+        margin-bottom: 28px;
+    }
 }
 
 .cake-slider-wrapper {
@@ -1011,6 +1065,13 @@ footer {
 .reviews-section .section-title {
     margin-bottom: 50px;
     font-size: 2.4rem;
+}
+
+@media (max-width: 560px) {
+    .reviews-section .section-title {
+        font-size: 1.6rem;
+        margin-bottom: 28px;
+    }
 }
 
 .review-card {
