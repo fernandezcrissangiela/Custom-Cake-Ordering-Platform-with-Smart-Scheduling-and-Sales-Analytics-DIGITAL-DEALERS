@@ -101,15 +101,51 @@
         loginEmailInput.value = email.value;
         loginEmailInput.focus();
         name.value = ''; email.value = ''; password.value = '';
-      } catch (error) { alert("Signup failed: " + error.message); }
+      } catch (error) {
+        const code = error.code || '';
+        let friendlyMsg = 'Signup failed. Please try again.';
+        if (code.includes('email-already-in-use')) friendlyMsg = 'An account with this email already exists.';
+        else if (code.includes('weak-password')) friendlyMsg = 'Password must be at least 6 characters.';
+        else if (code.includes('invalid-email')) friendlyMsg = 'Please enter a valid email address.';
+        const signupForm2 = document.getElementById('signup-form');
+        const prev2 = signupForm2.querySelector('.auth-error-banner');
+        if (prev2) prev2.remove();
+        const banner2 = document.createElement('div');
+        banner2.className = 'auth-error-banner';
+        banner2.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${friendlyMsg}`;
+        signupForm2.insertBefore(banner2, signupForm2.firstChild);
+      }
     };
 
     window.handleLogin = async function(e) {
       e.preventDefault();
+      const form = document.getElementById('login-form');
+      // Remove any previous error
+      const prev = form.querySelector('.auth-error-banner');
+      if (prev) prev.remove();
       try {
         await signInWithEmailAndPassword(auth, e.target.email.value, e.target.password.value);
         closeModal();
-      } catch (error) { alert("Login failed: " + error.message); }
+      } catch (error) {
+        // Map Firebase error codes to friendly messages
+        const code = error.code || '';
+        let friendlyMsg = 'Something went wrong. Please try again.';
+        if (code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found')) {
+          friendlyMsg = 'Incorrect email or password. Please try again.';
+        } else if (code.includes('too-many-requests')) {
+          friendlyMsg = 'Too many attempts. Please wait a moment and try again.';
+        } else if (code.includes('user-disabled')) {
+          friendlyMsg = 'This account has been disabled. Please contact support.';
+        } else if (code.includes('invalid-email')) {
+          friendlyMsg = 'Please enter a valid email address.';
+        } else if (code.includes('network-request-failed')) {
+          friendlyMsg = 'Network error. Please check your connection.';
+        }
+        const banner = document.createElement('div');
+        banner.className = 'auth-error-banner';
+        banner.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${friendlyMsg}`;
+        form.insertBefore(banner, form.firstChild);
+      }
     };
 
     window.handleLogout = async () => {
