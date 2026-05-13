@@ -3,17 +3,9 @@ NEED TO DO!!
 - add settings for the admin (email/password)
 
 2. MOBILE CAROUSEL STYLE
-- cart.html
-- index.html
-- user.html
 - all for the admin side
 
-3.ADD FOOTERS
-- cus.html
-- menu.html
-
 NEED TO FIX!!!!
-- missing products sa cart
 
 EMAIL JS INFO
 PUBLIC ID - LjFPVh32OznI3FhJv
