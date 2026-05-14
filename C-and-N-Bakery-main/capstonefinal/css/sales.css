@@ -1,7 +1,3 @@
-/* ============================================================
-   C&N BAKERY — SALES PAGE STYLES  (redesigned)
-   ============================================================ */
-
 /* ── Page Title ── */
 .page-title-bar {
   display: flex;
@@ -29,6 +25,8 @@
   grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
   gap: 18px;
   margin-bottom: 26px;
+  width: 100%; /* ensure responsiveness */
+  box-sizing: border-box;
 }
 
 .stat-box {
@@ -41,6 +39,7 @@
   transition: var(--transition);
   position: relative;
   overflow: hidden;
+  min-width: 0; /* fix for small screens */
 }
 
 .stat-box::after {
@@ -105,6 +104,8 @@
   grid-template-columns: 1.5fr 1fr;
   gap: 22px;
   margin-bottom: 26px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .chart-card {
@@ -113,6 +114,7 @@
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
   transition: var(--transition);
+  min-width: 0; /* fix for small screens */
 }
 
 .chart-card:hover {
@@ -137,7 +139,7 @@
   font-size: 1rem;
 }
 
-/* ── Responsive ── */
+/* ── Responsive adjustments ── */
 @media (max-width: 900px) {
   .charts-grid {
     grid-template-columns: 1fr;
@@ -145,15 +147,33 @@
 }
 
 @media (max-width: 600px) {
+  /* Stack stats vertically and ensure full width */
   .stats-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
-
+  /* Reduce font size for better fit */
   .stat-box p {
     font-size: 1.3rem;
   }
-
+  /* Make charts full width and reduce padding */
   .chart-card {
     padding: 16px;
+  }
+  /* Allow horizontal scrolling for nav tabs if overflowing */
+  .nav-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* smooth scrolling on mobile */
+  }
+  /* Make filter inputs full width on small screens */
+  #custom-range-inputs {
+    flex-direction: column;
+    gap: 8px;
+  }
+  #custom-range-inputs input[type="date"] {
+    width: 100%;
+  }
+  /* Make buttons full width if needed */
+  .btn-apply {
+    width: 100%;
   }
 }
