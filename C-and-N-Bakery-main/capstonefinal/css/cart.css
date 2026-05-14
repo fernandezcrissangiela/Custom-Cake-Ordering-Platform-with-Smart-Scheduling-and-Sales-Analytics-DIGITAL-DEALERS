@@ -679,3 +679,83 @@ h1.page-title span {
         height: 70px;
     }
 }
+
+/* ─── MOBILE STICKY BOTTOM BAR ─── */
+.mobile-checkout-bar {
+    display: none;
+}
+
+@media (max-width: 850px) {
+
+    /* Hide the sidebar summary on mobile */
+    .cart-summary {
+        display: none;
+    }
+
+    /* Add bottom padding so last item isn't hidden behind the bar */
+    .cart-container {
+        padding-bottom: 100px;
+    }
+
+    .mobile-checkout-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--white);
+        padding: 12px 20px 20px;
+        box-shadow: 0 -4px 24px rgba(103, 72, 49, 0.14);
+        border-top: 1.5px solid var(--beige);
+        z-index: 999;
+        gap: 16px;
+    }
+
+    .mobile-checkout-bar .bar-left {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        flex-shrink: 0;
+    }
+
+    .mobile-checkout-bar .bar-selected {
+        font-size: 0.75rem;
+        color: var(--text-light);
+        font-weight: 500;
+    }
+
+    .mobile-checkout-bar .bar-total {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--brown);
+    }
+
+    .mobile-checkout-bar .bar-checkout-btn {
+        background: linear-gradient(135deg, var(--btn-dark-start), var(--btn-dark-end));
+        color: white;
+        border: none;
+        padding: 13px 22px;
+        border-radius: 50px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9rem;
+        font-family: 'Poppins', sans-serif;
+        box-shadow: 0 6px 20px rgba(90, 60, 40, 0.32);
+        transition: var(--transition);
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .mobile-checkout-bar .bar-checkout-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 28px rgba(90, 60, 40, 0.42);
+    }
+
+    .mobile-checkout-bar .bar-checkout-btn:disabled {
+        background: #c8b8a8;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+}

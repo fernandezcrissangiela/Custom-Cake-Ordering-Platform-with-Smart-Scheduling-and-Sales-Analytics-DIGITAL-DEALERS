@@ -1805,32 +1805,35 @@ section h2 i {
 }
 
 .confirm-btn-yes {
-    padding: 12px 28px;
+    padding: 9px 20px;
     border-radius: 50px;
     border: none;
     background: linear-gradient(135deg, #5da86a, #3e8c4e);
     color: white;
     font-weight: 700;
-    font-size: 0.9rem;
+    font-size: 0.82rem;
     cursor: pointer;
     font-family: 'Poppins', sans-serif;
     transition: all 0.3s;
-    box-shadow: 0 6px 18px rgba(62, 140, 78, 0.3);
+    box-shadow: 0 4px 14px rgba(62, 140, 78, 0.3);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .confirm-btn-yes:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 26px rgba(62, 140, 78, 0.4);
+    box-shadow: 0 8px 20px rgba(62, 140, 78, 0.4);
 }
 
 .confirm-btn-no {
-    padding: 12px 28px;
+    padding: 9px 20px;
     border-radius: 50px;
     border: 1.5px solid var(--beige);
     background: white;
     color: var(--text-light);
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.82rem;
     cursor: pointer;
     font-family: 'Poppins', sans-serif;
     transition: all 0.2s;
@@ -1844,7 +1847,6 @@ section h2 i {
 
 /* ══════════════════════════════════════════════
    ACCOUNT SETTINGS — SLIDE-IN DRAWER
-   Inspired by Shopify / Lazada profile panels
    ══════════════════════════════════════════════ */
 
 /* Trigger button in header */
@@ -2296,9 +2298,8 @@ section h2 i {
     font-size: 0.95rem;
     color: var(--brown);
     margin: 0 0 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    word-break: break-word;
 }
 
 .ao-card-meta {
@@ -2402,4 +2403,308 @@ section h2 i {
         width: 100%;
         justify-content: center;
     }
+}
+
+/* ══════════════════════════════════════════════════════════
+   MOBILE BOTTOM-SHEET: ORDER DETAILS MODAL
+   
+   ══════════════════════════════════════════════════════════ */
+
+@media (max-width: 600px) {
+
+    /* The overlay dims the page but anchor aligns to bottom */
+    .modal {
+        align-items: flex-end !important;
+        justify-content: center !important;
+        padding: 0;
+        background: rgba(30, 18, 10, 0.52);
+    }
+
+    /* Bottom-sheet container */
+    .modal-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 22px 22px 0 0 !important;
+        padding: 0 !important;
+        max-height: 88vh !important;
+        overflow-y: auto !important;
+        animation: sheetSlideUp 0.38s cubic-bezier(0.22, 1, 0.36, 1) !important;
+        /* Ensure it sticks to very bottom */
+        margin-bottom: 0;
+        position: relative;
+    }
+
+    @keyframes sheetSlideUp {
+        from {
+            transform: translateY(100%);
+            opacity: 0.6;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    /* Drag handle pill at top of sheet */
+    .modal-content::before {
+        content: '';
+        display: block;
+        width: 40px;
+        height: 4px;
+        background: #d8c8be;
+        border-radius: 4px;
+        margin: 12px auto 0;
+        flex-shrink: 0;
+    }
+
+    /* Sticky header inside sheet */
+    .modal-header {
+        padding: 14px 20px 14px !important;
+        border-radius: 22px 22px 0 0;
+        border-bottom: 1px solid var(--beige);
+        background: white;
+        position: sticky;
+        top: 0;
+        z-index: 3;
+    }
+
+    .modal-header-title {
+        font-size: 1rem !important;
+    }
+
+    .close-modal {
+        top: 12px !important;
+        right: 14px !important;
+        font-size: 1.3rem !important;
+        width: 30px !important;
+        height: 30px !important;
+        background: var(--cream);
+        border-radius: 50%;
+    }
+
+    /* Body of sheet */
+    .modal-body {
+        padding: 18px 20px 32px !important;
+    }
+
+    /* Section labels tighter on mobile */
+    .modal-section-title {
+        margin: 14px 0 8px !important;
+        font-size: 0.68rem !important;
+    }
+
+    /* Info grid full-width stacked on mobile */
+    .modal-meta-grid {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+
+    /* Items box tighter */
+    .modal-items-box {
+        padding: 14px !important;
+        border-radius: 14px !important;
+    }
+
+    .modal-item-row {
+        font-size: 0.85rem !important;
+    }
+
+    .modal-total {
+        font-size: 0.95rem !important;
+    }
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   MOBILE: ORDER HISTORY — FLOATING ACTION BUTTON (FAB)
+   On mobile the history section is hidden in-page and
+   accessed via a sticky FAB that opens it as a bottom sheet.
+   ══════════════════════════════════════════════════════════ */
+
+/* --- FAB button (mobile only) --- */
+.history-fab {
+    display: none;
+    /* hidden on desktop */
+}
+
+@media (max-width: 600px) {
+
+    /* Hide the inline history section card on mobile */
+    #order-history-card {
+        display: none !important;
+    }
+
+    /* Show the FAB */
+    .history-fab {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1500;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: white;
+        border: none;
+        padding: 14px 24px;
+        border-radius: 50px;
+        font-family: 'Poppins', sans-serif;
+        font-size: 0.9rem;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 8px 28px rgba(103, 72, 49, 0.40);
+        white-space: nowrap;
+        transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+        animation: fabPop 0.5s 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    @keyframes fabPop {
+        from {
+            transform: translateX(-50%) scale(0.7);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(-50%) scale(1);
+            opacity: 1;
+        }
+    }
+
+    .history-fab:active {
+        transform: translateX(-50%) scale(0.96);
+        box-shadow: 0 4px 14px rgba(103, 72, 49, 0.35);
+    }
+
+    .history-fab .fab-badge {
+        background: rgba(255, 255, 255, 0.28);
+        border-radius: 20px;
+        padding: 2px 8px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        min-width: 22px;
+        text-align: center;
+    }
+}
+
+/* ── History Bottom Sheet (mobile) ── */
+.history-sheet-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(30, 18, 10, 0.52);
+    backdrop-filter: blur(4px);
+    z-index: 1600;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.history-sheet-overlay.open {
+    display: flex;
+}
+
+.history-sheet {
+    width: 100%;
+    max-height: 88vh;
+    background: white;
+    border-radius: 22px 22px 0 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: sheetSlideUp 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Drag handle inside sheet */
+.history-sheet-handle {
+    width: 40px;
+    height: 4px;
+    background: #d8c8be;
+    border-radius: 4px;
+    margin: 12px auto 0;
+    flex-shrink: 0;
+}
+
+/* Sheet header — sticky */
+.history-sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 14px;
+    border-bottom: 1px solid var(--beige);
+    background: white;
+    flex-shrink: 0;
+}
+
+.history-sheet-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.history-sheet-title h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--brown);
+}
+
+.history-sheet-title .htb-count {
+    background: var(--primary);
+    color: white;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 20px;
+}
+
+.history-sheet-close {
+    background: var(--cream);
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.history-sheet-close:hover {
+    background: var(--secondary);
+    color: var(--brown);
+}
+
+/* Filter chips inside sheet */
+.history-sheet-filters {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--beige);
+    background: var(--cream);
+    flex-shrink: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.history-sheet-filters::-webkit-scrollbar {
+    display: none;
+}
+
+/* Sheet body — scrollable */
+.history-sheet-body {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    flex: 1;
+    padding: 14px 16px 24px;
+}
+
+/* Mirror the filter chips into the sheet */
+.history-sheet-filters .chip {
+    flex-shrink: 0;
 }
