@@ -6,7 +6,6 @@
 /* ── Orders Panels ── */
 .orders-panel { display: none; }
 .orders-panel.active { display: block; }
-
 /* ── Order Count Badge (subnav) ── */
 .order-count-badge {
   display: inline-flex;
@@ -23,7 +22,7 @@
   margin-left: 2px;
   flex-shrink: 0;
 }
-.order-count-badge.active-badge { background: #2980b9; }
+.order-count-badge.active-badge { background: #ac5606; }
 
 /* ── Order Grid ── */
 #pending-list,
