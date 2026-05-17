@@ -7,6 +7,96 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../css/cart.css" />
+    <style>
+        /* ─── Cart Badge Styles ─── */
+        .cart-wrapper {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+        .cart-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: var(--primary);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            min-width: 18px;
+            height: 18px;
+            line-height: 18px;
+            border-radius: 50%;
+            text-align: center;
+            padding: 0 5px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            pointer-events: none;
+        }
+        .cart-badge.hidden {
+            display: none;
+        }
+
+        /* ─── Mobile Sticky Checkout Bar ─── */
+        #mobile-checkout-bar {
+            display: none;
+        }
+        @media (max-width: 850px) {
+            body { padding-bottom: 88px; }
+            #mobile-checkout-bar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                z-index: 1100;
+                background: #fff;
+                border-top: 2px solid var(--beige);
+                box-shadow: 0 -4px 20px rgba(103,72,49,0.13);
+                padding: 12px 18px;
+                gap: 14px;
+            }
+            #mobile-checkout-bar .mob-total {
+                display: flex;
+                flex-direction: column;
+                line-height: 1.3;
+                min-width: 0;
+            }
+            #mobile-checkout-bar .mob-total .mob-label {
+                font-size: 0.72rem;
+                color: var(--text-light);
+                white-space: nowrap;
+            }
+            #mobile-checkout-bar .mob-total .mob-price {
+                font-size: 1.1rem;
+                font-weight: 700;
+                color: var(--primary-dark);
+            }
+            #mobile-checkout-bar .mob-btn {
+                flex-shrink: 0;
+                padding: 13px 22px;
+                background: linear-gradient(135deg, var(--btn-dark-start), var(--btn-dark-end));
+                color: #fff;
+                border: none;
+                border-radius: 50px;
+                font-size: 0.95rem;
+                font-weight: 600;
+                font-family: 'Poppins', sans-serif;
+                cursor: pointer;
+                box-shadow: 0 6px 18px rgba(90,60,40,0.30);
+                transition: all 0.3s ease;
+                white-space: nowrap;
+            }
+            #mobile-checkout-bar .mob-btn:active {
+                transform: scale(0.97);
+            }
+            #mobile-checkout-bar .mob-btn:disabled {
+                background: #c8b8a8;
+                box-shadow: none;
+                cursor: not-allowed;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -52,6 +142,17 @@
         </div>
     </div>
 
+    <!-- ─── MOBILE STICKY CHECKOUT BAR ─── -->
+    <div id="mobile-checkout-bar">
+        <div class="mob-total">
+            <span class="mob-label" id="mob-selected-label">0 items selected</span>
+            <span class="mob-price" id="mob-total-price">₱0.00</span>
+        </div>
+        <button class="mob-btn" id="mob-checkout-btn" disabled onclick="proceedToCheckout()">
+            Checkout
+        </button>
+    </div>
+
     <!-- ─── CART LOGIC (unchanged) ─── -->
     <script>
         const gridWrapper = document.getElementById('cart-grid-wrapper');
@@ -59,12 +160,22 @@
 
         let selectedIndices = [];
 
+        // Flag: has the page already loaded & reconciled the cart from Firebase?
+        // Once true, we never let Firebase overwrite local changes (deletions, checkouts).
+        let cartSyncedFromFirebase = false;
+
         function getCart() { return JSON.parse(localStorage.getItem('cart') || '[]'); }
-        function saveCart(cart) { (window._saveCartSync || (c => { localStorage.setItem('cart', JSON.stringify(c)); updateHeaderCount(); }))(cart); }
+
+        // saveCart always writes localStorage + header, and calls Firebase sync if available
+        function saveCart(cart) {
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateHeaderCount();
+            if (window._firebaseSaveCart) window._firebaseSaveCart(cart);
+        }
 
         function updateHeaderCount() {
             const cart = getCart();
-            const count = cart.reduce((sum, item) => sum + (item.quantity || 0), 0);
+            const count = cart.length; // Show number of unique items, not total quantity
             if (!countBadge) return;
             if (count > 0) {
                 countBadge.textContent = count;
@@ -72,6 +183,17 @@
             } else {
                 countBadge.style.display = 'none';
             }
+        }
+
+        function updateMobileBar(count, subtotal) {
+            const bar = document.getElementById('mobile-checkout-bar');
+            const btn = document.getElementById('mob-checkout-btn');
+            const label = document.getElementById('mob-selected-label');
+            const price = document.getElementById('mob-total-price');
+            if (!bar) return;
+            label.textContent = count + ' item' + (count !== 1 ? 's' : '') + ' selected';
+            price.textContent = '₱' + subtotal.toLocaleString(undefined, {minimumFractionDigits: 2});
+            btn.disabled = count === 0;
         }
 
         function toggleSelect(index) {
@@ -95,6 +217,7 @@
                         <p>Looks like you haven't added anything yet.</p>
                         <button class="btn-primary" onclick="location.href='menu.html'" style="width:auto; padding:13px 40px;">Browse Menu</button>
                     </div>`;
+                updateMobileBar(0, 0);
                 return;
             }
 
@@ -162,6 +285,9 @@
 
             gridWrapper.appendChild(itemsList);
             gridWrapper.appendChild(summaryDiv);
+
+            // Update mobile sticky bar
+            updateMobileBar(selectedIndices.length, selectedSubtotal);
         }
 
         window.changeQuantity = function(index, delta) {
@@ -190,7 +316,6 @@
                     description:     item.description    || '',
                     category:        item.category       || '',
                     customDetails:   item.customDetails  || null,
-                    // Preserve custom cake fields directly so they survive checkout → Firebase
                     layers:          item.layers         || '',
                     flavor:          item.flavor         || '',
                     frosting:        item.frosting       || '',
@@ -201,9 +326,11 @@
                 };
             });
 
-            // Remove only the checked-out items from the cart before navigating
-            const remainingCart = cart.filter((_, index) => !selectedIndices.includes(index));
-            saveCart(remainingCart);
+            // ── DO NOT remove items from the cart here ──
+            // Items stay in the cart until the order is fully placed.
+            // The checkout page is responsible for clearing them on success.
+            // This prevents items from disappearing if the user goes back
+            // or closes the page before completing the order.
 
             try {
                 localStorage.removeItem('checkoutItems');
@@ -241,46 +368,54 @@
         const db = getDatabase(app);
 
         // ── Cart sync helpers ──
+        let currentFirebaseUser = null;
+
         function saveCartToFirebase(user, cart) {
             set(ref(db, `carts/${user.uid}`), cart.length > 0 ? cart : null).catch(console.error);
         }
 
-        function mergeAndSaveCart(user, cloudCart) {
+        // Expose Firebase save so saveCart() (defined in the first script) can call it
+        window._firebaseSaveCart = function(cart) {
+            if (currentFirebaseUser) saveCartToFirebase(currentFirebaseUser, cart);
+        };
+
+        function initialCartSync(user, cloudCart) {
+            // Only run once on page load — NEVER after the user has already
+            // made changes (delete, checkout) because that would restore items.
+            if (cartSyncedFromFirebase) return;
+            cartSyncedFromFirebase = true;
+
             const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
-            if (localCart.length === 0) {
-                // No local items — restore from cloud
+
+            if (localCart.length === 0 && cloudCart.length > 0) {
+                // Fresh page load with nothing local — restore from cloud
                 localStorage.setItem('cart', JSON.stringify(cloudCart));
                 renderCart();
                 updateHeaderCount();
-            } else if (cloudCart.length === 0) {
-                // No cloud items — push local to cloud
+            } else if (localCart.length > 0 && cloudCart.length === 0) {
+                // Local exists but cloud is empty — push to cloud
                 saveCartToFirebase(user, localCart);
-            } else {
-                // Merge: combine cloud + local, deduplicate by name
-                const merged = [...cloudCart];
-                localCart.forEach(localItem => {
-                    const exists = merged.find(c => c.name === localItem.name && JSON.stringify(c.customDetails) === JSON.stringify(localItem.customDetails));
-                    if (!exists) merged.push(localItem);
+            } else if (localCart.length > 0 && cloudCart.length > 0) {
+                // Both exist — add any cloud-only items that aren't in local
+                // (handles "added on another device" case without overwriting deletions)
+                const merged = [...localCart];
+                cloudCart.forEach(cloudItem => {
+                    const exists = merged.find(l =>
+                        l.name === cloudItem.name &&
+                        JSON.stringify(l.customDetails) === JSON.stringify(cloudItem.customDetails)
+                    );
+                    if (!exists) merged.push(cloudItem);
                 });
-                localStorage.setItem('cart', JSON.stringify(merged));
-                saveCartToFirebase(user, merged);
-                renderCart();
-                updateHeaderCount();
+                if (merged.length !== localCart.length) {
+                    localStorage.setItem('cart', JSON.stringify(merged));
+                    saveCartToFirebase(user, merged);
+                    renderCart();
+                    updateHeaderCount();
+                }
+                // If nothing new was added, don't re-render (avoids flicker)
             }
+            // If both are empty, nothing to do
         }
-
-        // Patch saveCart to also sync to Firebase
-        const _originalSaveCart = window.saveCart || null;
-        let currentFirebaseUser = null;
-
-        function saveCartWithSync(cart) {
-            localStorage.setItem('cart', JSON.stringify(cart));
-            updateHeaderCount();
-            if (currentFirebaseUser) saveCartToFirebase(currentFirebaseUser, cart);
-        }
-
-        // Override the global saveCart used by changeQuantity / removeItem
-        window._saveCartSync = saveCartWithSync;
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -292,10 +427,10 @@
                     }
                 });
 
-                // Restore cart from Firebase on login
+                // One-time sync on page load
                 get(ref(db, `carts/${user.uid}`)).then(snap => {
                     const cloudCart = snap.exists() ? snap.val() : [];
-                    mergeAndSaveCart(user, Array.isArray(cloudCart) ? cloudCart : []);
+                    initialCartSync(user, Array.isArray(cloudCart) ? cloudCart : []);
                 });
             }
         });

@@ -99,6 +99,222 @@
     .cart-badge.hidden {
       display: none;
     }
+
+    /* ─── Footer Styles ─── */
+    footer {
+      background: #3F2A1F;
+      color: #EDE0D4;
+      padding: 48px 0 0;
+      width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 40px;
+      padding-bottom: 40px;
+    }
+
+    .footer-about h3,
+    .footer-contact h3,
+    .footer-links h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #F0E0D2;
+      margin-bottom: 14px;
+    }
+
+    .footer-about p,
+    .footer-contact p {
+      font-size: 0.92rem;
+      line-height: 1.75;
+      color: #c9b5a8;
+      margin: 4px 0;
+    }
+
+    .footer-about .logo-text {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #F0E0D2;
+      text-decoration: none;
+      display: inline-block;
+      margin-bottom: 12px;
+    }
+
+    .footer-about .logo-text span {
+      color: #D4956A;
+    }
+
+    .footer-links ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .footer-links ul li {
+      margin-bottom: 8px;
+    }
+
+    .footer-links ul li a {
+      text-decoration: none;
+      color: #c9b5a8;
+      font-size: 0.92rem;
+      transition: color 0.3s;
+    }
+
+    .footer-links ul li a:hover {
+      color: #D4956A;
+    }
+
+    .footer-contact i {
+      color: #D4956A;
+      margin-right: 8px;
+      width: 16px;
+    }
+
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,0.1);
+      text-align: center;
+      padding: 16px 20px;
+      font-size: 0.82rem;
+      color: #a08070;
+    }
+
+    /* ─── Footer Mobile ─── */
+    @media (max-width: 768px) {
+      footer {
+        width: 100%;
+        box-sizing: border-box;
+        overflow: hidden;
+      }
+
+      footer .container.footer-grid {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+        padding: 28px 20px;
+        width: 100%;
+        box-sizing: border-box;
+        text-align: left;
+      }
+
+      footer .footer-about,
+      footer .footer-contact,
+      footer .footer-links {
+        width: 100%;
+      }
+
+      footer .footer-about p,
+      footer .footer-contact p {
+        font-size: 0.88rem;
+        line-height: 1.6;
+        margin: 4px 0;
+      }
+
+      footer .footer-about h3,
+      footer .footer-contact h3,
+      footer .footer-links h3 {
+        font-size: 1rem;
+        margin-bottom: 8px;
+      }
+
+      footer .footer-links ul li a {
+        font-size: 0.88rem;
+      }
+
+      footer .footer-bottom {
+        padding: 12px 20px;
+        font-size: 0.8rem;
+        text-align: center;
+      }
+    }
+
+    /* ─── Customize Page Mobile Fixes ─── */
+    @media (max-width: 850px) {
+      .cus-container {
+        padding: 32px 16px 60px;
+      }
+
+      .cus-card {
+        padding: 24px 18px;
+        border-radius: 18px;
+        gap: 28px;
+      }
+
+      .form-section h2 {
+        font-size: 1.8rem;
+        margin-bottom: 24px;
+      }
+
+      .selection-group {
+        margin-bottom: 20px;
+      }
+
+      .selection-group label {
+        font-size: 0.95rem;
+        margin-bottom: 8px;
+      }
+
+      .selection-group select,
+      .selection-group textarea,
+      .selection-group input[type="file"] {
+        padding: 12px 14px;
+        font-size: 0.95rem;
+        border-radius: 12px;
+      }
+
+      .selection-group textarea {
+        min-height: 80px;
+      }
+
+      .price-display {
+        padding: 18px;
+        margin: 24px 0 18px;
+        border-radius: 16px;
+      }
+
+      .price-display p {
+        font-size: 0.95rem;
+      }
+
+      .price-display h3 {
+        font-size: 2rem;
+      }
+
+      .preview-section {
+        min-height: 200px;
+        padding: 28px 16px;
+        border-radius: 18px;
+      }
+
+      .preview-section i {
+        font-size: 3.5rem;
+        margin-bottom: 14px;
+      }
+
+      .preview-section p {
+        font-size: 0.95rem;
+        margin-bottom: 16px;
+      }
+
+      .modal-content {
+        padding: 28px 20px;
+        border-radius: 22px;
+        width: 92%;
+      }
+
+      .modal-content h2 {
+        font-size: 1.4rem;
+      }
+
+      .summary-list li {
+        font-size: 0.95rem;
+        padding: 10px 0;
+      }
+    }
   </style>
 </head>
 <body>
@@ -194,6 +410,37 @@
       <button class="btn-primary full-width" onclick="addToCart()">Add to Cart</button>
     </div>
   </div>
+
+  <!-- ─── Footer ─── -->
+  <footer>
+    <div class="container footer-grid">
+      <div class="footer-about">
+        <a href="index.html" class="logo-text">C&N <span>Bakery</span></a>
+        <p>Handcrafted cakes made with love and the finest ingredients. Every cake tells a story — let us help you tell yours.</p>
+      </div>
+
+      <div class="footer-links">
+        <h3>Quick Links</h3>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="menu.html">Menu</a></li>
+          <li><a href="cus.html">Customize</a></li>
+          <li><a href="faq.html">FAQ</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-contact">
+        <h3>Contact Us</h3>
+        <p><i class="fas fa-envelope"></i> candbakery@gmail.com</p>
+        <p><i class="fas fa-phone"></i> +63 912 345 6789</p>
+        <p><i class="fas fa-map-marker-alt"></i> Manila, Philippines</p>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2025 C&N Bakery. All rights reserved.</p>
+    </div>
+  </footer>
 
   <script>
     // ─── Cart Count Badge Logic ───

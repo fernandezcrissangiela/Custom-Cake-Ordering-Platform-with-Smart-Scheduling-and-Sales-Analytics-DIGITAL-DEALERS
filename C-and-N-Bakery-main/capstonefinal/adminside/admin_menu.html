@@ -59,6 +59,9 @@
     <button class="subnav-btn" data-panel="panel-custom">
       <i class="fas fa-magic"></i> Manage Custom Cake 
     </button>
+    <button class="subnav-btn" data-panel="panel-featured">
+      <i class="fas fa-star"></i> Featured Cakes
+    </button>
   </div>
 
   <!-- ══ PANEL 1: Menu Management ══ -->
@@ -242,7 +245,112 @@
 
   </div><!-- /panel-custom -->
 
+  <!-- ══ PANEL 4: Featured Cakes ══ -->
+  <div id="panel-featured" class="menu-panel">
+
+    <div class="page-heading">
+      <h1 class="page-title"><i class="fas fa-star"></i> Featured Cakes</h1>
+      <p class="page-subtitle">Pin up to 5 cakes to display in the "Our Featured Cakes" section on the homepage.</p>
+    </div>
+
+    <div class="menu-layout">
+
+      <!-- LEFT: Add Featured Cake form -->
+      <aside class="sidebar-panel">
+        <div class="admin-card panel-sticky">
+          <h2><i class="fas fa-plus-circle"></i> Add Featured Cake</h2>
+          <p class="card-sub">Fill in the details to pin a cake to the homepage.</p>
+          <form id="add-featured-form">
+            <div class="form-group">
+              <label>Cake Name *</label>
+              <input type="text" id="feat-name" required placeholder="e.g. White Teal Dream">
+            </div>
+            <div class="form-group">
+              <label>Description <span style="color:var(--muted); font-weight:400;">(optional)</span></label>
+              <textarea id="feat-desc" rows="3" placeholder="Describe this featured cake…"></textarea>
+            </div>
+            <label class="file-input-label"><i class="fas fa-image"></i> Cake Photo *</label>
+            <input type="file" id="feat-image-file" accept="image/*" required>
+            <img id="feat-img-preview" src="" alt="Preview" style="max-width:100%; border-radius:12px; margin:6px 0 14px; display:none; border:2px solid var(--border); object-fit:cover; aspect-ratio:4/3;">
+            <button type="submit" id="feat-submit-btn" class="btn-main btn-full">
+              <i class="fas fa-star"></i> Pin to Homepage
+            </button>
+          </form>
+        </div>
+      </aside>
+
+      <!-- RIGHT: Current featured cakes list -->
+      <main class="main-panel">
+        <div class="admin-card">
+          <h2><i class="fas fa-list-ul"></i> Currently Featured <span id="feat-count-label" style="font-size:0.85rem; font-weight:500; color:var(--muted); margin-left:6px;">(0 / 5)</span></h2>
+          <p class="card-sub">Use ◀ ▶ arrows to reorder. Changes save instantly.</p>
+          <div id="featured-list" style="display:flex; flex-wrap:wrap; gap:16px; margin-top:8px;">
+            <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
+          </div>
+        </div>
+      </main>
+
+    </div><!-- /menu-layout -->
+  </div><!-- /panel-featured -->
+
 </div><!-- /container -->
+
+<!-- ========== DELETE FEATURED MODAL ========== -->
+<div id="delete-featured-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+  <div style="background:var(--white); border-radius:20px; padding:36px 32px; max-width:440px; width:100%; box-shadow:0 24px 60px rgba(0,0,0,0.3); position:relative; text-align:center;">
+    <div style="width:64px; height:64px; background:#fff0f0; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
+      <i class="fas fa-star" style="font-size:1.8rem; color:#c0392b;"></i>
+    </div>
+    <h2 style="font-size:1.25rem; font-weight:700; color:#c0392b; margin-bottom:10px;">Remove Featured Cake</h2>
+    <p style="color:var(--muted); font-size:0.95rem; line-height:1.6; margin-bottom:6px;">
+      Remove <strong id="del-feat-name" style="color:var(--brown);"></strong> from the homepage?
+    </p>
+    <div style="display:flex; gap:12px; justify-content:center; margin-top:20px;">
+      <button onclick="closeDeleteFeatModal()" style="flex:1; padding:12px; border-radius:12px; border:1.5px solid var(--border); background:var(--white); color:var(--brown); font-family:'Poppins',sans-serif; font-size:0.92rem; font-weight:600; cursor:pointer;">
+        Cancel
+      </button>
+      <button id="del-feat-confirm-btn" style="flex:1; padding:12px; border-radius:12px; border:none; background:#c0392b; color:#fff; font-family:'Poppins',sans-serif; font-size:0.92rem; font-weight:600; cursor:pointer;">
+        <i class="fas fa-trash-alt"></i> Yes, Remove
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== EDIT FEATURED MODAL ========== -->
+<div id="edit-featured-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+  <div style="background:var(--white); border-radius:20px; max-width:520px; width:100%; box-shadow:0 24px 60px rgba(0,0,0,0.25); position:relative; max-height:90vh; display:flex; flex-direction:column;">
+    <!-- Fixed header -->
+    <div style="padding:32px 32px 0; flex-shrink:0;">
+      <button onclick="closeEditFeatModal()" style="position:absolute; top:16px; right:18px; background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--muted);">&times;</button>
+      <h2 style="font-size:1.2rem; font-weight:700; color:var(--brown); margin-bottom:20px; display:flex; align-items:center; gap:10px;">
+        <i class="fas fa-pen" style="color:var(--primary);"></i> Edit Featured Cake
+      </h2>
+    </div>
+    <!-- Scrollable form body -->
+    <div style="padding:0 32px; overflow-y:auto; flex:1;">
+      <form id="edit-featured-form">
+        <input type="hidden" id="edit-feat-id">
+        <div class="form-group">
+          <label>Cake Name *</label>
+          <input type="text" id="edit-feat-name" required placeholder="e.g. White Teal Dream">
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="edit-feat-desc" rows="3" placeholder="Describe this featured cake…"></textarea>
+        </div>
+        <label class="file-input-label"><i class="fas fa-image"></i> Replace Photo <span style="color:var(--muted); font-weight:400;">(optional)</span></label>
+        <input type="file" id="edit-feat-image-file" accept="image/*" style="width:100%; padding:10px 12px; border:1.5px dashed var(--border); border-radius:12px; background:var(--cream); font-family:'Poppins',sans-serif; font-size:0.88rem; color:var(--muted); cursor:pointer; margin-bottom:10px; box-sizing:border-box;">
+        <img id="edit-feat-img-preview" src="" alt="Preview" style="max-width:180px; border-radius:12px; margin:6px 0 14px; display:none; border:2px solid var(--border); object-fit:cover; aspect-ratio:4/3;">
+      </form>
+    </div>
+    <!-- Fixed footer with Save button -->
+    <div style="padding:16px 32px 32px; flex-shrink:0;">
+      <button type="button" id="edit-feat-submit-btn" class="btn-main" style="width:100%; justify-content:center;" onclick="document.getElementById('edit-featured-form').requestSubmit()">
+        <i class="fas fa-save"></i> Save Changes
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- ========== EDIT PRODUCT MODAL ========== -->
 <div id="edit-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9999; align-items:center; justify-content:center; padding:16px;">
@@ -1111,6 +1219,272 @@
 
   // ── Load default option category on page load ──
   loadCurrentOptions();
+
+  // ══════════════════════════════════════════════
+  // FEATURED CAKES MANAGEMENT
+  // ══════════════════════════════════════════════
+
+  const MAX_FEATURED = 5;
+  let cachedFeatured = []; // [{ id, name, description, image, order }]
+  let featBase64     = "";
+  let editFeatBase64 = "";
+  let _pendingDeleteFeatId = null;
+
+  // ── Image preview (Add form) ──
+  document.getElementById('feat-image-file').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      featBase64 = reader.result;
+      const preview = document.getElementById('feat-img-preview');
+      preview.src = featBase64;
+      preview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // ── Image preview (Edit form) ──
+  document.getElementById('edit-feat-image-file').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      editFeatBase64 = reader.result;
+      const preview = document.getElementById('edit-feat-img-preview');
+      preview.src = editFeatBase64;
+      preview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // ── Load featured cakes (real-time) ──
+  onValue(ref(db, 'featured-cakes'), (snapshot) => {
+    cachedFeatured = [];
+    if (snapshot.exists()) {
+      snapshot.forEach(child => {
+        cachedFeatured.push({ id: child.key, ...child.val() });
+      });
+      // Sort by order field
+      cachedFeatured.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+    }
+    renderFeatured();
+  });
+
+  function renderFeatured() {
+    const container = document.getElementById('featured-list');
+    const count     = cachedFeatured.length;
+    document.getElementById('feat-count-label').textContent = `(${count} / ${MAX_FEATURED})`;
+
+    // Disable add form if at max
+    const submitBtn = document.getElementById('feat-submit-btn');
+    if (count >= MAX_FEATURED) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-ban"></i> Limit Reached (5/5)';
+    } else {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fas fa-star"></i> Pin to Homepage';
+    }
+
+    if (count === 0) {
+      container.innerHTML = `
+        <div class="no-products">
+          <i class="fas fa-star" style="color:var(--primary); opacity:0.35; font-size:2.5rem; margin-bottom:12px;"></i>
+          <p>No featured cakes yet. Add one using the form.</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = '';
+    cachedFeatured.forEach((cake, index) => {
+      const isFirst = index === 0;
+      const isLast  = index === cachedFeatured.length - 1;
+      const card = document.createElement('div');
+      card.className = 'product-card';
+      card.style.cssText = 'position:relative; width:200px; flex-shrink:0;';
+      card.innerHTML = `
+        <div class="img-wrapper" style="position:relative;">
+          <img src="${cake.image || 'https://via.placeholder.com/280x185?text=No+Image'}" alt="${cake.name}"
+               onerror="this.src='https://via.placeholder.com/280x185?text=Image+Error'">
+          <span style="position:absolute; top:10px; left:10px; background:var(--primary); color:#fff; font-size:0.72rem; font-weight:700; padding:3px 10px; border-radius:20px; letter-spacing:0.5px;">
+            <i class="fas fa-star" style="font-size:0.65rem;"></i> #${index + 1}
+          </span>
+        </div>
+        <div class="product-info">
+          <h4 style="font-size:0.88rem; color:var(--brown); margin-bottom:4px;">${cake.name}</h4>
+          <small style="color:var(--muted); font-size:0.78rem; display:block; margin-bottom:8px;">${cake.description
+            ? cake.description.substring(0, 55) + (cake.description.length > 55 ? '…' : '')
+            : '<em style="opacity:0.45;">No description</em>'}</small>
+          <div class="card-divider"></div>
+          <!-- Left / Right reorder -->
+          <div style="display:flex; gap:5px; margin-bottom:8px;">
+            <button onclick="moveFeatured('${cake.id}', -1)"
+                    title="Move Left"
+                    style="flex:1; padding:6px 4px; border-radius:8px; border:1.5px solid var(--border); background:var(--cream); color:${isFirst ? 'var(--muted)' : 'var(--brown)'}; font-size:0.85rem; cursor:${isFirst ? 'not-allowed' : 'pointer'}; opacity:${isFirst ? '0.38' : '1'}; font-family:'Poppins',sans-serif; transition:0.2s;"
+                    ${isFirst ? 'disabled' : ''}>
+              <i class="fas fa-arrow-left"></i>
+            </button>
+            <button onclick="moveFeatured('${cake.id}', 1)"
+                    title="Move Right"
+                    style="flex:1; padding:6px 4px; border-radius:8px; border:1.5px solid var(--border); background:var(--cream); color:${isLast ? 'var(--muted)' : 'var(--brown)'}; font-size:0.85rem; cursor:${isLast ? 'not-allowed' : 'pointer'}; opacity:${isLast ? '0.38' : '1'}; font-family:'Poppins',sans-serif; transition:0.2s;"
+                    ${isLast ? 'disabled' : ''}>
+              <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+          <div class="card-actions">
+            <button class="edit-btn" onclick="openEditFeat('${cake.id}')">
+              <i class="fas fa-pen"></i> Edit
+            </button>
+            <button class="delete-btn" onclick="deleteFeatured('${cake.id}', '${cake.name.replace(/'/g, "\\'")}')">
+              <i class="fas fa-trash-alt"></i> Remove
+            </button>
+          </div>
+        </div>`;
+      container.appendChild(card);
+    });
+  }
+
+  // ── Add Featured Cake ──
+  document.getElementById('add-featured-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    if (cachedFeatured.length >= MAX_FEATURED) {
+      alert('You already have 5 featured cakes. Remove one before adding more.');
+      return;
+    }
+    const btn = document.getElementById('feat-submit-btn');
+    btn.disabled  = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Pinning…';
+
+    const name = document.getElementById('feat-name').value.trim();
+    const desc = document.getElementById('feat-desc').value.trim();
+
+    if (!name)      { alert('Please enter a cake name.');  btn.disabled = false; btn.innerHTML = '<i class="fas fa-star"></i> Pin to Homepage'; return; }
+    if (!featBase64){ alert('Please upload a cake photo.'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-star"></i> Pin to Homepage'; return; }
+
+    const nextOrder = cachedFeatured.length > 0
+      ? Math.max(...cachedFeatured.map(c => c.order ?? 0)) + 1
+      : 0;
+
+    try {
+      await push(ref(db, 'featured-cakes'), {
+        name,
+        description: desc,
+        image:       featBase64,
+        order:       nextOrder,
+        createdAt:   Date.now()
+      });
+      document.getElementById('add-featured-form').reset();
+      featBase64 = '';
+      document.getElementById('feat-img-preview').style.display = 'none';
+    } catch (err) {
+      alert('Error adding featured cake: ' + err.message);
+    } finally {
+      btn.disabled  = false;
+      btn.innerHTML = '<i class="fas fa-star"></i> Pin to Homepage';
+    }
+  });
+
+  // ── Move Featured (reorder) ──
+  window.moveFeatured = async function(id, direction) {
+    const index = cachedFeatured.findIndex(c => c.id === id);
+    if (index < 0) return;
+    const swapIndex = index + direction;
+    if (swapIndex < 0 || swapIndex >= cachedFeatured.length) return;
+
+    const a = cachedFeatured[index];
+    const b = cachedFeatured[swapIndex];
+    const aOrder = a.order ?? index;
+    const bOrder = b.order ?? swapIndex;
+
+    try {
+      await update(ref(db, `featured-cakes/${a.id}`), { order: bOrder });
+      await update(ref(db, `featured-cakes/${b.id}`), { order: aOrder });
+    } catch (err) {
+      alert('Error reordering: ' + err.message);
+    }
+  };
+
+  // ── Open Edit Featured Modal ──
+  window.openEditFeat = function(id) {
+    const cake = cachedFeatured.find(c => c.id === id);
+    if (!cake) return;
+    document.getElementById('edit-feat-id').value   = id;
+    document.getElementById('edit-feat-name').value = cake.name || '';
+    document.getElementById('edit-feat-desc').value = cake.description || '';
+    const preview = document.getElementById('edit-feat-img-preview');
+    if (cake.image) { preview.src = cake.image; preview.style.display = 'block'; }
+    else            { preview.style.display = 'none'; }
+    editFeatBase64 = '';
+    document.getElementById('edit-feat-image-file').value = '';
+    document.getElementById('edit-featured-modal').style.display = 'flex';
+  };
+
+  window.closeEditFeatModal = function() {
+    document.getElementById('edit-featured-modal').style.display = 'none';
+    editFeatBase64 = '';
+  };
+  document.getElementById('edit-featured-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('edit-featured-modal')) closeEditFeatModal();
+  });
+
+  document.getElementById('edit-featured-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = document.getElementById('edit-feat-submit-btn');
+    btn.disabled  = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+
+    const id   = document.getElementById('edit-feat-id').value;
+    const name = document.getElementById('edit-feat-name').value.trim();
+    const desc = document.getElementById('edit-feat-desc').value.trim();
+
+    if (!name) { alert('Please enter a cake name.'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save Changes'; return; }
+
+    const updates = { name, description: desc };
+    if (editFeatBase64) updates.image = editFeatBase64;
+
+    // Close modal immediately for snappy UX — Firebase syncs in background
+    closeEditFeatModal();
+
+    try {
+      await update(ref(db, `featured-cakes/${id}`), updates);
+    } catch (err) {
+      alert('Error saving: ' + err.message);
+    } finally {
+      btn.disabled  = false;
+      btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+    }
+  });
+
+  // ── Delete Featured ──
+  window.deleteFeatured = function(id, name) {
+    _pendingDeleteFeatId = id;
+    document.getElementById('del-feat-name').textContent = `"${name}"`;
+    document.getElementById('delete-featured-modal').style.display = 'flex';
+  };
+
+  window.closeDeleteFeatModal = function() {
+    document.getElementById('delete-featured-modal').style.display = 'none';
+    _pendingDeleteFeatId = null;
+  };
+  document.getElementById('delete-featured-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('delete-featured-modal')) closeDeleteFeatModal();
+  });
+
+  document.getElementById('del-feat-confirm-btn').addEventListener('click', async () => {
+    if (!_pendingDeleteFeatId) return;
+    const btn = document.getElementById('del-feat-confirm-btn');
+    btn.disabled  = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Removing…';
+    try {
+      await remove(ref(db, `featured-cakes/${_pendingDeleteFeatId}`));
+      closeDeleteFeatModal();
+    } catch (err) {
+      alert('Error removing: ' + err.message);
+    } finally {
+      btn.disabled  = false;
+      btn.innerHTML = '<i class="fas fa-trash-alt"></i> Yes, Remove';
+    }
+  });
 </script>
 
 </body>

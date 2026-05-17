@@ -10,8 +10,6 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="../css/menu.css">
-
-  
 </head>
 <body>
 
@@ -32,11 +30,11 @@
         <div class="auth-area">
           <div class="nav-icons">
             <div class="cart-wrapper">
-              <i class="fas fa-shopping-cart" title="Cart" onclick="checkAuth(event)"></i>
+              <i class="fas fa-shopping-cart" title="Cart" onclick="menuApp.checkAuth(event)"></i>
               <span id="cart-count-header">0</span>
             </div>
             <div class="user-wrapper">
-              <i class="fas fa-user nav-user-icon" title="Account" onclick="checkAuth(event)"></i>
+              <i class="fas fa-user nav-user-icon" title="Account" onclick="menuApp.checkAuth(event)"></i>
             </div>
           </div>
           <span id="user-name-display"></span>
@@ -66,15 +64,12 @@
     </div>
 
     <div class="categories" id="category-buttons">
-      <span style="color:var(--muted); font-size:0.9rem;"><i class="fas fa-spinner fa-spin"></i> Loading categories…</span>
+      <span style="color:var(--muted);font-size:0.9rem;">
+        <i class="fas fa-spinner fa-spin"></i> Loading categories…
+      </span>
     </div>
 
     <div class="product-grid" id="product-grid"></div>
-    <div class="carousel-controls" id="carousel-controls">
-      <button class="carousel-btn" id="carousel-prev"><i class="fas fa-chevron-left"></i></button>
-      <div class="carousel-dots" id="carousel-dots"></div>
-      <button class="carousel-btn" id="carousel-next"><i class="fas fa-chevron-right"></i></button>
-    </div>
   </div>
 
   <!-- Product Detail Modal -->
@@ -106,343 +101,365 @@
     appId: "1:620414447517:web:d42c5d50a91ff41e5ac974"
   };
 
-  const app = initializeApp(firebaseConfig);
+  const app  = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const db = getDatabase(app);
+  const db   = getDatabase(app);
 
-  const grid = document.getElementById('product-grid');
-  let productsByCategory = { cakes: [], pastries: [], custom: [] };
-  let currentSelectedProduct = null;
+  // ============================================================
+  // OOP: ENCAPSULATION
+  // CartManager encapsulates all cart localStorage read/write and
+  // the cart-count badge update. Private field #key hides the
+  // storage key; no external code accesses localStorage directly.
+  // ============================================================
+  class CartManager { // OOP - Encapsulation
+    #key = 'cart';
 
-  // ==================== CART FUNCTIONS ====================
-  const getCart = () => JSON.parse(localStorage.getItem('cart') || '[]');
-
-  const updateCartCount = () => {
-    const countEl = document.getElementById('cart-count-header');
-    if (!countEl) return;
-
-    const isLoggedIn = !document.getElementById('logout-trigger').classList.contains('hidden');
-
-    if (!isLoggedIn) {
-      countEl.textContent = '0';
-      countEl.style.display = 'none';
-      return;
+    getCart() {
+      return JSON.parse(localStorage.getItem(this.#key) || '[]');
     }
 
-    const total = getCart().reduce((sum, item) => sum + (item.quantity || 1), 0);
-    countEl.textContent = total;
-    countEl.style.display = total > 0 ? 'flex' : 'none';
-  };
-
-  const saveCart = (cart) => {
-    localStorage.setItem('cart', JSON.stringify(cart));
-    updateCartCount();
-  };
-
-  // ==================== AUTH & UI ====================
-  onAuthStateChanged(auth, async (user) => {
-    const signupBtn = document.getElementById('signup-trigger');
-    const logoutBtn = document.getElementById('logout-trigger');
-    const nameTag   = document.getElementById('user-name-display');
-
-    if (user) {
-      signupBtn?.classList.add('hidden');
-      logoutBtn?.classList.remove('hidden');
-      try {
-        const snap = await get(ref(db, "users/" + user.uid));
-        if (snap.exists()) {
-          nameTag.innerText = "Hi, " + (snap.val().name || "Guest");
-        }
-      } catch {}
-    } else {
-      signupBtn?.classList.remove('hidden');
-      logoutBtn?.classList.add('hidden');
-      nameTag.innerText = "";
+    saveCart(cart) {
+      localStorage.setItem(this.#key, JSON.stringify(cart));
+      this.updateCount();
     }
 
-    updateCartCount();
-  });
-
-  window.handleLogout = () => signOut(auth).catch(err => console.error("Logout error:", err));
-
-  window.checkAuth = (e) => {
-    const isLoggedIn = !document.getElementById('logout-trigger').classList.contains('hidden');
-    if (!isLoggedIn) {
-      alert("Please sign in to continue.");
-      window.location.href = 'index.html';
-      return;
-    }
-    const target = e.currentTarget;
-    if (target.classList.contains('fa-shopping-cart')) {
-      window.location.href = 'cart.html';
-    } else if (target.classList.contains('fa-user')) {
-      window.location.href = 'user.html';
-    }
-  };
-
-  // ==================== ADD TO CART ====================
-  const addToCart = (product) => {
-    if (!auth.currentUser) {
-      alert("Please sign in to add items to your cart.");
-      window.location.href = 'index.html';
-      return;
+    updateCount() {
+      const countEl   = document.getElementById('cart-count-header');
+      const isLoggedIn = !document.getElementById('logout-trigger').classList.contains('hidden');
+      if (!countEl) return;
+      if (!isLoggedIn) { countEl.textContent = '0'; countEl.style.display = 'none'; return; }
+      const total = this.getCart().reduce((sum, item) => sum + (item.quantity || 1), 0);
+      countEl.textContent  = total;
+      countEl.style.display = total > 0 ? 'flex' : 'none';
     }
 
-    let cart = getCart();
-    const catObj = allCategories.find(c => c.key === product.category);
-    const category = catObj ? catObj.displayName : (product.category || "Others");
-
-    const item = {
-      ...product,
-      category,
-      id: product.id || Date.now().toString()
-    };
-
-    const existing = cart.find(i => i.id === item.id);
-    if (existing) {
-      existing.quantity = (existing.quantity || 1) + 1;
-    } else {
-      cart.push({ ...item, quantity: 1 });
-    }
-
-    saveCart(cart);
-
-    document.querySelectorAll(`.btn-add[data-id="${product.id}"]`).forEach(btn => {
-      const original = btn.innerHTML;
-      btn.innerHTML = '<i class="fas fa-check"></i> Added';
-      btn.disabled = true;
-      setTimeout(() => {
-        btn.innerHTML = original;
-        btn.disabled = false;
-      }, 1400);
-    });
-  };
-
-  // ==================== MODAL ====================
-  const modal = document.getElementById('productModal');
-  const openProductModal = (product) => {
-    currentSelectedProduct = product;
-    document.getElementById('modalImg').src = product.image || `https://via.placeholder.com/420x300?text=${encodeURIComponent(product.name)}`;
-    document.getElementById('modalImg').alt = product.name;
-    document.getElementById('modalTitle').textContent = product.name;
-    document.getElementById('modalPrice').textContent = `₱${Number(product.price).toFixed(2)}`;
-    document.getElementById('modalDesc').textContent = product.description || "Freshly baked daily with love and the finest ingredients.";
-    modal.classList.add('active');
-  };
-
-  document.getElementById('closeModal').onclick = () => modal.classList.remove('active');
-  document.getElementById('modalAddToCart').onclick = () => {
-    if (currentSelectedProduct) addToCart(currentSelectedProduct);
-    modal.classList.remove('active');
-  };
-
-  // ==================== RENDER & FETCH ====================
-  function showSkeletons(count = 8) {
-    grid.innerHTML = '';
-    for (let i = 0; i < count; i++) {
-      grid.innerHTML += `
-        <div class="cake-item skeleton">
-          <div class="skeleton-img"></div>
-          <div class="skeleton-text"></div>
-          <div class="skeleton-text" style="width:65%"></div>
-          <div class="skeleton-btn"></div>
-        </div>`;
+    addItem(product, categoryLabel) {
+      const cart = this.getCart();
+      const item = { ...product, category: categoryLabel, id: product.id || Date.now().toString() };
+      const existing = cart.find(i => i.id === item.id);
+      if (existing) {
+        existing.quantity = (existing.quantity || 1) + 1;
+      } else {
+        cart.push({ ...item, quantity: 1 });
+      }
+      this.saveCart(cart);
     }
   }
 
-  function renderProducts(category) {
-    const activePriceBtn = document.querySelector('.price-filter-btn.active');
-    const minPrice = parseFloat(activePriceBtn?.dataset.min || 0);
-    const maxPrice = parseFloat(activePriceBtn?.dataset.max || Infinity);
+  // ============================================================
+  // OOP: ABSTRACTION
+  // ProductCard is an abstract base for a menu card.
+  // It defines the shared interface: render() and getButtonLabel().
+  // Concrete subclasses decide how they render differently.
+  // ============================================================
+  class ProductCard { // OOP - Abstraction (base class)
+    constructor(product) {
+      this.product = product;
+    }
 
-    const items = (productsByCategory[category] || []).filter(p => {
-      return p.price >= minPrice && p.price <= maxPrice;
-    });
-
-    grid.innerHTML = items.length === 0 
-      ? '<p class="no-products">No products found in this price range.</p>'
-      : '';
-
-    items.forEach(p => {
-      const card = document.createElement('div');
-      card.className = 'cake-item';
-      card.innerHTML = `
-        <img src="${p.image || `https://via.placeholder.com/300x250?text=${encodeURIComponent(p.name)}`}" 
+    // Shared template — delegates to getButtonLabel() for flexibility
+    render() { // OOP - Polymorphism (calls overridden getButtonLabel)
+      const p = this.product;
+      return `
+        <img src="${p.image || `https://via.placeholder.com/300x250?text=${encodeURIComponent(p.name)}`}"
              alt="${p.name}" loading="lazy">
         <h3>${p.name}</h3>
         <p class="card-desc">${p.description || "Freshly baked daily with love and the finest ingredients."}</p>
         <p class="price">₱${Number(p.price).toFixed(2)}</p>
-        <button class="btn-primary btn-add" data-id="${p.id}">Add to Cart</button>
-      `;
-      card.addEventListener('click', e => {
-        if (!e.target.closest('button')) openProductModal(p);
-      });
-      grid.appendChild(card);
-    });
+        <button class="btn-primary btn-add" data-id="${p.id}">${this.getButtonLabel()}</button>`;
+    }
 
-    // Init carousel after render
-    setTimeout(initCarousel, 50);
-  }
-
-  async function fetchCategory(category) {
-    showSkeletons();
-    try {
-      const snap = await get(ref(db, `products/${category}`));
-      productsByCategory[category] = snap.exists()
-        ? Object.entries(snap.val()).map(([id, val]) => ({ id, ...val, category }))
-        : [];
-      renderProducts(category);
-    } catch (err) {
-      grid.innerHTML = `<p class="error-msg">Failed to load ${category}: ${err.message}</p>`;
-      console.error(err);
+    // Default label — subclasses override for different text
+    getButtonLabel() { // OOP - Polymorphism (overridden by subclasses)
+      return 'Add to Cart';
     }
   }
 
-  // ==================== DYNAMIC CATEGORIES ====================
-  let allCategories = []; // { key, displayName }
+  // ============================================================
+  // OOP: INHERITANCE + POLYMORPHISM
+  // CakeCard inherits ProductCard and overrides getButtonLabel()
+  // to show a cake-specific label.
+  // ============================================================
+  class CakeCard extends ProductCard { // OOP - Inheritance
+    getButtonLabel() { // OOP - Polymorphism (overrides base)
+      return '🎂 Add to Cart';
+    }
+  }
 
-  async function loadCategories() {
-    const btnContainer = document.getElementById('category-buttons');
-    try {
-      const snap = await get(ref(db, 'categories'));
-      allCategories = [];
-      if (snap.exists()) {
-        snap.forEach(child => {
-          allCategories.push({ key: child.key, displayName: child.val().displayName || child.key });
-        });
-      }
+  // ============================================================
+  // OOP: INHERITANCE + POLYMORPHISM
+  // PastryCard inherits ProductCard and overrides getButtonLabel()
+  // to show a pastry-specific label.
+  // ============================================================
+  class PastryCard extends ProductCard { // OOP - Inheritance
+    getButtonLabel() { // OOP - Polymorphism (overrides base)
+      return '🥐 Add to Cart';
+    }
+  }
 
-      if (allCategories.length === 0) {
-        btnContainer.innerHTML = '<span style="color:var(--muted);">No categories available.</span>';
+  // ============================================================
+  // OOP: ABSTRACTION — Factory function
+  // createProductCard() hides which subclass to use. Callers only
+  // pass a product and category; this function decides the type.
+  // ============================================================
+  function createProductCard(product, categoryKey) { // OOP - Abstraction (factory)
+    if (categoryKey === 'cakes') return new CakeCard(product);   // OOP - Inheritance
+    if (categoryKey === 'pastries') return new PastryCard(product); // OOP - Inheritance
+    return new ProductCard(product); // base for unknown categories
+  }
+
+  // ============================================================
+  // OOP: ENCAPSULATION
+  // ProductModal encapsulates all modal open/close state and
+  // the currently selected product. No external code reads
+  // #currentProduct directly.
+  // ============================================================
+  class ProductModal { // OOP - Encapsulation
+    #currentProduct = null;
+    #el;
+
+    constructor(modalId) {
+      this.#el = document.getElementById(modalId);
+      document.getElementById('closeModal').onclick = () => this.close();
+    }
+
+    open(product) {
+      this.#currentProduct = product;
+      document.getElementById('modalImg').src   = product.image || `https://via.placeholder.com/420x300?text=${encodeURIComponent(product.name)}`;
+      document.getElementById('modalImg').alt   = product.name;
+      document.getElementById('modalTitle').textContent = product.name;
+      document.getElementById('modalPrice').textContent = `₱${Number(product.price).toFixed(2)}`;
+      document.getElementById('modalDesc').textContent  = product.description || "Freshly baked daily with love and the finest ingredients.";
+      this.#el.classList.add('active');
+    }
+
+    close() {
+      this.#el.classList.remove('active');
+      this.#currentProduct = null;
+    }
+
+    getCurrentProduct() {
+      return this.#currentProduct; // controlled access to private state
+    }
+  }
+
+  // ============================================================
+  // OOP: ENCAPSULATION
+  // MenuApp encapsulates the entire page state: loaded products,
+  // active category, price filter, and references to helper
+  // objects. It coordinates CartManager, ProductModal, and
+  // Firebase — callers just call init().
+  // ============================================================
+  class MenuApp { // OOP - Encapsulation
+    #cartManager;
+    #modal;
+    #productsByCategory = {};
+    #allCategories = [];
+    #grid;
+
+    constructor() {
+      this.#cartManager = new CartManager();       // OOP - Encapsulation
+      this.#modal       = new ProductModal('productModal'); // OOP - Encapsulation
+      this.#grid        = document.getElementById('product-grid');
+    }
+
+    // ── Auth helpers (abstracted so the rest of the class
+    //    never touches Firebase auth directly)
+    checkAuth(e) { // OOP - Abstraction (hides auth check logic)
+      const isLoggedIn = !document.getElementById('logout-trigger').classList.contains('hidden');
+      if (!isLoggedIn) { alert("Please sign in to continue."); window.location.href = 'index.html'; return; }
+      const target = e.currentTarget;
+      if (target.classList.contains('fa-shopping-cart')) window.location.href = 'cart.html';
+      else if (target.classList.contains('fa-user')) window.location.href = 'user.html';
+    }
+
+    showLoggedIn(name) {
+      document.getElementById('signup-trigger')?.classList.add('hidden');
+      document.getElementById('logout-trigger')?.classList.remove('hidden');
+      const nameTag = document.getElementById('user-name-display');
+      if (nameTag) nameTag.innerText = "Hi, " + (name || "Guest");
+      this.#cartManager.updateCount();
+    }
+
+    showLoggedOut() {
+      document.getElementById('signup-trigger')?.classList.remove('hidden');
+      document.getElementById('logout-trigger')?.classList.add('hidden');
+      const nameTag = document.getElementById('user-name-display');
+      if (nameTag) nameTag.innerText = "";
+      this.#cartManager.updateCount();
+    }
+
+    // ── Add to cart (delegates to CartManager)
+    addToCart(product) { // OOP - Abstraction (caller doesn't manage cart details)
+      if (!auth.currentUser) {
+        alert("Please sign in to add items to your cart.");
+        window.location.href = 'index.html';
         return;
       }
+      const catObj = this.#allCategories.find(c => c.key === product.category);
+      const label  = catObj ? catObj.displayName : (product.category || "Others");
+      this.#cartManager.addItem(product, label); // OOP - Encapsulation
 
-      btnContainer.innerHTML = '';
-      allCategories.forEach((cat, i) => {
-        const btn = document.createElement('button');
-        btn.className = 'category-btn' + (i === 0 ? ' active' : '');
-        btn.dataset.category = cat.key;
-        btn.textContent = cat.displayName;
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          fetchCategory(cat.key);
-        });
-        btnContainer.appendChild(btn);
+      document.querySelectorAll(`.btn-add[data-id="${product.id}"]`).forEach(btn => {
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> Added';
+        btn.disabled = true;
+        setTimeout(() => { btn.innerHTML = original; btn.disabled = false; }, 1400);
       });
-
-      // Load the first category automatically
-      fetchCategory(allCategories[0].key);
-    } catch (err) {
-      btnContainer.innerHTML = `<span style="color:#c0392b;">Failed to load categories: ${err.message}</span>`;
-    }
-  }
-
-  // ==================== EVENT LISTENERS ====================
-  document.querySelectorAll('.price-filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.price-filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const activeCat = document.querySelector('.category-btn.active')?.dataset.category;
-      if (activeCat) renderProducts(activeCat);
-    });
-  });
-
-  grid.addEventListener('click', e => {
-    const btn = e.target.closest('.btn-add');
-    if (!btn) return;
-    e.stopPropagation();
-    const id = btn.dataset.id;
-    const activeCat = document.querySelector('.category-btn.active')?.dataset.category;
-    const product = productsByCategory[activeCat]?.find(p => p.id === id);
-    if (product) addToCart(product);
-  });
-
-  // ==================== CAROUSEL (mobile only) ====================
-  let carouselIndex = 0;
-
-  function isMobile() {
-    return window.innerWidth <= 600;
-  }
-
-  function initCarousel() {
-    if (!isMobile()) return;
-    const items = grid.querySelectorAll('.cake-item');
-    if (items.length === 0) return;
-
-    carouselIndex = 0;
-
-    const dotsEl = document.getElementById('carousel-dots');
-    const prevBtn = document.getElementById('carousel-prev');
-    const nextBtn = document.getElementById('carousel-next');
-    const controls = document.getElementById('carousel-controls');
-
-    if (items.length <= 1) {
-      controls.style.display = 'none';
-      return;
     }
 
-    controls.style.display = 'flex';
-    dotsEl.innerHTML = '';
-
-    items.forEach((_, i) => {
-      const dot = document.createElement('span');
-      dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
-      dot.addEventListener('click', () => goTo(i));
-      dotsEl.appendChild(dot);
-    });
-
-    updateCarousel(items);
-
-    prevBtn.onclick = () => { carouselIndex = Math.max(0, carouselIndex - 1); updateCarousel(items); };
-    nextBtn.onclick = () => { carouselIndex = Math.min(items.length - 1, carouselIndex + 1); updateCarousel(items); };
-
-    // Touch swipe support
-    let touchStartX = 0;
-    grid.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
-    grid.addEventListener('touchend', e => {
-      const diff = touchStartX - e.changedTouches[0].clientX;
-      if (Math.abs(diff) > 40) {
-        if (diff > 0) carouselIndex = Math.min(items.length - 1, carouselIndex + 1);
-        else carouselIndex = Math.max(0, carouselIndex - 1);
-        updateCarousel(items);
+    // ── Rendering
+    #showSkeletons(count = 8) { // OOP - Encapsulation (private method)
+      this.#grid.innerHTML = '';
+      for (let i = 0; i < count; i++) {
+        this.#grid.innerHTML += `
+          <div class="cake-item skeleton">
+            <div class="skeleton-img"></div>
+            <div class="skeleton-text"></div>
+            <div class="skeleton-text" style="width:65%"></div>
+            <div class="skeleton-btn"></div>
+          </div>`;
       }
-    }, { passive: true });
+    }
+
+    #renderProducts(categoryKey) { // OOP - Encapsulation (private method)
+      const activePriceBtn = document.querySelector('.price-filter-btn.active');
+      const minPrice = parseFloat(activePriceBtn?.dataset.min || 0);
+      const maxPrice = parseFloat(activePriceBtn?.dataset.max || Infinity);
+
+      const items = (this.#productsByCategory[categoryKey] || []).filter(p =>
+        p.price >= minPrice && p.price <= maxPrice
+      );
+
+      this.#grid.innerHTML = items.length === 0
+        ? '<p class="no-products">No products found in this price range.</p>'
+        : '';
+
+      items.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'cake-item';
+        const cardObj = createProductCard(p, categoryKey); // OOP - Abstraction + Polymorphism
+        card.innerHTML = cardObj.render();                 // OOP - Polymorphism
+        card.addEventListener('click', e => {
+          if (!e.target.closest('button')) this.#modal.open(p); // OOP - Encapsulation
+        });
+        this.#grid.appendChild(card);
+      });
+    }
+
+    async #fetchCategory(categoryKey) { // OOP - Encapsulation (private method)
+      this.#showSkeletons();
+      try {
+        const snap = await get(ref(db, `products/${categoryKey}`));
+        this.#productsByCategory[categoryKey] = snap.exists()
+          ? Object.entries(snap.val()).map(([id, val]) => ({ id, ...val, category: categoryKey }))
+          : [];
+        this.#renderProducts(categoryKey);
+      } catch (err) {
+        this.#grid.innerHTML = `<p class="error-msg">Failed to load ${categoryKey}: ${err.message}</p>`;
+      }
+    }
+
+    async #loadCategories() { // OOP - Encapsulation (private method)
+      const btnContainer = document.getElementById('category-buttons');
+      try {
+        const snap = await get(ref(db, 'categories'));
+        this.#allCategories = [];
+        if (snap.exists()) {
+          snap.forEach(child => {
+            this.#allCategories.push({ key: child.key, displayName: child.val().displayName || child.key });
+          });
+        }
+
+        if (this.#allCategories.length === 0) {
+          btnContainer.innerHTML = '<span style="color:var(--muted);">No categories available.</span>';
+          return;
+        }
+
+        btnContainer.innerHTML = '';
+        this.#allCategories.forEach((cat, i) => {
+          const btn = document.createElement('button');
+          btn.className = 'category-btn' + (i === 0 ? ' active' : '');
+          btn.dataset.category = cat.key;
+          btn.textContent = cat.displayName;
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            this.#fetchCategory(cat.key);
+          });
+          btnContainer.appendChild(btn);
+        });
+
+        this.#fetchCategory(this.#allCategories[0].key);
+      } catch (err) {
+        btnContainer.innerHTML = `<span style="color:#c0392b;">Failed to load categories: ${err.message}</span>`;
+      }
+    }
+
+    // ── Wire up price filter buttons
+    #bindPriceFilters() { // OOP - Encapsulation (private method)
+      document.querySelectorAll('.price-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.price-filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const activeCat = document.querySelector('.category-btn.active')?.dataset.category;
+          if (activeCat) this.#renderProducts(activeCat);
+        });
+      });
+    }
+
+    // ── Wire up grid click delegation for Add to Cart buttons
+    #bindGridClicks() { // OOP - Encapsulation (private method)
+      this.#grid.addEventListener('click', e => {
+        const btn = e.target.closest('.btn-add');
+        if (!btn) return;
+        e.stopPropagation();
+        const id        = btn.dataset.id;
+        const activeCat = document.querySelector('.category-btn.active')?.dataset.category;
+        const product   = this.#productsByCategory[activeCat]?.find(p => p.id === id);
+        if (product) this.addToCart(product); // OOP - Abstraction
+      });
+    }
+
+    // ── Wire up the modal "Add to Cart" button
+    #bindModalCart() { // OOP - Encapsulation (private method)
+      document.getElementById('modalAddToCart').onclick = () => {
+        const product = this.#modal.getCurrentProduct(); // OOP - Encapsulation
+        if (product) this.addToCart(product);
+        this.#modal.close();
+      };
+    }
+
+    // ── Public initializer — single entry point
+    async init() { // OOP - Abstraction (hides all setup complexity behind one call)
+      this.#bindPriceFilters();
+      this.#bindGridClicks();
+      this.#bindModalCart();
+      await this.#loadCategories();
+    }
   }
 
-  function goTo(index) {
-    const items = grid.querySelectorAll('.cake-item');
-    carouselIndex = index;
-    updateCarousel(items);
-  }
+  // ============================================================
+  // INSTANTIATE & boot
+  // ============================================================
+  const menuApp = new MenuApp(); // OOP - Encapsulation
+  window.menuApp = menuApp; // expose for inline onclick in HTML
 
-  function updateCarousel(items) {
-    const prevBtn = document.getElementById('carousel-prev');
-    const nextBtn = document.getElementById('carousel-next');
-    const dots = document.querySelectorAll('.carousel-dot');
+  menuApp.init(); // OOP - Abstraction
 
-    items.forEach((item, i) => {
-      item.style.display = i === carouselIndex ? 'flex' : 'none';
-    });
-
-    dots.forEach((d, i) => d.classList.toggle('active', i === carouselIndex));
-    if (prevBtn) prevBtn.disabled = carouselIndex === 0;
-    if (nextBtn) nextBtn.disabled = carouselIndex === items.length - 1;
-  }
-
-  // Re-init on resize
-  window.addEventListener('resize', () => {
-    const items = grid.querySelectorAll('.cake-item');
-    if (!isMobile()) {
-      items.forEach(item => item.style.display = '');
-      document.getElementById('carousel-controls').style.display = 'none';
+  // ── Auth state listener
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      try {
+        const snap = await get(ref(db, "users/" + user.uid));
+        menuApp.showLoggedIn(snap.exists() ? snap.val().name : null);
+      } catch { menuApp.showLoggedIn(null); }
     } else {
-      initCarousel();
+      menuApp.showLoggedOut();
     }
   });
 
-  // ==================== INITIALIZE ====================
-  loadCategories();
+  window.handleLogout = () => signOut(auth).catch(err => console.error("Logout error:", err));
 </script>
 </body>
 </html>

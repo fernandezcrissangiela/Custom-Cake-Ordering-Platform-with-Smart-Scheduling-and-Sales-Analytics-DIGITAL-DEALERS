@@ -1,0 +1,14 @@
+NEED TO DO!!
+1. ADD EMAIL AND PASSWORD FOR admin
+- add settings for the admin (email/password)
+
+2. MOBILE CAROUSEL STYLE
+- all for the admin side
+
+NEED TO FIX!!!!
+
+EMAIL JS INFO
+PUBLIC ID - LjFPVh32OznI3FhJv
+SERVICE ID - service_06n33to
+DOWNPAYMENT TEMPLATE - template_5mznngl
+ORDER CONFIRMATION/DELIVERYPICKUP TEMPLATE - template_xh0chdq

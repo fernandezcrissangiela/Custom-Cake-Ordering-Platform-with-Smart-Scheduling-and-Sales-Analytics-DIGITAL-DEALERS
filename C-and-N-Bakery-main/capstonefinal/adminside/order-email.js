@@ -1,5 +1,5 @@
 // EMAILJS ID's
-const EMAILJS_SERVICE_ID = "service_06n33to";   // EmailJS service
+const EMAILJS_SERVICE_ID = "";   // EmailJS service
 const EMAILJS_TEMPLATE_ID = "template_xh0chdq";  // Order confirmation template
 const EMAILJS_DOWNPAY_TMPL_ID = "template_5mznngl";  // Downpayment received template
 const EMAILJS_SHIP_TMPL_ID = "template_xh0chdq";  // Shipped / ready for pickup template

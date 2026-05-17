@@ -8,6 +8,719 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="../css/user.css">
+  <style>
+  /* ═══════════════════════════════════════════════════════
+     MOBILE-FIRST REDESIGN — E-Commerce Inspired (Shopee / Lazada)
+     All rules scoped to ≤600px unless noted
+     ═══════════════════════════════════════════════════════ */
+
+  @media (max-width: 600px) {
+
+    /* ── Safe-area + scroll feel ── */
+    body {
+      -webkit-tap-highlight-color: transparent;
+      background: #f5ede5;
+    }
+
+    /* ── Main content tighter on mobile ── */
+    .main-content {
+      padding: 16px 12px 100px !important;
+    }
+
+    /* ─────────────────────────────────────────
+       WELCOME HEADER — Shopee-style hero banner
+       ───────────────────────────────────────── */
+    .welcome-header {
+      padding: 22px 20px 22px !important;
+      border-radius: 18px !important;
+      margin-bottom: 18px !important;
+      background: linear-gradient(135deg, #825A3C 0%, #5C3822 100%) !important;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .welcome-header::before {
+      font-size: 5rem !important;
+      right: 14px !important;
+      opacity: 0.15 !important;
+    }
+
+    .welcome-header h1 {
+      font-size: 1.35rem !important;
+      line-height: 1.3 !important;
+      margin-bottom: 4px !important;
+    }
+
+    .welcome-header p {
+      font-size: 0.78rem !important;
+      opacity: 0.88;
+      line-height: 1.5;
+    }
+
+    /* ─────────────────────────────────────────
+       QUICK STATS — Horizontal scrollable chips
+       like Shopee's icon row
+       ───────────────────────────────────────── */
+    .stats-row {
+      display: flex !important;
+      flex-direction: row !important;
+      gap: 10px !important;
+      margin-bottom: 18px !important;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding-bottom: 4px;
+    }
+
+    .stats-row::-webkit-scrollbar { display: none; }
+
+    .stat-card {
+      flex: 0 0 auto !important;
+      min-width: 130px !important;
+      scroll-snap-align: start;
+      padding: 16px 14px !important;
+      border-radius: 16px !important;
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 10px !important;
+      background: white;
+      border: 1px solid #f0e0d2;
+    }
+
+    .stat-icon {
+      width: 40px !important;
+      height: 40px !important;
+      border-radius: 12px !important;
+      font-size: 1.1rem !important;
+    }
+
+    .stat-label {
+      font-size: 0.7rem !important;
+    }
+
+    .stat-value {
+      font-size: 1.6rem !important;
+    }
+
+    /* ─────────────────────────────────────────
+       SECTION CARDS — Clean card style
+       ───────────────────────────────────────── */
+    .section-card {
+      border-radius: 18px !important;
+      margin-bottom: 14px !important;
+      border: 1px solid #ede0d4 !important;
+      overflow: hidden;
+    }
+
+    .section-header {
+      padding: 14px 18px !important;
+    }
+
+    .section-header h2 {
+      font-size: 1rem !important;
+    }
+
+    .section-header-icon {
+      font-size: 1.1rem !important;
+    }
+
+    /* ─────────────────────────────────────────
+       ORDER TRACKER — Better mobile layout
+       ───────────────────────────────────────── */
+    .order-tracker {
+      padding: 20px 16px !important;
+    }
+
+    .tracking-header {
+      gap: 10px !important;
+      margin-bottom: 20px !important;
+    }
+
+    .tracking-header-left h3 {
+      font-size: 0.95rem !important;
+    }
+
+    .tracking-header-left p {
+      font-size: 0.75rem !important;
+    }
+
+    .tracking-header-right {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* ─────────────────────────────────────────
+       STATUS STEPPER — Shopee/Grab style
+       ───────────────────────────────────────── */
+    .status-stepper {
+      margin-top: 20px !important;
+      padding: 0 4px !important;
+      gap: 0 !important;
+    }
+
+    .step-icon {
+      width: 36px !important;
+      height: 36px !important;
+      font-size: 0.8rem !important;
+    }
+
+    .step-text {
+      font-size: 0.58rem !important;
+      margin-top: 2px !important;
+    }
+
+    /* ─────────────────────────────────────────
+       ACTIVE ORDERS — Card list style
+       ───────────────────────────────────────── */
+    .ao-list {
+      padding: 12px 14px !important;
+    }
+
+    .ao-card {
+      border-radius: 16px !important;
+      margin-bottom: 12px !important;
+    }
+
+    .ao-card:hover, .history-card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(103, 72, 49, 0.15);
+    }
+
+    .ao-card:active, .history-card:active {
+      transform: translateY(0);
+    }
+
+    .ao-card-main {
+      padding: 14px 16px !important;
+      gap: 10px !important;
+    }
+
+    .ao-card-icon {
+      width: 42px !important;
+      height: 42px !important;
+      font-size: 1.1rem !important;
+      border-radius: 12px !important;
+    }
+
+    .ao-item-name {
+      font-size: 0.88rem !important;
+    }
+
+    .ao-item-meta {
+      font-size: 0.72rem !important;
+    }
+
+    .ao-card-actions {
+      padding: 10px 16px 14px !important;
+      gap: 8px !important;
+      border-top: 1px dashed #ede0d4;
+      display: flex !important;
+      justify-content: flex-end !important;
+    }
+
+    .view-btn, .track-btn, .review-btn {
+      padding: 8px 14px !important;
+      font-size: 0.72rem !important;
+      border-radius: 50px !important;
+    }
+
+    .ao-received-bar {
+      padding: 12px 16px !important;
+    }
+
+    .ao-received-bar-text {
+      font-size: 0.78rem !important;
+    }
+
+    .ao-received-btn {
+      width: 100% !important;
+      justify-content: center !important;
+      padding: 10px 20px !important;
+      font-size: 0.82rem !important;
+    }
+
+    /* ─────────────────────────────────────────
+       EMPTY STATE
+       ───────────────────────────────────────── */
+    #no-active-order {
+      padding: 30px 16px !important;
+    }
+
+    #no-active-order p {
+      font-size: 0.85rem !important;
+    }
+
+    .empty-icon {
+      font-size: 2.4rem !important;
+    }
+
+    /* ─────────────────────────────────────────
+       HISTORY CARDS — inside bottom sheet
+       ───────────────────────────────────────── */
+    .history-card {
+      border-radius: 14px !important;
+      margin-bottom: 10px !important;
+    }
+
+    .hc-top {
+      padding: 14px 16px 10px !important;
+    }
+
+    .hc-order-name {
+      font-size: 0.88rem !important;
+    }
+
+    .hc-date {
+      font-size: 0.7rem !important;
+    }
+
+    .hc-bottom {
+      padding: 10px 16px 12px !important;
+    }
+
+    .hc-total {
+      font-size: 0.8rem !important;
+    }
+
+    .hc-total strong {
+      font-size: 0.92rem !important;
+    }
+
+    .hc-actions {
+      gap: 6px !important;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    /* ─────────────────────────────────────────
+       HISTORY FAB — improved position
+       ───────────────────────────────────────── */
+    .history-fab {
+      bottom: 20px !important;
+      padding: 13px 22px !important;
+      font-size: 0.85rem !important;
+      border-radius: 50px !important;
+      box-shadow: 0 6px 24px rgba(103, 72, 49, 0.45) !important;
+    }
+
+    /* ─────────────────────────────────────────
+       HISTORY BOTTOM SHEET
+       ───────────────────────────────────────── */
+    .history-sheet-body {
+      padding: 12px 14px 28px !important;
+    }
+
+    .history-cards-list {
+      padding: 0 !important;
+    }
+
+    /* ─────────────────────────────────────────
+       BADGE sizing on mobile
+       ───────────────────────────────────────── */
+    .badge {
+      padding: 4px 10px !important;
+      font-size: 0.65rem !important;
+    }
+
+    /* ─────────────────────────────────────────
+       SETTINGS DRAWER — full-width on mobile
+       ───────────────────────────────────────── */
+    .settings-drawer {
+      width: 100% !important;
+      max-width: 100% !important;
+      border-radius: 0 !important;
+    }
+
+    .drawer-header {
+      padding: 20px 18px 18px !important;
+    }
+
+    .drawer-body {
+      padding: 20px 18px 40px !important;
+    }
+
+    .settings-grid {
+      gap: 12px !important;
+    }
+
+    .settings-input {
+      font-size: 0.88rem !important;
+    }
+
+    .settings-section-label {
+      font-size: 0.7rem !important;
+      margin-bottom: 10px !important;
+    }
+
+    .settings-actions {
+      gap: 8px !important;
+      flex-wrap: wrap !important;
+    }
+
+    .settings-btn-save,
+    .settings-btn-cancel {
+      flex: 1 1 auto !important;
+      text-align: center !important;
+      justify-content: center !important;
+      font-size: 0.85rem !important;
+      padding: 10px 16px !important;
+    }
+
+    /* ─────────────────────────────────────────
+       ORDER DETAILS MODAL — bottom sheet
+       ───────────────────────────────────────── */
+    .modal-header {
+      padding: 16px 18px !important;
+    }
+
+    .modal-body {
+      padding: 16px 18px 28px !important;
+    }
+
+    .modal-header-title {
+      font-size: 0.98rem !important;
+    }
+
+    /* ─────────────────────────────────────────
+       CONFIRM RECEIVED MODAL
+       ───────────────────────────────────────── */
+    .confirm-modal-box {
+      padding: 28px 20px !important;
+      border-radius: 20px !important;
+    }
+
+    .confirm-modal-box p {
+      font-size: 0.82rem !important;
+      margin-bottom: 20px !important;
+    }
+
+    .confirm-modal-btns {
+      flex-direction: column !important;
+      gap: 8px !important;
+    }
+
+    .confirm-btn-yes,
+    .confirm-btn-no {
+      width: 100% !important;
+      justify-content: center !important;
+      padding: 12px 20px !important;
+    }
+
+    /* ─────────────────────────────────────────
+       REVIEW MODAL
+       ───────────────────────────────────────── */
+    .review-modal-box {
+      padding: 24px 18px 18px !important;
+      border-radius: 20px !important;
+    }
+
+    .star-rating-row {
+      font-size: 2.4rem !important;
+      gap: 8px !important;
+      justify-content: center;
+    }
+
+    .review-modal-actions {
+      flex-direction: column !important;
+      gap: 8px !important;
+    }
+
+    .review-submit-btn,
+    .review-cancel-btn {
+      width: 100% !important;
+      justify-content: center !important;
+      padding: 12px 20px !important;
+    }
+
+    /* ─────────────────────────────────────────
+       PENDING STATE
+       ───────────────────────────────────────── */
+    #status-pending {
+      padding: 30px 16px !important;
+    }
+
+    .pending-emoji {
+      font-size: 3rem !important;
+    }
+
+    /* ─────────────────────────────────────────
+       ORDER-RECEIVED WRAP (tracker section)
+       ───────────────────────────────────────── */
+    .order-received-wrap {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      padding: 16px !important;
+      border-radius: 14px !important;
+      gap: 12px !important;
+      margin-top: 20px !important;
+    }
+
+    .btn-order-received {
+      width: 100% !important;
+      justify-content: center !important;
+    }
+
+    /* ─────────────────────────────────────────
+       NO ACTIVE ORDERS EMPTY STATE
+       ───────────────────────────────────────── */
+    #no-active-orders-msg {
+      margin: 0 14px 16px !important;
+      padding: 32px 16px !important;
+    }
+
+    /* ─────────────────────────────────────────
+       FILTER CHIPS — horizontally scrollable
+       ───────────────────────────────────────── */
+    .filter-row {
+      flex-wrap: nowrap !important;
+      overflow-x: auto !important;
+      scrollbar-width: none !important;
+      -webkit-overflow-scrolling: touch;
+      padding: 12px 16px !important;
+      gap: 8px !important;
+    }
+
+    .filter-row::-webkit-scrollbar { display: none; }
+
+    .chip {
+      flex-shrink: 0 !important;
+      white-space: nowrap !important;
+    }
+
+  } /* end @media max-width:600px */
+
+  /* ═══════════════════════════════════
+     EXTRA SMALL — 380px and below
+     ═══════════════════════════════════ */
+  @media (max-width: 380px) {
+    .welcome-header h1 {
+      font-size: 1.15rem !important;
+    }
+
+    .stat-card {
+      min-width: 115px !important;
+    }
+
+    .step-icon {
+      width: 30px !important;
+      height: 30px !important;
+      font-size: 0.7rem !important;
+    }
+
+    .step-text {
+      font-size: 0.52rem !important;
+    }
+  }
+  
+    /* ── Write a Review button (matches .track-btn style) ── */
+    .review-btn {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      border: none;
+      padding: 7px 13px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+      transition: all 0.22s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+      box-shadow: 0 3px 10px rgba(103, 72, 49, 0.22);
+      line-height: 1;
+    }
+    .review-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(103, 72, 49, 0.32);
+    }
+    .review-btn--done {
+      background: var(--beige);
+      color: var(--brown-light);
+      box-shadow: none;
+      cursor: default;
+    }
+    .review-btn--done:hover {
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* ── Review Modal ── */
+    .review-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(63, 42, 31, 0.55);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 3000;
+      animation: fadeIn 0.2s ease;
+    }
+    .review-modal-overlay.open { display: flex; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .review-modal-box {
+      background: white;
+      border-radius: var(--radius);
+      padding: 32px 32px 24px;
+      width: 90%;
+      max-width: 440px;
+      box-shadow: 0 24px 80px rgba(103, 72, 49, 0.26);
+      animation: modalSlideIn 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    @keyframes modalSlideIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .review-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .review-modal-header h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--brown);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+    }
+    .review-modal-header h3 i { color: var(--primary); }
+    .review-close-btn {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: var(--text-light);
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+    .review-close-btn:hover { background: var(--secondary); color: var(--brown); }
+
+    .review-order-label {
+      font-size: 0.82rem;
+      color: var(--text-light);
+      margin-bottom: 18px;
+      background: var(--cream);
+      border: 1px solid var(--beige);
+      border-radius: 10px;
+      padding: 7px 12px;
+      font-style: italic;
+    }
+
+    .star-rating-row {
+      display: flex;
+      gap: 6px;
+      font-size: 2rem;
+      margin-bottom: 16px;
+      cursor: pointer;
+    }
+    .star-rate {
+      color: var(--beige);
+      transition: color 0.15s, transform 0.15s;
+      user-select: none;
+      line-height: 1;
+    }
+    .star-rate.active, .star-rate.hovered { color: var(--primary); transform: scale(1.1); }
+
+    .review-textarea {
+      width: 100%;
+      border: 1.5px solid var(--beige);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.9rem;
+      color: var(--text);
+      background: var(--cream);
+      resize: vertical;
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      min-height: 100px;
+    }
+    .review-textarea:focus {
+      border-color: var(--primary);
+      background: white;
+      box-shadow: 0 0 0 3px rgba(130, 90, 60, 0.1);
+    }
+    .review-char-count {
+      text-align: right;
+      font-size: 0.75rem;
+      color: var(--text-light);
+      margin: 6px 0 18px;
+      opacity: 0.7;
+    }
+    .review-modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .review-submit-btn {
+      padding: 11px 24px;
+      border-radius: 50px;
+      border: none;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      font-weight: 700;
+      font-size: 0.88rem;
+      cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s;
+      box-shadow: 0 6px 16px rgba(103, 72, 49, 0.25);
+    }
+    .review-submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(103, 72, 49, 0.35);
+    }
+    .review-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .review-cancel-btn {
+      padding: 11px 20px;
+      border-radius: 50px;
+      border: 1.5px solid var(--beige);
+      background: white;
+      color: var(--text-light);
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+      transition: all 0.2s;
+    }
+    .review-cancel-btn:hover { background: var(--cream); border-color: var(--primary); color: var(--primary); }
+    .review-note {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      text-align: center;
+      margin-top: 14px;
+      opacity: 0.75;
+    }
+
+    /* Clickable card feedback */
+    .ao-card, .history-card {
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .ao-card:hover, .history-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(103, 72, 49, 0.14);
+    }
+    .ao-card:active, .history-card:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+  </style>
 </head>
 <body>
 
@@ -197,6 +910,43 @@
 
 </div><!-- /main-content -->
 
+<!-- ── Mobile History FAB ── -->
+<button class="history-fab" onclick="openHistorySheet()" aria-label="View Order History">
+  <i class="fas fa-clock-rotate-left"></i>
+  Order History
+  <span class="fab-badge" id="fab-history-badge">0</span>
+</button>
+
+<!-- ── History Bottom Sheet (mobile) ── -->
+<div class="history-sheet-overlay" id="history-sheet-overlay" onclick="handleSheetOverlayClick(event)">
+  <div class="history-sheet" id="history-sheet">
+    <div class="history-sheet-handle"></div>
+    <div class="history-sheet-header">
+      <div class="history-sheet-title">
+        <i class="fas fa-clock-rotate-left" style="color:var(--primary);font-size:1.1rem;"></i>
+        <h3>Order History</h3>
+        <span class="htb-count" id="sheet-history-count">0</span>
+      </div>
+      <button class="history-sheet-close" onclick="closeHistorySheet()" aria-label="Close">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+    <div class="history-sheet-filters">
+      <span class="filter-label">Filter:</span>
+      <button class="chip active" data-filter="all"       onclick="filterSheetHistory(this,'all')">All</button>
+      <button class="chip"        data-filter="completed" onclick="filterSheetHistory(this,'completed')">Completed</button>
+      <button class="chip"        data-filter="cancelled" onclick="filterSheetHistory(this,'cancelled')">Cancelled</button>
+    </div>
+    <div class="history-sheet-body">
+      <div class="history-cards-list" id="sheet-history-list"></div>
+      <div id="sheet-no-history-msg" class="empty-table-state no-history-padded hidden">
+        <i class="fas fa-receipt"></i>
+        <p>No completed or cancelled orders yet.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Order Details Modal -->
 <div id="details-modal" class="modal">
   <div class="modal-content">
@@ -323,10 +1073,37 @@
   </div>
 </div>
 
+<!-- ── Write a Review Modal ── -->
+<div class="review-modal-overlay" id="review-modal-overlay">
+  <div class="review-modal-box">
+    <div class="review-modal-header">
+      <h3><i class="fas fa-star"></i> Write a Review</h3>
+      <button class="review-close-btn" onclick="closeReviewModal()" aria-label="Close"><i class="fas fa-xmark"></i></button>
+    </div>
+    <p class="review-order-label" id="review-order-label">Order</p>
+    <div class="star-rating-row" id="star-row">
+      <span class="star-rate" data-val="1">★</span>
+      <span class="star-rate" data-val="2">★</span>
+      <span class="star-rate" data-val="3">★</span>
+      <span class="star-rate" data-val="4">★</span>
+      <span class="star-rate" data-val="5">★</span>
+    </div>
+    <textarea id="review-text" class="review-textarea" placeholder="Share your experience with this order…" maxlength="300" rows="4"></textarea>
+    <p class="review-char-count"><span id="review-char-num">0</span>/300</p>
+    <div class="review-modal-actions">
+      <button class="review-cancel-btn" onclick="closeReviewModal()">Cancel</button>
+      <button class="review-submit-btn" id="submit-review-btn" onclick="submitReview()">
+        <i class="fas fa-paper-plane"></i> Submit Review
+      </button>
+    </div>
+    <p class="review-note">Your review will appear on our homepage for everyone to see 🎂</p>
+  </div>
+</div>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut, EmailAuthProvider, reauthenticateWithCredential, updateEmail, updatePassword } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getDatabase, ref, onValue, get, update, push } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCWUJfDwLR5erpExZUoBWW7YJ-aDpT_zy0",
@@ -413,6 +1190,12 @@
             const orderTitle = data.orderName || (data.items?.[0]?.name + ' Order') || 'Bakery Order';
             const itemCount  = data.items ? data.items.length : 0;
             const totalAmt   = data.totalAmount ? '₱' + data.totalAmount : '';
+            card.style.cursor = 'pointer';
+            card.addEventListener('click', (e) => {
+              if (!e.target.closest('.ao-received-btn') && !e.target.closest('.track-btn')) {
+                viewOrderDetails(id);
+              }
+            });
             card.innerHTML = `
               <div class="ao-card-main">
                 <div class="ao-card-info">
@@ -427,10 +1210,7 @@
                   <span class="badge badge-${data.status}">${data.status}</span>
                   <span class="badge badge-pay-${payStatus}">${payLabel}</span>
                 </div>
-                <div class="ao-card-actions">
-                  <button class="view-btn" onclick="viewOrderDetails('${id}')"><i class="fas fa-eye"></i> View</button>
-                  ${data.status !== 'pending' ? `<button class="track-btn" onclick="trackThisOrder('${id}')"><i class="fas fa-location-dot"></i> Track</button>` : ''}
-                </div>
+                ${data.status !== 'pending' ? `<div class="ao-card-actions"><button class="track-btn" onclick="event.stopPropagation(); trackThisOrder('${id}')"><i class="fas fa-location-dot"></i> Track</button></div>` : ''}
               </div>
               ${data.status === 'delivery' ? `
               <div class="ao-received-bar">
@@ -438,7 +1218,7 @@
                   <i class="fas fa-truck-fast"></i>
                   <span>Your order is out for delivery!</span>
                 </div>
-                <button class="ao-received-btn" onclick="activeOrderId='${id}'; promptOrderReceived();">
+                <button class="ao-received-btn" onclick="setActiveOrderAndPrompt('${id}')">
                   <i class="fas fa-box-check"></i> Order Received
                 </button>
               </div>` : ''}
@@ -452,6 +1232,13 @@
             const card = document.createElement('div');
             card.className = 'history-card';
             card.dataset.status = data.status;
+            card.dataset.orderId = id;
+            card.style.cursor = 'pointer';
+            card.addEventListener('click', (e) => {
+              if (!e.target.closest('.review-btn')) {
+                viewOrderDetails(id);
+              }
+            });
             card.innerHTML = `
               <div class="hc-top">
                 <div class="hc-top-left">
@@ -469,7 +1256,11 @@
                   Total: <strong>₱${data.totalAmount || '—'}</strong>
                 </div>
                 <div class="hc-actions">
-                  <button class="view-btn" onclick="viewOrderDetails('${id}')"><i class="fas fa-eye"></i> Details</button>
+                  ${data.status === 'completed'
+                    ? data.reviewed
+                      ? `<button class="review-btn review-btn--done" disabled><i class="fas fa-star"></i> Reviewed</button>`
+                      : `<button class="review-btn" onclick="event.stopPropagation(); openReviewModal('${id}', \`${(data.orderName || (data.items?.[0]?.name + ' Order') || 'Bakery Order').replace(/`/g, "'")}\`)"><i class="fas fa-star"></i> Write a Review</button>`
+                    : ''}
                 </div>
               </div>`;
             historyContainer.appendChild(card);
@@ -480,6 +1271,7 @@
         const completedCount = allHistoryCards.filter(c => c.dataset.status === 'completed').length;
         updateStats(activeCount, completedCount, totalCount);
         document.getElementById('history-count-badge').textContent = historyCount;
+        syncFabBadge(historyCount);
 
         if (activeCount === 0) document.getElementById('no-active-orders-msg').classList.remove('hidden');
         if (historyCount === 0) document.getElementById('no-history-msg').classList.remove('hidden');
@@ -619,7 +1411,7 @@
           </button>` : ''}
         ${order.status === 'delivery' ? `
           <button class="modal-btn-primary modal-btn-green"
-            onclick="activeOrderId='${id}'; closeModal(); setTimeout(promptOrderReceived, 200);">
+            onclick="setActiveOrderAndPrompt('${id}'); closeModal();">
             <i class="fas fa-box-check"></i> Order Received
           </button>` : ''}
       </div>`;
@@ -655,8 +1447,64 @@
     document.getElementById('no-history-msg').classList.toggle('hidden', visible.length > 0);
   };
 
+  // ── History Bottom Sheet (mobile) ──
+  window.openHistorySheet = () => {
+    const sheetList = document.getElementById('sheet-history-list');
+    sheetList.innerHTML = '';
+    allHistoryCards.forEach(card => {
+      const clone = card.cloneNode(true);
+      const orderId = card.dataset.orderId;
+      clone.style.cursor = 'pointer';
+      clone.addEventListener('click', (e) => {
+        if (!e.target.closest('.review-btn')) {
+          viewOrderDetails(orderId);
+        }
+      });
+      sheetList.appendChild(clone);
+    });
+    const sheetCount = allHistoryCards.length;
+    document.getElementById('sheet-history-count').textContent = sheetCount;
+    document.getElementById('sheet-no-history-msg').classList.toggle('hidden', sheetCount > 0);
+    document.getElementById('history-sheet-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closeHistorySheet = () => {
+    document.getElementById('history-sheet-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  };
+
+  window.handleSheetOverlayClick = (e) => {
+    if (e.target === document.getElementById('history-sheet-overlay')) closeHistorySheet();
+  };
+
+  window.filterSheetHistory = (chip, filter) => {
+    // Update chip state within the sheet filters only
+    document.querySelectorAll('.history-sheet-filters .chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    const sheetCards = document.querySelectorAll('#sheet-history-list .history-card');
+    let visibleCount = 0;
+    sheetCards.forEach(card => {
+      const show = filter === 'all' || card.dataset.status === filter;
+      card.style.display = show ? 'block' : 'none';
+      if (show) visibleCount++;
+    });
+    document.getElementById('sheet-no-history-msg').classList.toggle('hidden', visibleCount > 0);
+  };
+
+  // Sync FAB badge whenever history updates
+  function syncFabBadge(count) {
+    const el = document.getElementById('fab-history-badge');
+    if (el) el.textContent = count;
+  }
+
   window.promptOrderReceived = () => {
     document.getElementById('confirm-received-modal').style.display = 'flex';
+  };
+
+  window.setActiveOrderAndPrompt = (id) => {
+    activeOrderId = id;
+    promptOrderReceived();
   };
 
   window.closeConfirmModal = () => {
@@ -828,6 +1676,91 @@
     document.getElementById('new-password').value = '';
     document.getElementById('confirm-password').value = '';
     document.getElementById('password-alert').style.display = 'none';
+  };
+
+  // ── Review Modal ──
+  let reviewOrderId  = null;
+  let reviewStars    = 0;
+  let reviewUserName = '';
+
+  // Capture user name for reviews
+  onAuthStateChanged(auth, user => {
+    if (user) {
+      get(ref(db, 'users/' + user.uid)).then(snap => {
+        if (snap.exists()) reviewUserName = snap.val().name || 'Customer';
+      });
+    }
+  });
+
+  window.openReviewModal = (orderId, orderName) => {
+    reviewOrderId = orderId;
+    reviewStars   = 0;
+    document.getElementById('review-order-label').textContent = orderName;
+    document.getElementById('review-text').value = '';
+    document.getElementById('review-char-num').textContent = '0';
+    document.querySelectorAll('.star-rate').forEach(s => s.classList.remove('active', 'hovered'));
+    document.getElementById('review-modal-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closeReviewModal = () => {
+    document.getElementById('review-modal-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  };
+
+  // Close on overlay click
+  document.getElementById('review-modal-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('review-modal-overlay')) closeReviewModal();
+  });
+
+  // Star interaction
+  document.querySelectorAll('.star-rate').forEach(star => {
+    star.addEventListener('click', () => {
+      reviewStars = parseInt(star.dataset.val);
+      document.querySelectorAll('.star-rate').forEach((s, i) =>
+        s.classList.toggle('active', i < reviewStars));
+    });
+    star.addEventListener('mouseenter', () => {
+      const val = parseInt(star.dataset.val);
+      document.querySelectorAll('.star-rate').forEach((s, i) =>
+        s.classList.toggle('hovered', i < val));
+    });
+    star.addEventListener('mouseleave', () =>
+      document.querySelectorAll('.star-rate').forEach(s => s.classList.remove('hovered')));
+  });
+
+  document.getElementById('review-text').addEventListener('input', function () {
+    document.getElementById('review-char-num').textContent = this.value.length;
+  });
+
+  window.submitReview = async () => {
+    if (!reviewStars) { alert('Please select a star rating first!'); return; }
+    const text = document.getElementById('review-text').value.trim();
+    if (!text) { alert('Please write something about your experience!'); return; }
+
+    const btn = document.getElementById('submit-review-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting…';
+
+    try {
+      const initials = reviewUserName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || 'CX';
+      await push(ref(db, 'reviews'), {
+        name:      reviewUserName,
+        initials:  initials,
+        stars:     reviewStars,
+        text:      text,
+        orderId:   reviewOrderId,
+        createdAt: new Date().toISOString()
+      });
+      await update(ref(db, `orders/${reviewOrderId}`), { reviewed: true });
+      closeReviewModal();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to submit. Please try again.');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Review';
+    }
   };
 
   function updateCartBadge() {

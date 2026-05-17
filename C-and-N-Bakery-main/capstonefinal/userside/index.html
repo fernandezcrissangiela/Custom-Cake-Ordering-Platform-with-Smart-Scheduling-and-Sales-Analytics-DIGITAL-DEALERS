@@ -6,11 +6,55 @@
   <title>C&N Bakery - Homemade Cakes & Pastries</title>
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    /* ── Skeleton shimmer (featured cakes + reviews) ── */
+    @keyframes skeleton-shimmer {
+      0%   { background-position: -600px 0; }
+      100% { background-position:  600px 0; }
+    }
+    .sk-line {
+      background: linear-gradient(90deg, var(--secondary) 25%, var(--beige) 50%, var(--secondary) 75%);
+      background-size: 1200px 100%;
+      animation: skeleton-shimmer 1.5s infinite linear;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+    /* Review skeleton lines */
+    .sk-stars  { height: 16px; width: 90px; }
+    .sk-text   { height: 13px; width: 100%; }
+    .sk-text-short { width: 68%; }
+    .sk-avatar { height: 38px; width: 38px; border-radius: 50%; flex-shrink: 0; margin-bottom: 0; }
+    .sk-name   { height: 13px; width: 90px; margin-bottom: 0; align-self: center; }
+    .review-skeleton { pointer-events: none; }
+    /* Featured cake skeleton */
+    .cake-skeleton { pointer-events: none; }
+    .skeleton-img  { width: 100%; aspect-ratio: 4/3; border-radius: 20px; margin-bottom: 18px; }
+    .skeleton-title { height: 20px; width: 65%; margin: 0 auto 10px; }
+    .skeleton-desc  { height: 14px; width: 85%; margin: 0 auto; }
+  </style>
 
+  <style>
+    /* ── Skeleton loading for Featured Cakes ── */
+    @keyframes skeleton-shimmer {
+      0%   { background-position: -400px 0; }
+      100% { background-position:  400px 0; }
+    }
+    .cake-skeleton { pointer-events: none; }
+    .skeleton-img,
+    .skeleton-line {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 800px 100%;
+      animation: skeleton-shimmer 1.4s infinite linear;
+      border-radius: 8px;
+    }
+    .skeleton-img   { width: 100%; aspect-ratio: 4/3; margin-bottom: 14px; }
+    .skeleton-title { height: 20px; width: 65%; margin: 0 auto 10px; }
+    .skeleton-desc  { height: 14px; width: 85%; margin: 0 auto; }
+  </style>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+    import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCWUJfDwLR5erpExZUoBWW7YJ-aDpT_zy0",
@@ -57,15 +101,51 @@
         loginEmailInput.value = email.value;
         loginEmailInput.focus();
         name.value = ''; email.value = ''; password.value = '';
-      } catch (error) { alert("Signup failed: " + error.message); }
+      } catch (error) {
+        const code = error.code || '';
+        let friendlyMsg = 'Signup failed. Please try again.';
+        if (code.includes('email-already-in-use')) friendlyMsg = 'An account with this email already exists.';
+        else if (code.includes('weak-password')) friendlyMsg = 'Password must be at least 6 characters.';
+        else if (code.includes('invalid-email')) friendlyMsg = 'Please enter a valid email address.';
+        const signupForm2 = document.getElementById('signup-form');
+        const prev2 = signupForm2.querySelector('.auth-error-banner');
+        if (prev2) prev2.remove();
+        const banner2 = document.createElement('div');
+        banner2.className = 'auth-error-banner';
+        banner2.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${friendlyMsg}`;
+        signupForm2.insertBefore(banner2, signupForm2.firstChild);
+      }
     };
 
     window.handleLogin = async function(e) {
       e.preventDefault();
+      const form = document.getElementById('login-form');
+      // Remove any previous error
+      const prev = form.querySelector('.auth-error-banner');
+      if (prev) prev.remove();
       try {
         await signInWithEmailAndPassword(auth, e.target.email.value, e.target.password.value);
         closeModal();
-      } catch (error) { alert("Login failed: " + error.message); }
+      } catch (error) {
+        // Map Firebase error codes to friendly messages
+        const code = error.code || '';
+        let friendlyMsg = 'Something went wrong. Please try again.';
+        if (code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found')) {
+          friendlyMsg = 'Incorrect email or password. Please try again.';
+        } else if (code.includes('too-many-requests')) {
+          friendlyMsg = 'Too many attempts. Please wait a moment and try again.';
+        } else if (code.includes('user-disabled')) {
+          friendlyMsg = 'This account has been disabled. Please contact support.';
+        } else if (code.includes('invalid-email')) {
+          friendlyMsg = 'Please enter a valid email address.';
+        } else if (code.includes('network-request-failed')) {
+          friendlyMsg = 'Network error. Please check your connection.';
+        }
+        const banner = document.createElement('div');
+        banner.className = 'auth-error-banner';
+        banner.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${friendlyMsg}`;
+        form.insertBefore(banner, form.firstChild);
+      }
     };
 
     window.handleLogout = async () => {
@@ -99,6 +179,85 @@
     document.addEventListener('DOMContentLoaded', () => {
       const uid = localStorage.getItem('currentUserId');
       updateCartCount(uid || null);
+
+      // ── Load Featured Cakes from Firebase ──
+      const grid = document.getElementById('featured-cakes-grid');
+      if (grid) {
+        onValue(ref(db, 'featured-cakes'), (snapshot) => {
+          grid.innerHTML = '';
+          if (!snapshot.exists()) {
+            grid.innerHTML = '<p style="color:#999; text-align:center; padding:2rem; grid-column:1/-1;">No featured cakes yet.</p>';
+            return;
+          }
+          const cakes = [];
+          snapshot.forEach(child => { cakes.push({ id: child.key, ...child.val() }); });
+          cakes.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+          cakes.forEach(cake => {
+            const item = document.createElement('div');
+            item.className = 'cake-item';
+            item.innerHTML = `
+              <img src="${cake.image || 'https://via.placeholder.com/400x300?text=No+Image'}"
+                   alt="${cake.name}"
+                   onerror="this.src='https://via.placeholder.com/400x300?text=Image+Error'">
+              <h3>${cake.name}</h3>
+              ${cake.description ? `<p class="cake-desc">${cake.description}</p>` : ''}
+            `;
+            grid.appendChild(item);
+          });
+          if (typeof window.reinitCakeSlider === 'function') window.reinitCakeSlider();
+        });
+      }
+
+      // ── Load Reviews from Firebase ──
+      // safeReinit: waits for the carousel script (non-module, end of body) to be ready
+      function safeReinit() {
+        if (typeof window.reinitCarousel === 'function') {
+          window.reinitCarousel();
+        } else {
+          // Module scripts can run before body-end classic scripts — poll briefly
+          let attempts = 0;
+          const poll = setInterval(() => {
+            if (typeof window.reinitCarousel === 'function') {
+              clearInterval(poll);
+              window.reinitCarousel();
+            } else if (++attempts > 20) {
+              clearInterval(poll);
+            }
+          }, 50);
+        }
+      }
+
+      const track = document.getElementById('reviews-track');
+      if (track) {
+        onValue(ref(db, 'reviews'), (snapshot) => {
+          track.innerHTML = '';
+          if (!snapshot.exists()) {
+            track.innerHTML = `<div class="review-card" style="min-width:100%;text-align:center;color:var(--text-light);font-style:italic;padding:3rem;">
+              No reviews yet — be the first to share your experience! 🎂</div>`;
+            safeReinit();
+            return;
+          }
+          const reviews = [];
+          snapshot.forEach(child => reviews.push({ id: child.key, ...child.val() }));
+          reviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          reviews.forEach(r => {
+            const filled = '★'.repeat(r.stars || 5);
+            const empty  = '☆'.repeat(5 - (r.stars || 5));
+            const card   = document.createElement('div');
+            card.className = 'review-card';
+            card.innerHTML = `
+              <div class="review-quote-icon"><i class="fas fa-quote-left"></i></div>
+              <div class="stars">${filled}${empty}</div>
+              <p>"${r.text}"</p>
+              <div class="reviewer-row">
+                <div class="reviewer-avatar">${r.initials || 'CX'}</div>
+                <div class="reviewer">${r.name || 'Customer'}</div>
+              </div>`;
+            track.appendChild(card);
+          });
+          safeReinit();
+        });
+      }
     });
   </script>
 </head>
@@ -179,23 +338,23 @@
   <section class="featured-cakes">
     <div class="container">
       <h2 class="section-title">Our <span>Featured</span> Cakes</h2>
-      <div class="cake-grid">
-        <div class="cake-item">
-          <img src="../css/featured.jpg" alt="White Teal Dream">
-          <h3>White Teal Dream</h3>
-          <p class="cake-desc">Rich chocolate layers with silky truffle ganache and crunchy hazelnut base.</p>
+      <div class="cake-slider-wrapper">
+        <button class="cake-slider-btn cake-slider-prev" aria-label="Previous cake">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <div class="cake-slider-track-wrapper">
+          <div class="cake-grid" id="featured-cakes-grid">
+            <!-- Skeleton placeholders shown instantly while Firebase loads -->
+            <div class="cake-item cake-skeleton"><div class="sk-line skeleton-img"></div><div class="sk-line skeleton-title"></div><div class="sk-line skeleton-desc"></div></div>
+            <div class="cake-item cake-skeleton"><div class="sk-line skeleton-img"></div><div class="sk-line skeleton-title"></div><div class="sk-line skeleton-desc"></div></div>
+            <div class="cake-item cake-skeleton"><div class="sk-line skeleton-img"></div><div class="sk-line skeleton-title"></div><div class="sk-line skeleton-desc"></div></div>
+          </div>
         </div>
-        <div class="cake-item">
-          <img src="../css/featured2.jpg" alt="Blue Strawberry Bliss">
-          <h3>Blue Strawberry Bliss</h3>
-          <p class="cake-desc">Light vanilla sponge filled with fresh strawberries and whipped cream frosting.</p>
-        </div>
-        <div class="cake-item">
-          <img src="../css/featured3.jpg" alt="Pink Strawberry">
-          <h3>Pink Strawberry</h3>
-          <p class="cake-desc">Classic red velvet with tangy cream cheese frosting and subtle cocoa notes.</p>
-        </div>
+        <button class="cake-slider-btn cake-slider-next" aria-label="Next cake">
+          <i class="fas fa-chevron-right"></i>
+        </button>
       </div>
+      <div class="cake-slider-dots"></div>
     </div>
   </section>
 
@@ -210,48 +369,35 @@
         </button>
 
         <div class="carousel-track-wrapper">
-          <div class="carousel-track">
-
-            <div class="review-card">
-              <div class="review-quote-icon"><i class="fas fa-quote-left"></i></div>
-              <div class="stars">★★★★★</div>
-              <p>"Best red velvet I've ever had! So moist and the cream cheese frosting is perfect."</p>
-              <div class="reviewer-row">
-                <div class="reviewer-avatar">MD</div>
-                <div class="reviewer">Maria D.</div>
+          <div class="carousel-track" id="reviews-track">
+            <!-- Skeleton placeholders shown while Firebase loads -->
+            <div class="review-card review-skeleton">
+              <div class="sk-line sk-stars"></div>
+              <div class="sk-line sk-text"></div>
+              <div class="sk-line sk-text sk-text-short"></div>
+              <div class="reviewer-row" style="border-top:none;padding-top:8px;">
+                <div class="sk-line sk-avatar"></div>
+                <div class="sk-line sk-name"></div>
               </div>
             </div>
-
-            <div class="review-card">
-              <div class="review-quote-icon"><i class="fas fa-quote-left"></i></div>
-              <div class="stars">★★★★★</div>
-              <p>"Custom cake for my daughter's birthday was a huge hit. Beautiful and delicious!"</p>
-              <div class="reviewer-row">
-                <div class="reviewer-avatar">JR</div>
-                <div class="reviewer">James R.</div>
+            <div class="review-card review-skeleton">
+              <div class="sk-line sk-stars"></div>
+              <div class="sk-line sk-text"></div>
+              <div class="sk-line sk-text sk-text-short"></div>
+              <div class="reviewer-row" style="border-top:none;padding-top:8px;">
+                <div class="sk-line sk-avatar"></div>
+                <div class="sk-line sk-name"></div>
               </div>
             </div>
-
-            <div class="review-card">
-              <div class="review-quote-icon"><i class="fas fa-quote-left"></i></div>
-              <div class="stars">★★★★★</div>
-              <p>"Fast delivery and packaging was excellent. Tiramisu was restaurant quality."</p>
-              <div class="reviewer-row">
-                <div class="reviewer-avatar">SL</div>
-                <div class="reviewer">Sofia L.</div>
+            <div class="review-card review-skeleton">
+              <div class="sk-line sk-stars"></div>
+              <div class="sk-line sk-text"></div>
+              <div class="sk-line sk-text sk-text-short"></div>
+              <div class="reviewer-row" style="border-top:none;padding-top:8px;">
+                <div class="sk-line sk-avatar"></div>
+                <div class="sk-line sk-name"></div>
               </div>
             </div>
-
-            <div class="review-card">
-              <div class="review-quote-icon"><i class="fas fa-quote-left"></i></div>
-              <div class="stars">★★★★★</div>
-              <p>"Finally found an eggless chocolate cake that actually tastes amazing!"</p>
-              <div class="reviewer-row">
-                <div class="reviewer-avatar">RK</div>
-                <div class="reviewer">Raj K.</div>
-              </div>
-            </div>
-
           </div>
         </div>
 
@@ -267,25 +413,27 @@
   <footer>
     <div class="container footer-grid">
       <div class="footer-about">
-        <h3>C&N <span>Bakery</span></h3>
+        <a href="index.html" class="footer-logo">C&N <span>Bakery</span></a>
         <p>Baking memories since 2019. We pride ourselves on using traditional recipes passed down through generations.</p>
-      </div>
-      <div class="footer-contact">
-        <h3>Contact Us</h3>
-        <p><i class="fas fa-envelope"></i> CandNBakery@gmail.com</p>
-        <p><i class="fas fa-phone"></i> +63 9XX XXX XXXX</p>
-        <div class="social-links">
-          <a href="https://web.facebook.com/SweetdreamsEst.2014" target="_blank">
-            <i class="fab fa-facebook-f"></i> Facebook
-          </a>
-        </div>
       </div>
       <div class="footer-links">
         <h3>Quick Links</h3>
         <ul>
+          <li><a href="index.html">Home</a></li>
           <li><a href="menu.html">Menu</a></li>
+          <li><a href="cus.html">Customize</a></li>
           <li><a href="faq.html">FAQ</a></li>
         </ul>
+      </div>
+      <div class="footer-contact">
+        <h3>Contact Us</h3>
+        <p><i class="fas fa-envelope"></i> CandNBakery@gmail.com</p>
+        <p><i class="fas fa-phone"></i> 09814535981</p>
+        <p>
+          <a href="https://web.facebook.com/SweetdreamsEst.2014" target="_blank" class="footer-social">
+            <i class="fab fa-facebook-f"></i> Facebook
+          </a>
+        </p>
       </div>
     </div>
     <div class="footer-bottom">
@@ -398,6 +546,75 @@
 
       buildDots();
       window.addEventListener('resize', () => { buildDots(); goTo(0); });
+      window.reinitCarousel = () => { buildDots(); goTo(0); };
+    })();
+
+    /* ── Featured Cakes Mobile Slider ── */
+    (function () {
+      function isMobile() { return window.innerWidth <= 560; }
+
+      const dotsWrap  = document.querySelector('.cake-slider-dots');
+      const prevBtn   = document.querySelector('.cake-slider-prev');
+      const nextBtn   = document.querySelector('.cake-slider-next');
+      const trackWrap = document.querySelector('.cake-slider-track-wrapper');
+      let current = 0;
+
+      function getItems() {
+        return Array.from(document.querySelectorAll('#featured-cakes-grid .cake-item'));
+      }
+
+      function buildCakeDots() {
+        dotsWrap.innerHTML = '';
+        if (!isMobile()) return;
+        getItems().forEach((_, i) => {
+          const btn = document.createElement('button');
+          btn.className = 'cake-dot' + (i === current ? ' active' : '');
+          btn.setAttribute('aria-label', 'Cake ' + (i + 1));
+          btn.addEventListener('click', () => goToCake(i));
+          dotsWrap.appendChild(btn);
+        });
+      }
+
+      function updateDots() {
+        dotsWrap.querySelectorAll('.cake-dot').forEach((d, i) =>
+          d.classList.toggle('active', i === current));
+      }
+
+      function goToCake(index) {
+        const items = getItems();
+        if (!items.length) return;
+        current = Math.max(0, Math.min(index, items.length - 1));
+        if (isMobile()) {
+          // Scroll the track wrapper so the target item is at the left edge
+          trackWrap.scrollTo({ left: current * trackWrap.offsetWidth, behavior: 'smooth' });
+        }
+        updateDots();
+      }
+
+      prevBtn.addEventListener('click', () => goToCake(current - 1));
+      nextBtn.addEventListener('click', () => goToCake(current + 1));
+
+      // Sync dot when user manually swipes
+      trackWrap.addEventListener('scroll', () => {
+        if (!isMobile()) return;
+        const idx = Math.round(trackWrap.scrollLeft / trackWrap.offsetWidth);
+        if (idx !== current) { current = idx; updateDots(); }
+      }, { passive: true });
+
+      window.addEventListener('resize', () => {
+        current = 0;
+        trackWrap.scrollLeft = 0;
+        buildCakeDots();
+      });
+
+      // Re-init after Firebase loads cakes
+      window.reinitCakeSlider = () => {
+        current = 0;
+        trackWrap.scrollLeft = 0;
+        buildCakeDots();
+      };
+
+      buildCakeDots();
     })();
   </script>
 </body>

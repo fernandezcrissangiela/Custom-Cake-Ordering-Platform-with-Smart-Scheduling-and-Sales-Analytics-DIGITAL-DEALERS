@@ -1,0 +1,425 @@
+/* ============================================
+   faq.css — FAQ Page Specific Styles
+   C&N Bakery
+   ============================================ */
+
+/* ── Hero ── */
+.faq-hero {
+    text-align: center;
+    padding: 60px 20px 50px;
+    background: linear-gradient(135deg, var(--cream) 0%, var(--secondary) 100%);
+}
+
+.faq-hero h1 {
+    font-size: 3.5rem;
+    margin-bottom: 15px;
+}
+
+.faq-hero h1 span {
+    color: var(--primary);
+}
+
+.faq-hero p {
+    font-size: 1.35rem;
+    color: var(--text-light);
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+/* ── FAQ Container ── */
+.faq-container {
+    max-width: 750px;
+    margin: 0 auto 60px;
+    padding: 0 20px;
+}
+
+/* ── FAQ Item ── */
+.faq-item {
+    background: white;
+    border-radius: var(--radius);
+    margin-bottom: 18px;
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+/* ── FAQ Question Button ── */
+.faq-question {
+    width: 100%;
+    padding: 28px 32px;
+    background: none;
+    border: none;
+    text-align: left;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.faq-question:hover {
+    background: var(--beige);
+}
+
+.faq-question::after {
+    content: "＋";
+    font-size: 1.9rem;
+    color: var(--primary);
+    transition: transform 0.4s ease;
+}
+
+.faq-item.active .faq-question::after {
+    transform: rotate(45deg);
+}
+
+/* ── FAQ Answer ── */
+.faq-answer {
+    padding: 0 32px;
+    max-height: 0;
+    overflow: hidden;
+    background: #fffafb;
+    line-height: 1.75;
+    transition: max-height 0.5s ease, padding 0.5s ease;
+}
+
+.faq-item.active .faq-answer {
+    max-height: 500px;
+    padding: 28px 32px;
+}
+
+/* ── Dot Indicators (hidden on desktop) ── */
+.faq-dots {
+    display: none;
+}
+
+/* ── Burger override scoped to mobile only (see @media below) ── */
+
+/* ============================================
+   Mobile Styles
+   ============================================ */
+@media (max-width: 768px) {
+
+    /* ── Burger Button — matches menu.css ── */
+    .nav-toggle-label {
+        display: flex;
+        cursor: pointer;
+        z-index: 1002;
+        position: relative;
+        width: 40px;
+        height: 40px;
+        align-items: center;
+        justify-content: center;
+        background: var(--secondary);
+        border-radius: 10px;
+        flex-shrink: 0;
+    }
+
+    .nav-toggle-label span,
+    .nav-toggle-label span::before,
+    .nav-toggle-label span::after {
+        display: block;
+        background: var(--primary);
+        height: 2.5px;
+        width: 22px;
+        border-radius: 4px;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        transition: all 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.4);
+    }
+
+    .nav-toggle-label span {
+        top: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .nav-toggle-label span::before {
+        content: '';
+        top: -8px;
+    }
+
+    .nav-toggle-label span::after {
+        content: '';
+        bottom: -8px;
+    }
+
+    .nav-toggle:checked+.nav-toggle-label span {
+        background: transparent;
+    }
+
+    .nav-toggle:checked+.nav-toggle-label span::before {
+        transform: translate(-50%, 8px) rotate(45deg);
+    }
+
+    .nav-toggle:checked+.nav-toggle-label span::after {
+        transform: translate(-50%, -8px) rotate(-45deg);
+    }
+
+    /* Hero — fix overflow & shrink title */
+    .faq-hero {
+        padding: 72px 24px 52px;
+        width: 100%;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
+    .faq-hero .container {
+        width: 100%;
+        max-width: 100%;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    .faq-hero h1 {
+        font-size: 2rem;
+        line-height: 1.2;
+        max-width: 280px;
+        margin: 0 auto 10px;
+        word-break: break-word;
+    }
+
+    .faq-hero p {
+        font-size: 0.95rem;
+        max-width: 270px;
+        margin: 0 auto;
+    }
+
+    /* Carousel-style FAQ */
+    .faq-container {
+        max-width: 100%;
+        margin-bottom: 60px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        display: flex;
+        gap: 16px;
+        padding: 10px 20px 20px;
+        scroll-padding-left: 20px;
+    }
+
+    .faq-item {
+        min-width: 82vw;
+        max-width: 82vw;
+        scroll-snap-align: start;
+        flex-shrink: 0;
+        margin-bottom: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .faq-question {
+        font-size: 1rem;
+        padding: 20px 22px;
+        border-radius: var(--radius, 12px);
+        pointer-events: none;
+    }
+
+    .faq-question::after {
+        display: none;
+    }
+
+    .faq-answer {
+        max-height: none !important;
+        padding: 0 22px 22px !important;
+        font-size: 0.95rem;
+        flex: 1;
+    }
+
+    /* Scrollbar */
+    .faq-container::-webkit-scrollbar {
+        height: 4px;
+    }
+
+    .faq-container::-webkit-scrollbar-track {
+        background: var(--cream, #f5ede4);
+        border-radius: 4px;
+    }
+
+    .faq-container::-webkit-scrollbar-thumb {
+        background: var(--primary, #8B4513);
+        border-radius: 4px;
+    }
+
+    /* Dot indicators */
+    .faq-dots {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 4px;
+        margin-bottom: 40px;
+    }
+
+    .faq-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #d4b8a8;
+        transition: 0.3s;
+    }
+
+    .faq-dot.active {
+        background: var(--primary, #8B4513);
+        width: 18px;
+        border-radius: 3px;
+    }
+
+    /* ── Footer mobile fix ── */
+    footer {
+        width: 100%;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
+    footer .container.footer-grid {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+        padding: 28px 20px;
+        width: 100%;
+        box-sizing: border-box;
+        text-align: left;
+    }
+
+    footer .footer-about,
+    footer .footer-contact,
+    footer .footer-links {
+        width: 100%;
+    }
+
+    footer .footer-about p,
+    footer .footer-contact p {
+        font-size: 0.88rem;
+        line-height: 1.6;
+        margin: 4px 0;
+    }
+
+    footer .footer-about h3,
+    footer .footer-contact h3,
+    footer .footer-links h3 {
+        font-size: 1rem;
+        margin-bottom: 8px;
+    }
+
+    footer .footer-links ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    footer .footer-links ul li {
+        margin-bottom: 4px;
+    }
+
+    footer .footer-links ul li a {
+        font-size: 0.88rem;
+    }
+
+    footer .footer-bottom {
+        padding: 12px 20px;
+        font-size: 0.8rem;
+        text-align: center;
+    }
+}
+
+/* ============================================
+   Footer Base Styles
+   ============================================ */
+footer {
+    background: #3F2A1F;
+    color: #EDE0D4;
+    padding: 48px 0 0;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 40px;
+    padding-bottom: 40px;
+}
+
+.footer-logo {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #F0E0D2;
+    text-decoration: none;
+    display: inline-block;
+    margin-bottom: 12px;
+}
+
+.footer-logo span {
+    color: #D4956A;
+}
+
+.footer-about h3,
+.footer-contact h3,
+.footer-links h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #F0E0D2;
+    margin-bottom: 14px;
+}
+
+.footer-about p,
+.footer-contact p {
+    font-size: 0.92rem;
+    line-height: 1.75;
+    color: #c9b5a8;
+    margin: 4px 0;
+}
+
+.footer-contact i {
+    color: #D4956A;
+    margin-right: 8px;
+    width: 16px;
+}
+
+.footer-social {
+    text-decoration: none;
+    color: #c9b5a8;
+    font-size: 0.92rem;
+    transition: color 0.3s;
+}
+
+.footer-social:hover {
+    color: #D4956A;
+}
+
+.footer-social i {
+    color: #D4956A;
+    margin-right: 8px;
+}
+
+.footer-links ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-links ul li {
+    margin-bottom: 8px;
+}
+
+.footer-links ul li a {
+    text-decoration: none;
+    color: #c9b5a8;
+    font-size: 0.92rem;
+    transition: color 0.3s;
+}
+
+.footer-links ul li a:hover {
+    color: #D4956A;
+}
+
+.footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+    padding: 16px 20px;
+    font-size: 0.82rem;
+    color: #a08070;
+}
