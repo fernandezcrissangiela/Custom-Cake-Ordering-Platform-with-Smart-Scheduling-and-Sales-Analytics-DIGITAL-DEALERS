@@ -10,6 +10,21 @@
   <link rel="stylesheet" href="../css/history.css">
 </head>
 <body>
+<!-- ========== MOBILE DRAWER ========== -->
+<div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()"></div>
+<div class="mobile-drawer" id="mobile-drawer">
+  <div class="drawer-inner">
+    <span class="drawer-label">Navigation</span>
+    <a href="sales.html"      class="drawer-link "><i class="fas fa-chart-line"></i> Sales</a>
+    <a href="orders.html"     class="drawer-link "><i class="fas fa-shopping-bag"></i> Orders</a>
+    <a href="schedule.html"   class="drawer-link "><i class="fas fa-calendar-alt"></i> Schedule</a>
+    <a href="admin_menu.html" class="drawer-link "><i class="fas fa-birthday-cake"></i> Menu</a>
+    <a href="history.html"    class="drawer-link active"><i class="fas fa-history"></i> History</a>
+    <div class="drawer-divider"></div>
+    <button class="drawer-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+</div>
+
 
 <!-- Add right after <body>, BEFORE everything else -->
 <script>
@@ -33,7 +48,12 @@
 
 <!-- ========== HEADER ========== -->
 <header>
-  <a href="admin.html" class="logo-text">C&N</span> Bakery</a>
+  <a href="admin.html" class="logo-text">C&N <span>Bakery</span></a>
+  <button class="btn-hamburger" id="hamburger-btn" onclick="toggleDrawer()" aria-label="Open menu">
+    <span class="bar"></span>
+    <span class="bar"></span>
+    <span class="bar"></span>
+  </button>
   <button class="btn-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
 </header>
 
@@ -360,6 +380,31 @@
   document.getElementById('search-history').addEventListener('input', renderHistory);
   document.getElementById('filter-status').addEventListener('change', renderHistory);
   document.getElementById('filter-sort').addEventListener('change', renderHistory);
+</script>
+
+
+<script>
+  function toggleDrawer() {
+    const drawer   = document.getElementById('mobile-drawer');
+    const backdrop = document.getElementById('drawer-backdrop');
+    const btn      = document.getElementById('hamburger-btn');
+    const isOpen   = drawer.classList.contains('open');
+    if (isOpen) { closeDrawer(); } else {
+      drawer.classList.add('open');
+      backdrop.classList.add('open');
+      btn.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+  }
+  function closeDrawer() {
+    document.getElementById('mobile-drawer').classList.remove('open');
+    document.getElementById('drawer-backdrop').classList.remove('open');
+    const btn = document.getElementById('hamburger-btn');
+    if (btn) btn.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  // Close on resize to desktop
+  window.addEventListener('resize', () => { if (window.innerWidth > 768) closeDrawer(); });
 </script>
 
 </body>

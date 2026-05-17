@@ -5,6 +5,9 @@ NEED TO DO!!
 2. MOBILE CAROUSEL STYLE
 - all for the admin side
 
+3. FEEDBACK
+-need to fix
+
 NEED TO FIX!!!!
 
 EMAIL JS INFO
