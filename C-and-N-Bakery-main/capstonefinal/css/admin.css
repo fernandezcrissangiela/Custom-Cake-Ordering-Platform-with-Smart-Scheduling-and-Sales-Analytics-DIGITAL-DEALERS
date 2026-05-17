@@ -147,7 +147,7 @@ header {
   border-color: var(--border);
   margin-top: -12px;
   margin-bottom: 24px;
-  justify-content: center
+  justify-content: flex-start;
 }
 
 .subnav-btn {
@@ -601,4 +601,23 @@ input[type="file"]:hover { border-color: var(--primary); }
 
 @media (max-width: 420px) {
   .nav-link i { margin-right: 0; }
+}
+
+/* ── Main Nav + Sub-nav Mobile Fix ── */
+.nav-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: 8px;
+  padding-bottom: 4px;
+}
+.nav-tabs::-webkit-scrollbar {
+  display: none;
+}
+.nav-tabs .nav-link,
+.nav-tabs .subnav-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
 }

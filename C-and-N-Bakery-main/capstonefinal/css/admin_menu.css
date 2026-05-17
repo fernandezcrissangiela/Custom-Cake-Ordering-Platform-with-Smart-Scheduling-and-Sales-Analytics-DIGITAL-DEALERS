@@ -333,3 +333,21 @@
 @media (max-width: 380px) {
   #products-list { grid-template-columns: 1fr; }
 }
+
+/* ── Menu Sub-nav Mobile Fix ── */
+.menu-subnav {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: 8px;
+  padding-bottom: 4px;
+}
+.menu-subnav::-webkit-scrollbar {
+  display: none;
+}
+.menu-subnav .subnav-btn {
+  flex-shrink: 0;       /* prevents buttons from squishing */
+  white-space: nowrap;  /* keeps text on one line */
+}
