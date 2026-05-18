@@ -105,7 +105,7 @@ nav a:hover {
     flex-wrap: nowrap;
 }
 
-/* Icons + Badge + Greeting */
+/* Icons + Badge + Greeting (now consistent with menu.html) */
 .nav-icons {
     display: flex;
     align-items: center;
@@ -440,7 +440,7 @@ nav a:hover {
     min-width: 0;
 }
 
-/* Desktop & tablet: normal grid */
+/* Desktop & tablet: normal grid (no transform needed) */
 .cake-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -509,12 +509,14 @@ nav a:hover {
         scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
+        /* Firefox */
         width: 100%;
         min-width: 0;
     }
 
     .cake-slider-track-wrapper::-webkit-scrollbar {
         display: none;
+        /* Chrome/Safari */
     }
 
     .cake-grid {
@@ -568,7 +570,7 @@ nav a:hover {
     }
 }
 
-/* Hide buttons at very small screens */
+/* Hide buttons at very small screens where dots handle navigation */
 @media (max-width: 360px) {
     .cake-slider-btn {
         display: none;
@@ -1054,7 +1056,327 @@ footer {
     }
 }
 
-/* ── Hero decorative rings ── */
+/* REVIEWS SECTION */
+.reviews-section {
+    padding: 70px 0;
+    background: white;
+}
+
+.reviews-section .section-title {
+    margin-bottom: 50px;
+    font-size: 2.4rem;
+}
+
+@media (max-width: 560px) {
+    .reviews-section .section-title {
+        font-size: 1.6rem;
+        margin-bottom: 28px;
+    }
+}
+
+.review-card {
+    background: var(--cream);
+    padding: 20px 18px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: var(--transition);
+}
+
+.review-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow);
+}
+
+.stars {
+    color: #d4a373;
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+}
+
+.review-card p {
+    font-style: italic;
+    color: var(--text-light);
+    margin: 0 0 10px;
+    line-height: 1.5;
+    font-size: 0.95rem;
+}
+
+.reviewer {
+    font-weight: 600;
+    color: var(--brown);
+    font-style: normal;
+    font-size: 0.9rem;
+    margin-top: 6px;
+}
+
+.swiper-pagination {
+    position: relative;
+    margin-top: 25px;
+}
+
+.swiper-pagination-bullet {
+    background: var(--primary);
+    opacity: 0.5;
+    width: 8px;
+    height: 8px;
+}
+
+.swiper-pagination-bullet-active {
+    opacity: 1;
+    background: var(--primary-dark);
+    width: 10px;
+    height: 10px;
+}
+
+/* Responsive – reviews */
+@media (max-width: 992px) {
+    .reviews-section {
+        padding: 60px 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .review-card {
+        padding: 18px 16px;
+        min-height: 170px;
+    }
+
+    .stars {
+        font-size: 1.1rem;
+    }
+
+    .review-card p {
+        font-size: 0.92rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .reviews-section {
+        padding: 50px 0;
+    }
+
+    .review-card {
+        padding: 16px 14px;
+        min-height: 180px;
+    }
+
+    .review-card p {
+        font-size: 0.9rem;
+    }
+}
+
+/* ── Section background: warm cream-to-beige wash ── */
+.reviews-section {
+    background: linear-gradient(160deg, #F0E0D2 0%, #EDE0D4 55%, #F8F1EA 100%);
+    padding: 80px 0 72px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Decorative soft rings */
+.reviews-section::before {
+    content: '';
+    position: absolute;
+    top: -100px;
+    right: -100px;
+    width: 380px;
+    height: 380px;
+    border-radius: 50%;
+    border: 44px solid rgba(130, 90, 60, 0.07);
+    pointer-events: none;
+}
+
+.reviews-section::after {
+    content: '';
+    position: absolute;
+    bottom: -70px;
+    left: -70px;
+    width: 260px;
+    height: 260px;
+    border-radius: 50%;
+    border: 30px solid rgba(130, 90, 60, 0.05);
+    pointer-events: none;
+}
+
+/* ── Carousel layout ── */
+.reviews-carousel {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.carousel-track-wrapper {
+    overflow: hidden;
+    flex: 1;
+}
+
+.carousel-track {
+    display: flex;
+    transition: transform 0.52s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+}
+
+/* ── Card ── */
+.review-card {
+    min-width: 100%;
+    box-sizing: border-box;
+    padding: 36px 36px 28px;
+    background: #FFFFFF;
+    border-radius: 20px;
+    border: 1.5px solid rgba(130, 90, 60, 0.13);
+    position: relative;
+    box-shadow: 0 8px 28px rgba(103, 72, 49, 0.09);
+    transition: box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.review-card:hover {
+    box-shadow: 0 16px 48px rgba(103, 72, 49, 0.17);
+    transform: translateY(-4px);
+}
+
+@media (min-width: 640px) {
+    .review-card {
+        min-width: 50%;
+    }
+}
+
+@media (min-width: 1024px) {
+    .review-card {
+        min-width: 33.333%;
+    }
+}
+
+/* Quote icon — large faint background watermark */
+.review-quote-icon {
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    font-size: 2.2rem;
+    color: #F0E0D2;
+    line-height: 1;
+    pointer-events: none;
+}
+
+/* Stars */
+.review-card .stars {
+    font-size: 1.05rem;
+    color: #825A3C;
+    letter-spacing: 3px;
+    margin-bottom: 14px;
+}
+
+/* Review text */
+.review-card p {
+    font-size: 0.94rem;
+    line-height: 1.78;
+    color: #5F4635;
+    margin-bottom: 22px;
+    font-style: italic;
+}
+
+/* Reviewer row */
+.reviewer-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-top: 1px solid #F0E0D2;
+    padding-top: 16px;
+}
+
+/* Avatar circle */
+.reviewer-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #825A3C;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+}
+
+.reviewer {
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: #3F2A1F;
+}
+
+/* ── Arrow buttons ── */
+.carousel-btn {
+    flex-shrink: 0;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 2px solid #825A3C;
+    background: #FFFFFF;
+    color: #825A3C;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.82rem;
+    box-shadow: 0 4px 14px rgba(103, 72, 49, 0.13);
+    transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.carousel-btn:hover {
+    background: #825A3C;
+    color: #FFFFFF;
+    transform: scale(1.1);
+    box-shadow: 0 8px 24px rgba(103, 72, 49, 0.25);
+}
+
+.carousel-btn:active {
+    transform: scale(0.95);
+}
+
+@media (max-width: 360px) {
+    .carousel-btn {
+        display: none;
+    }
+}
+
+/* ── Pill dots ── */
+.carousel-dots {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 7px;
+    margin-top: 26px;
+}
+
+.carousel-dots .dot {
+    height: 8px;
+    width: 8px;
+    border-radius: 4px;
+    background: rgba(130, 90, 60, 0.22);
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.carousel-dots .dot.active {
+    background: #825A3C;
+    width: 26px;
+    border-radius: 4px;
+}
+
+
+
+
+/* ── Hero decorative rings (matching reviews section style) ── */
 .hero::after {
     content: '';
     position: absolute;
