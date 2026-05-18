@@ -7,33 +7,6 @@
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
-    /* ── Skeleton shimmer (featured cakes + reviews) ── */
-    @keyframes skeleton-shimmer {
-      0%   { background-position: -600px 0; }
-      100% { background-position:  600px 0; }
-    }
-    .sk-line {
-      background: linear-gradient(90deg, var(--secondary) 25%, var(--beige) 50%, var(--secondary) 75%);
-      background-size: 1200px 100%;
-      animation: skeleton-shimmer 1.5s infinite linear;
-      border-radius: 8px;
-      margin-bottom: 10px;
-    }
-    /* Review skeleton lines */
-    .sk-stars  { height: 16px; width: 90px; }
-    .sk-text   { height: 13px; width: 100%; }
-    .sk-text-short { width: 68%; }
-    .sk-avatar { height: 38px; width: 38px; border-radius: 50%; flex-shrink: 0; margin-bottom: 0; }
-    .sk-name   { height: 13px; width: 90px; margin-bottom: 0; align-self: center; }
-    .review-skeleton { pointer-events: none; }
-    /* Featured cake skeleton */
-    .cake-skeleton { pointer-events: none; }
-    .skeleton-img  { width: 100%; aspect-ratio: 4/3; border-radius: 20px; margin-bottom: 18px; }
-    .skeleton-title { height: 20px; width: 65%; margin: 0 auto 10px; }
-    .skeleton-desc  { height: 14px; width: 85%; margin: 0 auto; }
-  </style>
-
-  <style>
     /* ── Skeleton loading for Featured Cakes ── */
     @keyframes skeleton-shimmer {
       0%   { background-position: -400px 0; }
@@ -47,14 +20,193 @@
       animation: skeleton-shimmer 1.4s infinite linear;
       border-radius: 8px;
     }
+    .sk-line {
+      background: linear-gradient(90deg, var(--secondary) 25%, var(--beige) 50%, var(--secondary) 75%);
+      background-size: 1200px 100%;
+      animation: skeleton-shimmer 1.5s infinite linear;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
     .skeleton-img   { width: 100%; aspect-ratio: 4/3; margin-bottom: 14px; }
     .skeleton-title { height: 20px; width: 65%; margin: 0 auto 10px; }
     .skeleton-desc  { height: 14px; width: 85%; margin: 0 auto; }
+
+    /* ══════════════════════════════════════
+       AUTO-SLIDING REVIEWS SECTION
+    ══════════════════════════════════════ */
+    .reviews-section-new {
+      padding: 90px 0 80px;
+      background: white;
+      overflow: hidden;
+    }
+
+    @media (max-width: 560px) {
+      .reviews-section-new {
+        padding: 50px 0 44px;
+      }
+    }
+
+    /* Fade-edge mask on both sides */
+    .reviews-marquee-outer {
+      position: relative;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    .reviews-marquee-outer::before,
+    .reviews-marquee-outer::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100px;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .reviews-marquee-outer::before {
+      left: 0;
+      background: linear-gradient(to right, white 0%, transparent 100%);
+    }
+    .reviews-marquee-outer::after {
+      right: 0;
+      background: linear-gradient(to left, white 0%, transparent 100%);
+    }
+
+    /* The scrolling animation */
+    @keyframes reviews-scroll {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    .reviews-marquee-track {
+      display: flex;
+      gap: 20px;
+      padding: 12px 10px 16px;
+      width: max-content;
+      animation: reviews-scroll 28s linear infinite;
+      will-change: transform;
+    }
+
+    /* Pause on hover so users can read */
+    .reviews-marquee-outer:hover .reviews-marquee-track {
+      animation-play-state: paused;
+    }
+
+    /* Individual review card */
+    .review-card-new {
+      background: var(--cream, #F8F1EA);
+      border-radius: 20px;
+      padding: 26px 22px 20px;
+      border: 1.5px solid rgba(130, 90, 60, 0.10);
+      box-shadow: 0 4px 18px rgba(103, 72, 49, 0.07);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+      width: 300px;
+      flex-shrink: 0;
+      transition: transform 0.30s cubic-bezier(0.22, 1, 0.36, 1),
+                  box-shadow 0.30s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .review-card-new:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 14px 40px rgba(103, 72, 49, 0.14);
+    }
+
+    .review-card-new .rn-quote {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      font-size: 2.2rem;
+      color: rgba(130, 90, 60, 0.09);
+      line-height: 1;
+      pointer-events: none;
+      font-family: Georgia, serif;
+    }
+
+    .review-card-new .rn-stars {
+      color: #825A3C;
+      font-size: 1rem;
+      letter-spacing: 3px;
+    }
+
+    .review-card-new .rn-text {
+      font-size: 0.90rem;
+      color: var(--text-light, #5F4635);
+      font-style: italic;
+      line-height: 1.72;
+      flex: 1;
+      display: -webkit-box;
+      --webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .review-card-new .rn-footer {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-top: 1px solid rgba(130, 90, 60, 0.10);
+      padding-top: 12px;
+    }
+
+    .review-card-new .rn-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #825A3C;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      flex-shrink: 0;
+    }
+
+    .review-card-new .rn-name {
+      font-weight: 600;
+      font-size: 0.86rem;
+      color: var(--text, #3F2A1F);
+    }
+
+    /* Skeleton cards */
+    .review-skeleton-new {
+      background: var(--cream, #F8F1EA);
+      border-radius: 20px;
+      padding: 26px 22px 20px;
+      border: 1.5px solid rgba(130, 90, 60, 0.08);
+      width: 300px;
+      flex-shrink: 0;
+    }
+
+    .rn-sk-line {
+      background: linear-gradient(90deg, #f0e8e0 25%, #e8ddd5 50%, #f0e8e0 75%);
+      background-size: 800px 100%;
+      animation: skeleton-shimmer 1.4s infinite linear;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 560px) {
+      .review-card-new,
+      .review-skeleton-new {
+        width: 252px;
+      }
+      .reviews-marquee-outer::before,
+      .reviews-marquee-outer::after {
+        width: 36px;
+      }
+    }
   </style>
+
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
     import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
 
     const firebaseConfig = {
       apiKey: "AIzaSyCWUJfDwLR5erpExZUoBWW7YJ-aDpT_zy0",
@@ -66,9 +218,11 @@
       appId: "1:620414447517:web:d42c5d50a91ff41e5ac974"
     };
 
+
     const app  = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getDatabase(app);
+
 
     function updateCartCount(uid) {
       const cartCount = document.getElementById('cart-count');
@@ -79,6 +233,7 @@
       cartCount.innerText     = total;
       cartCount.style.display = total > 0 ? 'flex' : 'none';
     }
+
 
     window.handleSignup = async function(e) {
       e.preventDefault();
@@ -117,17 +272,16 @@
       }
     };
 
+
     window.handleLogin = async function(e) {
       e.preventDefault();
       const form = document.getElementById('login-form');
-      // Remove any previous error
       const prev = form.querySelector('.auth-error-banner');
       if (prev) prev.remove();
       try {
         await signInWithEmailAndPassword(auth, e.target.email.value, e.target.password.value);
         closeModal();
       } catch (error) {
-        // Map Firebase error codes to friendly messages
         const code = error.code || '';
         let friendlyMsg = 'Something went wrong. Please try again.';
         if (code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found')) {
@@ -148,12 +302,14 @@
       }
     };
 
+
     window.handleLogout = async () => {
       localStorage.removeItem('cart');
       localStorage.removeItem('currentUserId');
       await signOut(auth);
       updateCartCount(null);
     };
+
 
     onAuthStateChanged(auth, async (user) => {
       const signupBtn = document.getElementById('signup-trigger');
@@ -176,9 +332,11 @@
       }
     });
 
+
     document.addEventListener('DOMContentLoaded', () => {
       const uid = localStorage.getItem('currentUserId');
       updateCartCount(uid || null);
+
 
       // ── Load Featured Cakes from Firebase ──
       const grid = document.getElementById('featured-cakes-grid');
@@ -208,60 +366,69 @@
         });
       }
 
-      // ── Load Reviews from Firebase ──
-      // safeReinit: waits for the carousel script (non-module, end of body) to be ready
-      function safeReinit() {
-        if (typeof window.reinitCarousel === 'function') {
-          window.reinitCarousel();
-        } else {
-          // Module scripts can run before body-end classic scripts — poll briefly
-          let attempts = 0;
-          const poll = setInterval(() => {
-            if (typeof window.reinitCarousel === 'function') {
-              clearInterval(poll);
-              window.reinitCarousel();
-            } else if (++attempts > 20) {
-              clearInterval(poll);
-            }
-          }, 50);
-        }
-      }
-
-      const track = document.getElementById('reviews-track');
-      if (track) {
+      // ── Load Reviews from Firebase (infinite auto-scroll marquee) ──
+      const marqueeOuter = document.getElementById('reviews-marquee-outer');
+      if (marqueeOuter) {
         onValue(ref(db, 'reviews'), (snapshot) => {
-          track.innerHTML = '';
+          marqueeOuter.innerHTML = '';
+
           if (!snapshot.exists()) {
-            track.innerHTML = `<div class="review-card" style="min-width:100%;text-align:center;color:var(--text-light);font-style:italic;padding:3rem;">
-              No reviews yet — be the first to share your experience! 🎂</div>`;
-            safeReinit();
+            marqueeOuter.innerHTML = '<p style="color:#999;text-align:center;padding:2rem;width:100%;">No reviews yet. Be the first!</p>';
             return;
           }
+
           const reviews = [];
-          snapshot.forEach(child => reviews.push({ id: child.key, ...child.val() }));
-          reviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-          reviews.forEach(r => {
-            const filled = '★'.repeat(r.stars || 5);
-            const empty  = '☆'.repeat(5 - (r.stars || 5));
-            const card   = document.createElement('div');
-            card.className = 'review-card';
+          snapshot.forEach(child => { reviews.push({ id: child.key, ...child.val() }); });
+          reviews.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+          function buildCard(review) {
+            const stars = Math.min(5, Math.max(1, parseInt(review.stars) || 5));
+            const starStr = '★'.repeat(stars) + '☆'.repeat(5 - stars);
+            const initials = review.initials ||
+              (review.name || 'CX').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+            const card = document.createElement('div');
+            card.className = 'review-card-new';
             card.innerHTML = `
-              <div class="review-quote-icon"><i class="fas fa-quote-left"></i></div>
-              <div class="stars">${filled}${empty}</div>
-              <p>"${r.text}"</p>
-              <div class="reviewer-row">
-                <div class="reviewer-avatar">${r.initials || 'CX'}</div>
-                <div class="reviewer">${r.name || 'Customer'}</div>
-              </div>`;
-            track.appendChild(card);
-          });
-          safeReinit();
+              <span class="rn-quote">"</span>
+              <div class="rn-stars">${starStr}</div>
+              <p class="rn-text">${escapeHtml(review.text || '')}</p>
+              <div class="rn-footer">
+                <div class="rn-avatar">${escapeHtml(initials)}</div>
+                <span class="rn-name">${escapeHtml(review.name || 'Customer')}</span>
+              </div>
+            `;
+            return card;
+          }
+
+          // Build track with cards duplicated for seamless loop
+          const track = document.createElement('div');
+          track.className = 'reviews-marquee-track';
+
+          // Original set
+          reviews.forEach(r => track.appendChild(buildCard(r)));
+          // Duplicate set (makes the infinite loop seamless)
+          reviews.forEach(r => track.appendChild(buildCard(r)));
+
+          // Speed: ~4s per card, minimum 20s
+          const duration = Math.max(20, reviews.length * 4);
+          track.style.animationDuration = duration + 's';
+
+          marqueeOuter.appendChild(track);
         });
       }
     });
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
   </script>
 </head>
 <body>
+
 
   <header>
     <div class="container nav-flex">
@@ -274,7 +441,6 @@
           <li><a href="menu.html">Menu</a></li>
           <li><a href="cus.html">Customize Cake</a></li>
           <li><a href="faq.html">FAQ</a></li>
-          
         </ul>
         <div class="auth-area">
           <div class="nav-icons">
@@ -315,6 +481,7 @@
     </div>
   </section>
 
+
   <section class="features-showcase">
     <div class="container features-grid">
       <div class="feature-card">
@@ -335,6 +502,7 @@
     </div>
   </section>
 
+
   <section class="featured-cakes">
     <div class="container">
       <h2 class="section-title">Our <span>Featured</span> Cakes</h2>
@@ -344,7 +512,6 @@
         </button>
         <div class="cake-slider-track-wrapper">
           <div class="cake-grid" id="featured-cakes-grid">
-            <!-- Skeleton placeholders shown instantly while Firebase loads -->
             <div class="cake-item cake-skeleton"><div class="sk-line skeleton-img"></div><div class="sk-line skeleton-title"></div><div class="sk-line skeleton-desc"></div></div>
             <div class="cake-item cake-skeleton"><div class="sk-line skeleton-img"></div><div class="sk-line skeleton-title"></div><div class="sk-line skeleton-desc"></div></div>
             <div class="cake-item cake-skeleton"><div class="sk-line skeleton-img"></div><div class="sk-line skeleton-title"></div><div class="sk-line skeleton-desc"></div></div>
@@ -358,57 +525,48 @@
     </div>
   </section>
 
-  <!-- ─── REVIEWS CAROUSEL ─── -->
-  <section class="reviews-section">
+
+  <!-- ── Customer Reviews Section ── -->
+  <section class="reviews-section-new">
     <div class="container">
       <h2 class="section-title">What Our <span>Customers</span> Say</h2>
-
-      <div class="reviews-carousel">
-        <button class="carousel-btn carousel-prev" aria-label="Previous review">
-          <i class="fas fa-chevron-left"></i>
-        </button>
-
-        <div class="carousel-track-wrapper">
-          <div class="carousel-track" id="reviews-track">
-            <!-- Skeleton placeholders shown while Firebase loads -->
-            <div class="review-card review-skeleton">
-              <div class="sk-line sk-stars"></div>
-              <div class="sk-line sk-text"></div>
-              <div class="sk-line sk-text sk-text-short"></div>
-              <div class="reviewer-row" style="border-top:none;padding-top:8px;">
-                <div class="sk-line sk-avatar"></div>
-                <div class="sk-line sk-name"></div>
-              </div>
-            </div>
-            <div class="review-card review-skeleton">
-              <div class="sk-line sk-stars"></div>
-              <div class="sk-line sk-text"></div>
-              <div class="sk-line sk-text sk-text-short"></div>
-              <div class="reviewer-row" style="border-top:none;padding-top:8px;">
-                <div class="sk-line sk-avatar"></div>
-                <div class="sk-line sk-name"></div>
-              </div>
-            </div>
-            <div class="review-card review-skeleton">
-              <div class="sk-line sk-stars"></div>
-              <div class="sk-line sk-text"></div>
-              <div class="sk-line sk-text sk-text-short"></div>
-              <div class="reviewer-row" style="border-top:none;padding-top:8px;">
-                <div class="sk-line sk-avatar"></div>
-                <div class="sk-line sk-name"></div>
-              </div>
-            </div>
-          </div>
+    </div>
+    <!-- Marquee is outside .container so it stretches full-width -->
+    <div class="reviews-marquee-outer" id="reviews-marquee-outer">
+      <!-- Skeleton shown while Firebase loads -->
+      <div class="reviews-marquee-track" style="animation:none;">
+        <div class="review-skeleton-new">
+          <div class="rn-sk-line" style="height:13px;width:55%;margin-bottom:14px;"></div>
+          <div class="rn-sk-line" style="height:11px;width:90%;"></div>
+          <div class="rn-sk-line" style="height:11px;width:75%;"></div>
+          <div class="rn-sk-line" style="height:11px;width:65%;margin-bottom:14px;"></div>
+          <div class="rn-sk-line" style="height:32px;width:42%;border-radius:50px;"></div>
         </div>
-
-        <button class="carousel-btn carousel-next" aria-label="Next review">
-          <i class="fas fa-chevron-right"></i>
-        </button>
+        <div class="review-skeleton-new">
+          <div class="rn-sk-line" style="height:13px;width:60%;margin-bottom:14px;"></div>
+          <div class="rn-sk-line" style="height:11px;width:85%;"></div>
+          <div class="rn-sk-line" style="height:11px;width:70%;"></div>
+          <div class="rn-sk-line" style="height:11px;width:80%;margin-bottom:14px;"></div>
+          <div class="rn-sk-line" style="height:32px;width:42%;border-radius:50px;"></div>
+        </div>
+        <div class="review-skeleton-new">
+          <div class="rn-sk-line" style="height:13px;width:50%;margin-bottom:14px;"></div>
+          <div class="rn-sk-line" style="height:11px;width:88%;"></div>
+          <div class="rn-sk-line" style="height:11px;width:72%;"></div>
+          <div class="rn-sk-line" style="height:11px;width:60%;margin-bottom:14px;"></div>
+          <div class="rn-sk-line" style="height:32px;width:42%;border-radius:50px;"></div>
+        </div>
+        <div class="review-skeleton-new">
+          <div class="rn-sk-line" style="height:13px;width:58%;margin-bottom:14px;"></div>
+          <div class="rn-sk-line" style="height:11px;width:82%;"></div>
+          <div class="rn-sk-line" style="height:11px;width:74%;"></div>
+          <div class="rn-sk-line" style="height:11px;width:67%;margin-bottom:14px;"></div>
+          <div class="rn-sk-line" style="height:32px;width:42%;border-radius:50px;"></div>
+        </div>
       </div>
-
-      <div class="carousel-dots"></div>
     </div>
   </section>
+
 
   <footer>
     <div class="container footer-grid">
@@ -441,6 +599,7 @@
     </div>
   </footer>
 
+
   <!-- Auth Modal -->
   <div id="auth-modal" class="modal">
     <div class="modal-content">
@@ -467,10 +626,12 @@
     </div>
   </div>
 
+
   <script>
     const modal = document.getElementById('auth-modal');
     function openModal()  { modal.classList.add('active'); document.getElementById('nav-toggle').checked = false; }
     function closeModal() { modal.classList.remove('active'); }
+
 
     window.checkAuth = function(event) {
       const isLoggedIn = !document.getElementById('logout-trigger').classList.contains('hidden');
@@ -481,6 +642,7 @@
       else window.location.href = 'cus.html';
     };
 
+
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -490,68 +652,14 @@
       });
     });
 
+
     window.onclick = (e) => { if (e.target == modal) closeModal(); };
 
-    /* ── Carousel ── */
-    (function () {
-      const track    = document.querySelector('.carousel-track');
-      const dotsWrap = document.querySelector('.carousel-dots');
-
-      let current = 0;
-
-      function visibleCount() {
-        if (window.innerWidth >= 1024) return 3;
-        if (window.innerWidth >= 640)  return 2;
-        return 1;
-      }
-
-      function maxIndex() {
-        return Math.max(0, track.children.length - visibleCount());
-      }
-
-      function buildDots() {
-        dotsWrap.innerHTML = '';
-        for (let i = 0; i <= maxIndex(); i++) {
-          const btn = document.createElement('button');
-          btn.className = 'dot' + (i === current ? ' active' : '');
-          btn.setAttribute('aria-label', 'Review ' + (i + 1));
-          btn.addEventListener('click', () => goTo(i));
-          dotsWrap.appendChild(btn);
-        }
-      }
-
-      function goTo(index) {
-        current = Math.max(0, Math.min(index, maxIndex()));
-        track.style.transform = `translateX(-${(100 / visibleCount()) * current}%)`;
-        dotsWrap.querySelectorAll('.dot').forEach((d, i) =>
-          d.classList.toggle('active', i === current));
-      }
-
-      document.querySelector('.carousel-prev').addEventListener('click', () => goTo(current - 1));
-      document.querySelector('.carousel-next').addEventListener('click', () => goTo(current + 1));
-
-      let startX = 0;
-      track.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
-      track.addEventListener('touchend',   e => {
-        const diff = startX - e.changedTouches[0].clientX;
-        if (Math.abs(diff) > 40) goTo(diff > 0 ? current + 1 : current - 1);
-      });
-
-      let timer = setInterval(() => goTo(current < maxIndex() ? current + 1 : 0), 5000);
-      const wrapper = document.querySelector('.carousel-track-wrapper');
-      wrapper.addEventListener('mouseenter', () => clearInterval(timer));
-      wrapper.addEventListener('mouseleave', () => {
-        timer = setInterval(() => goTo(current < maxIndex() ? current + 1 : 0), 5000);
-      });
-
-      buildDots();
-      window.addEventListener('resize', () => { buildDots(); goTo(0); });
-      window.reinitCarousel = () => { buildDots(); goTo(0); };
-    })();
 
     /* ── Featured Cakes Mobile Slider ── */
     (function () {
       function isMobile() { return window.innerWidth <= 560; }
+
 
       const dotsWrap  = document.querySelector('.cake-slider-dots');
       const prevBtn   = document.querySelector('.cake-slider-prev');
@@ -559,9 +667,11 @@
       const trackWrap = document.querySelector('.cake-slider-track-wrapper');
       let current = 0;
 
+
       function getItems() {
         return Array.from(document.querySelectorAll('#featured-cakes-grid .cake-item'));
       }
+
 
       function buildCakeDots() {
         dotsWrap.innerHTML = '';
@@ -575,31 +685,34 @@
         });
       }
 
+
       function updateDots() {
         dotsWrap.querySelectorAll('.cake-dot').forEach((d, i) =>
           d.classList.toggle('active', i === current));
       }
+
 
       function goToCake(index) {
         const items = getItems();
         if (!items.length) return;
         current = Math.max(0, Math.min(index, items.length - 1));
         if (isMobile()) {
-          // Scroll the track wrapper so the target item is at the left edge
           trackWrap.scrollTo({ left: current * trackWrap.offsetWidth, behavior: 'smooth' });
         }
         updateDots();
       }
 
+
       prevBtn.addEventListener('click', () => goToCake(current - 1));
       nextBtn.addEventListener('click', () => goToCake(current + 1));
 
-      // Sync dot when user manually swipes
+
       trackWrap.addEventListener('scroll', () => {
         if (!isMobile()) return;
         const idx = Math.round(trackWrap.scrollLeft / trackWrap.offsetWidth);
         if (idx !== current) { current = idx; updateDots(); }
       }, { passive: true });
+
 
       window.addEventListener('resize', () => {
         current = 0;
@@ -607,12 +720,13 @@
         buildCakeDots();
       });
 
-      // Re-init after Firebase loads cakes
+
       window.reinitCakeSlider = () => {
         current = 0;
         trackWrap.scrollLeft = 0;
         buildCakeDots();
       };
+
 
       buildCakeDots();
     })();
