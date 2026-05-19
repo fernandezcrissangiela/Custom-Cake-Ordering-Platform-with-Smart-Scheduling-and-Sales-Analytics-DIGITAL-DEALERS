@@ -57,20 +57,11 @@
     .filter-bar-sales .btn-apply:hover { background: var(--primary-dark); }
 
     /* ── Stats grid ── */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      gap: 18px;
-      margin-bottom: 26px;
-    }
-    .stat-box { position: relative; }
     .stat-trend {
-      margin-top: 8px;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       font-weight: 600;
       display: flex;
       align-items: center;
-      justify-content: center;
       gap: 4px;
     }
     .stat-trend.up   { color: #27ae60; }
@@ -419,34 +410,40 @@
 
   <!-- Stats -->
   <div class="stats-grid">
-    <div class="stat-box">
-      <h3><i class="fas fa-peso-sign"></i> Total Revenue</h3>
-      <p id="total-revenue">PHP 0</p>
+    <div class="stat-box sbox-revenue">
+      <div class="sbox-icon"><i class="fas fa-peso-sign"></i></div>
+      <div class="sbox-label">Total Revenue</div>
+      <div class="sbox-value" id="total-revenue">PHP 0</div>
       <div class="stat-trend flat" id="trend-revenue"><i class="fas fa-minus"></i> —</div>
     </div>
-    <div class="stat-box">
-      <h3><i class="fas fa-calendar"></i> <span data-stat="period-label">This Year</span> Revenue</h3>
-      <p id="monthly-revenue">PHP 0</p>
+    <div class="stat-box sbox-period">
+      <div class="sbox-icon"><i class="fas fa-calendar"></i></div>
+      <div class="sbox-label"><span data-stat="period-label">This Year</span> Revenue</div>
+      <div class="sbox-value" id="monthly-revenue">PHP 0</div>
       <div class="stat-trend flat" id="trend-monthly"><i class="fas fa-minus"></i> —</div>
     </div>
-    <div class="stat-box">
-      <h3><i class="fas fa-box"></i> Items Sold</h3>
-      <p id="total-items">0</p>
+    <div class="stat-box sbox-items">
+      <div class="sbox-icon"><i class="fas fa-box"></i></div>
+      <div class="sbox-label">Items Sold</div>
+      <div class="sbox-value" id="total-items">0</div>
       <div class="stat-trend flat" id="trend-items"><i class="fas fa-minus"></i> —</div>
     </div>
-    <div class="stat-box">
-      <h3><i class="fas fa-receipt"></i> Orders</h3>
-      <p id="total-orders">0</p>
+    <div class="stat-box sbox-orders">
+      <div class="sbox-icon"><i class="fas fa-receipt"></i></div>
+      <div class="sbox-label">Orders</div>
+      <div class="sbox-value" id="total-orders">0</div>
       <div class="stat-trend flat" id="trend-orders"><i class="fas fa-minus"></i> —</div>
     </div>
-    <div class="stat-box">
-      <h3><i class="fas fa-users"></i> Customers</h3>
-      <p id="total-customers">0</p>
+    <div class="stat-box sbox-customers">
+      <div class="sbox-icon"><i class="fas fa-users"></i></div>
+      <div class="sbox-label">Customers</div>
+      <div class="sbox-value" id="total-customers">0</div>
       <div class="stat-trend flat" id="trend-customers"><i class="fas fa-minus"></i> —</div>
     </div>
-    <div class="stat-box">
-      <h3><i class="fas fa-receipt"></i> Avg. Order Value</h3>
-      <p id="avg-order">PHP 0</p>
+    <div class="stat-box sbox-avg">
+      <div class="sbox-icon"><i class="fas fa-chart-line"></i></div>
+      <div class="sbox-label">Avg. Order Value</div>
+      <div class="sbox-value" id="avg-order">PHP 0</div>
       <div class="stat-trend flat" id="trend-avg"><i class="fas fa-minus"></i> —</div>
     </div>
   </div>

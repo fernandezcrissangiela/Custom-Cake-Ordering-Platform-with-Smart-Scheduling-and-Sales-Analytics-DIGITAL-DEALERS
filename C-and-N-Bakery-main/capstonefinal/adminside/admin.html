@@ -15,16 +15,25 @@
     .dashboard-greeting {
       margin: 28px 0 24px;
     }
+    .greeting-eyebrow {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--primary);
+      margin: 0 0 6px;
+    }
     .dashboard-greeting h1 {
       font-size: 1.55rem;
-      font-weight: 700;
+      font-weight: 800;
       color: var(--brown);
       margin: 0 0 4px;
+      line-height: 1.15;
     }
     .dashboard-greeting h1 span { color: var(--primary); }
-    .dashboard-greeting p {
+    .greeting-sub {
       color: var(--muted);
-      font-size: 0.88rem;
+      font-size: 0.85rem;
       margin: 0;
     }
 
@@ -337,12 +346,43 @@
 
     /* responsive */
     @media (max-width: 600px) {
-      .dash-cards { grid-template-columns: 1fr 1fr; }
-      .dash-card-value { font-size: 1.3rem; }
-      .dashboard-greeting h1 { font-size: 1.25rem; }
+      .dash-cards {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .dash-card {
+        padding: 14px 12px 12px;
+        gap: 7px;
+        border-radius: 12px;
+      }
+      .dash-card::before {
+        border-radius: 12px 12px 0 0;
+      }
+      .dash-card-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        font-size: 0.95rem;
+      }
+      .dash-card-label {
+        font-size: 0.68rem;
+        letter-spacing: 0.3px;
+      }
+      .dash-card-value {
+        font-size: 1.25rem;
+      }
+      .dash-card-sub {
+        font-size: 0.7rem;
+        gap: 3px;
+      }
+      .dashboard-greeting h1 { font-size: 1.2rem; }
+      .greeting-eyebrow { font-size: 0.7rem; }
     }
     @media (max-width: 380px) {
-      .dash-cards { grid-template-columns: 1fr; }
+      .dash-cards { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .dash-card { padding: 12px 10px 10px; }
+      .dash-card-label { font-size: 0.62rem; }
+      .dash-card-value { font-size: 1.1rem; }
     }
   </style>
 </head>
@@ -514,8 +554,9 @@
 
   <!-- Greeting -->
   <div class="dashboard-greeting">
-    <h1>Welcome back, <span>Admin</span> 👋</h1>
-    <p id="greeting-date">Loading date…</p>
+    <p class="greeting-eyebrow" id="greeting-date">Loading date…</p>
+    <h1>Dashboard <span>Overview</span></h1>
+    <p class="greeting-sub">Here's what's happening at C&amp;N Bakery today.</p>
   </div>
 
   <!-- ── Summary Cards ── -->
@@ -1038,6 +1079,47 @@
 .forgot-info-banner i { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
 .forgot-info-banner strong { display: block; margin-bottom: 3px; font-size: 0.88rem; }
 .forgot-info-banner p { margin: 0; opacity: 0.85; }
+
+/* ── Mobile modal footer fix ── */
+@media (max-width: 600px) {
+  .modal-footer {
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 20px 20px;
+  }
+  .modal-footer .btn-forgot {
+    order: 2;
+    align-self: center;
+    font-size: 0.78rem;
+    padding: 6px 0;
+    opacity: 0.75;
+  }
+  .modal-footer > div[style] {
+    display: none;
+  }
+  .modal-footer .btn-cancel,
+  .modal-footer .btn-save {
+    order: 1;
+    width: 100%;
+    justify-content: center;
+    padding: 13px 16px;
+    font-size: 0.92rem;
+    border-radius: 12px;
+  }
+  /* Put Cancel + Save side by side, Forgot below */
+  .modal-footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "cancel save"
+      "forgot forgot";
+    gap: 10px;
+  }
+  .modal-footer .btn-cancel { grid-area: cancel; }
+  .modal-footer .btn-save   { grid-area: save; min-width: unset; }
+  .modal-footer .btn-forgot { grid-area: forgot; justify-self: center; }
+  .modal-footer > div[style] { display: none !important; }
+}
 </style>
 
 </body>
