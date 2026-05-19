@@ -119,6 +119,7 @@ header {
 
 /* ── Main Nav Tabs ── */
 .nav-tabs {
+  
   display: flex;
   align-items: center;
   justify-content: center;
@@ -166,7 +167,7 @@ header {
 .nav-tabs.orders-subnav {
   background: var(--cream);
   border-color: var(--border);
-  margin-top: -12px;
+  margin-top: 12px;
   margin-bottom: 24px;
   justify-content: center;
   gap: 8px;
