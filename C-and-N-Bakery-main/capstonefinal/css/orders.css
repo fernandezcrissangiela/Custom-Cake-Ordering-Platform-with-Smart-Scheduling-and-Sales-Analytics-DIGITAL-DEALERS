@@ -6,6 +6,7 @@
 /* ── Orders Panels ── */
 .orders-panel { display: none; }
 .orders-panel.active { display: block; }
+
 /* ── Order Count Badge (subnav) ── */
 .order-count-badge {
   display: inline-flex;
@@ -30,7 +31,6 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
   gap: 20px;
-  
 }
 
 .no-orders {
@@ -247,31 +247,39 @@
 .status-pill.completed            { background: #e8f8f0; color: #0a4a22; border: 1px solid #80c8a0; }
 .status-pill.cancelled            { background: #fdecea; color: #7a1515; border: 1px solid #f0a0a0; }
 
-/* ── Order Detail Modal ── */
-.modal-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.55);
-  z-index: 9999;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  backdrop-filter: blur(3px);
+/* ══════════════════════════════════════════
+   ORDER DETAIL MODAL — FIXED SCROLL
+   ══════════════════════════════════════════ */
+
+/* Override admin.css .modal-overlay for the orders modal specifically */
+#order-modal.modal-overlay {
+  display: none !important;
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(0,0,0,0.55) !important;
+  z-index: 10000 !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px !important;
+  backdrop-filter: blur(3px) !important;
 }
-.modal-overlay.open { display: flex; }
+#order-modal.modal-overlay.open {
+  display: flex !important;
+}
 
 .modal-box {
   background: var(--white);
   border-radius: var(--radius);
   max-width: 580px;
   width: 100%;
+  /* KEY FIX: give modal a fixed height so body can scroll */
+  height: 90vh;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
   box-shadow: 0 32px 80px rgba(0,0,0,0.28);
   animation: slideUp 0.35s cubic-bezier(0.22,1,0.36,1);
-  overflow: hidden;
+  overflow: hidden; /* clip rounded corners */
 }
 
 @keyframes slideUp {
@@ -279,15 +287,15 @@
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+/* Header — fixed, never scrolls */
 .mh {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 24px 0;
-  flex-shrink: 0;
+  padding: 20px 24px 16px;
+  flex-shrink: 0; /* never shrink */
   border-bottom: 1.5px solid var(--border);
-  padding-bottom: 16px;
-  margin-bottom: 0;
+  background: var(--white);
 }
 .mh-title {
   font-size: 1rem;
@@ -311,18 +319,37 @@
 }
 .mh-close:hover { background: #fdecea; color: #c0392b; border-color: #f5c6c6; }
 
+/* Body — scrollable */
 .mb {
   padding: 20px 24px;
-  overflow-y: auto;
-  flex: 1;
+  overflow-y: auto !important; /* force scroll */
+  overflow-x: hidden;
+  flex: 1 1 0;    /* KEY: flex-basis 0 allows shrinking below content size */
+  min-height: 0;  /* KEY: without this, flexbox won't shrink below content */
   font-size: 0.88rem;
   color: var(--text-light);
   display: flex;
   flex-direction: column;
   gap: 8px;
+  /* Custom scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--beige) transparent;
+}
+.mb::-webkit-scrollbar {
+  width: 5px;
+}
+.mb::-webkit-scrollbar-track {
+  background: transparent;
+}
+.mb::-webkit-scrollbar-thumb {
+  background: var(--beige);
+  border-radius: 10px;
+}
+.mb::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
 }
 
-/* Modal info rows */
+/* ── Modal info rows ── */
 .info-row {
   display: flex;
   align-items: center;
@@ -333,10 +360,11 @@
   font-size: 0.86rem;
   color: var(--text-light);
   border: 1px solid var(--border);
+  flex-shrink: 0;
 }
 .info-row i { color: var(--primary); font-size: 0.85rem; flex-shrink: 0; }
 
-/* Section label in modal */
+/* ── Section label in modal ── */
 .section-label {
   font-size: 0.75rem;
   font-weight: 700;
@@ -347,13 +375,15 @@
   display: flex;
   align-items: center;
   gap: 5px;
+  flex-shrink: 0;
 }
 
-/* Payment buttons */
+/* ── Payment buttons ── */
 .payment-btns {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 .pay-btn {
   flex: 1;
@@ -376,12 +406,13 @@
 .pay-btn.paid    { background: #f0fbf5; border-color: #a8e0bc; color: #1a6632; }
 .pay-btn.active-pay { box-shadow: 0 0 0 3px rgba(130,90,60,0.20); font-weight: 800; }
 
-/* Items list in modal */
+/* ── Items list in modal ── */
 .customize-block {
   background: var(--cream);
   border-radius: var(--radius-sm);
   padding: 14px 16px;
   border: 1.5px solid var(--border);
+  flex-shrink: 0;
 }
 .customize-block h4 {
   font-size: 0.9rem;
@@ -423,6 +454,7 @@
   border-radius: var(--radius-sm);
   overflow: hidden;
   border: 1.5px solid var(--border);
+  flex-shrink: 0;
 }
 .items-list-head {
   background: var(--beige);
@@ -466,15 +498,17 @@
   color: #fff;
   font-weight: 700;
   font-size: 0.95rem;
+  flex-shrink: 0;
 }
 
-/* Delivery confirm box */
+/* ── Delivery confirm box ── */
 .delivery-confirm-box {
   background: linear-gradient(135deg, #e8f4fd, #f0f8ff);
   border: 1.5px solid #aad4f5;
   border-radius: var(--radius-sm);
   padding: 16px;
   text-align: center;
+  flex-shrink: 0;
 }
 .delivery-confirm-box h4 {
   font-size: 0.92rem;
@@ -522,13 +556,14 @@
 }
 .btn-not-received:hover { background: var(--beige); }
 
-/* Downpayment prompt box */
+/* ── Downpayment prompt box ── */
 .downpayment-prompt-box {
   background: #fffbee;
   border: 1.5px solid #f5e0a0;
   border-radius: var(--radius-sm);
   padding: 14px 16px;
   text-align: center;
+  flex-shrink: 0;
 }
 .downpayment-prompt-box h4 {
   font-size: 0.88rem;
@@ -558,7 +593,7 @@
 }
 .btn-downpayment-modal:hover { opacity: 0.88; transform: translateY(-1px); }
 
-/* Zoom overlay */
+/* ── Zoom overlay ── */
 #zoom-overlay {
   display: none;
   position: fixed;
@@ -603,11 +638,20 @@
   .pay-btn { flex: none; }
   .delivery-confirm-btns { flex-direction: column; }
   .btn-received, .btn-not-received { width: 100%; justify-content: center; }
+
+  .modal-box {
+    height: 92vh;
+    max-height: 92vh;
+  }
 }
 
 @media (max-width: 500px) {
-  .modal-box { max-height: 95vh; border-radius: var(--radius-sm); }
-  .mh { padding: 16px 16px 12px; }
+  .modal-box {
+    height: 95vh;
+    max-height: 95vh;
+    border-radius: var(--radius-sm);
+  }
+  .mh { padding: 14px 16px 12px; }
   .mb { padding: 14px 14px; }
   .order-card { padding: 14px 14px 12px; border-radius: var(--radius-sm); }
   .order-actions { gap: 6px; }
