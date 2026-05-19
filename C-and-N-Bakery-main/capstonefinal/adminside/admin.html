@@ -13,6 +13,10 @@
 <div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()"></div>
 <div class="mobile-drawer" id="mobile-drawer">
   <div class="drawer-inner">
+    <div class="drawer-header">
+      <span class="drawer-logo">C&amp;N <span>Bakery</span></span>
+      <button class="drawer-close" onclick="closeDrawer()" aria-label="Close menu"><i class="fas fa-times"></i></button>
+    </div>
     <span class="drawer-label">Navigation</span>
     <a href="sales.html"      class="drawer-link "><i class="fas fa-chart-line"></i> Sales</a>
     <a href="orders.html"     class="drawer-link "><i class="fas fa-shopping-bag"></i> Orders</a>
@@ -20,6 +24,7 @@
     <a href="admin_menu.html" class="drawer-link "><i class="fas fa-birthday-cake"></i> Menu</a>
     <a href="history.html"    class="drawer-link "><i class="fas fa-history"></i> History</a>
     <div class="drawer-divider"></div>
+    <button class="drawer-settings" onclick="closeDrawer(); openSettings()"><i class="fas fa-cog"></i> Account Settings</button>
     <button class="drawer-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
   </div>
 </div>
@@ -39,11 +44,355 @@
     <span class="bar"></span>
     <span class="bar"></span>
   </button>
-  <button class="btn-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  <div class="header-actions">
+    <button class="btn-settings" onclick="openSettings()" title="Account Settings"><i class="fas fa-cog"></i></button>
+    <button class="btn-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
 </header>
+
+<!-- ========== ACCOUNT SETTINGS MODAL ========== -->
+<div class="modal-overlay" id="settings-overlay" onclick="closeSettings(event)">
+  <div class="settings-modal">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <i class="fas fa-user-cog modal-icon"></i>
+        <div>
+          <h2 class="modal-title">Account Settings</h2>
+          <p class="modal-sub">Update your admin password</p>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeSettings()"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div class="modal-body">
+      <div class="settings-field">
+        <label><i class="fas fa-lock"></i> Current Password</label>
+        <div class="settings-input-wrap">
+          <input type="password" id="curr-pass" placeholder="Enter current password" />
+          <span class="eye-toggle" onclick="toggleEye('curr-pass','eye1')"><i class="fas fa-eye" id="eye1"></i></span>
+        </div>
+        <p class="field-error" id="err-curr"></p>
+      </div>
+
+      <div class="settings-field">
+        <label><i class="fas fa-key"></i> New Password</label>
+        <div class="settings-input-wrap">
+          <input type="password" id="new-pass" placeholder="Enter new password" oninput="checkStrength()" />
+          <span class="eye-toggle" onclick="toggleEye('new-pass','eye2')"><i class="fas fa-eye" id="eye2"></i></span>
+        </div>
+        <div class="strength-bar-wrap" id="strength-wrap">
+          <div class="strength-bar" id="strength-bar"></div>
+        </div>
+        <p class="strength-label" id="strength-label"></p>
+        <p class="field-error" id="err-new"></p>
+      </div>
+
+      <div class="settings-field">
+        <label><i class="fas fa-check-double"></i> Confirm New Password</label>
+        <div class="settings-input-wrap">
+          <input type="password" id="confirm-pass" placeholder="Re-enter new password" />
+          <span class="eye-toggle" onclick="toggleEye('confirm-pass','eye3')"><i class="fas fa-eye" id="eye3"></i></span>
+        </div>
+        <p class="field-error" id="err-confirm"></p>
+      </div>
+
+      <div class="success-banner" id="success-banner">
+        <i class="fas fa-check-circle"></i> Password updated successfully!
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-forgot" onclick="openForgotPassword()"><i class="fas fa-question-circle"></i> Forgot Password?</button>
+      <div style="flex:1"></div>
+      <button class="btn-cancel" onclick="closeSettings()">Cancel</button>
+      <button class="btn-save" id="save-btn" onclick="savePassword()">
+        <span class="save-text"><i class="fas fa-save"></i> Save Changes</span>
+        <span class="save-spinner"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== FORGOT PASSWORD MODAL ========== -->
+<div class="modal-overlay" id="forgot-overlay" onclick="closeForgotPassword(event)">
+  <div class="settings-modal">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <i class="fas fa-unlock-alt modal-icon"></i>
+        <div>
+          <h2 class="modal-title" id="forgot-title">Manage Security Question</h2>
+          <p class="modal-sub" id="forgot-sub">Set or update your recovery question</p>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeForgotPassword()"><i class="fas fa-times"></i></button>
+    </div>
+
+    <!-- STEP: Setup / update security question -->
+    <div id="forgot-step-setup" style="display:none">
+      <div class="modal-body">
+        <div class="forgot-info-banner" id="forgot-setup-banner">
+          <i class="fas fa-shield-alt"></i>
+          <div>
+            <strong>Set a Security Question</strong>
+            <p>This lets you reset your password from the login page if you ever forget it.</p>
+          </div>
+        </div>
+        <div class="settings-field">
+          <label><i class="fas fa-question"></i> Security Question</label>
+          <div class="settings-input-wrap">
+            <select id="setup-question" style="width:100%;padding:12px 16px;border:1.5px solid #E8D5C4;border-radius:10px;font-family:'Poppins',sans-serif;font-size:0.88rem;color:#3F2A1F;background:#F8F1EA;outline:none;transition:all 0.3s;">
+              <option value="">— Choose a question —</option>
+              <option>What is the name of your first pet?</option>
+              <option>What is your mother's maiden name?</option>
+              <option>What city were you born in?</option>
+              <option>What was the name of your first school?</option>
+              <option>What is your favorite childhood food?</option>
+            </select>
+          </div>
+          <p class="field-error" id="err-setup-q"></p>
+        </div>
+        <div class="settings-field">
+          <label><i class="fas fa-comment-dots"></i> Your Answer</label>
+          <div class="settings-input-wrap">
+            <input type="password" id="setup-answer" placeholder="Enter your answer (case-insensitive)" />
+            <span class="eye-toggle" onclick="toggleEye('setup-answer','eye-setup')"><i class="fas fa-eye" id="eye-setup"></i></span>
+          </div>
+          <p class="field-error" id="err-setup-a"></p>
+        </div>
+        <div class="success-banner" id="setup-success-banner">
+          <i class="fas fa-check-circle"></i> Security question saved!
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeForgotPassword()">Cancel</button>
+        <button class="btn-save" id="setup-save-btn" onclick="saveSecurityQuestion()">
+          <span class="save-text"><i class="fas fa-shield-alt"></i> Save Question</span>
+          <span class="save-spinner"></span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCWUJfDwLR5erpExZUoBWW7YJ-aDpT_zy0",
+    authDomain: "candn-bakery.firebaseapp.com",
+    databaseURL: "https://candn-bakery-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "candn-bakery"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+
+  // SHA-256 hash helper
+  async function hashPassword(password) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  // Fetch current password hash from Firebase
+  async function getStoredHash() {
+    const snapshot = await get(ref(db, 'password'));
+    return snapshot.exists() ? snapshot.val() : await hashPassword('digitaldealers');
+  }
+
+  window.openSettings = function() {
+    document.getElementById('settings-overlay').classList.add('open');
+    ['curr-pass','new-pass','confirm-pass'].forEach(id => {
+      const el = document.getElementById(id);
+      el.value = '';
+      el.classList.remove('field-err');
+    });
+    ['err-curr','err-new','err-confirm'].forEach(id => document.getElementById(id).textContent = '');
+    document.getElementById('success-banner').classList.remove('show');
+    document.getElementById('save-btn').classList.remove('loading');
+    document.getElementById('strength-bar').style.width = '0';
+    document.getElementById('strength-label').textContent = '';
+  }
+
+  window.closeSettings = function(e) {
+    if (e && e.target !== document.getElementById('settings-overlay')) return;
+    document.getElementById('settings-overlay').classList.remove('open');
+  }
+
+  window.toggleEye = function(inputId, iconId) {
+    const inp = document.getElementById(inputId);
+    const ico = document.getElementById(iconId);
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      ico.classList.replace('fa-eye','fa-eye-slash');
+    } else {
+      inp.type = 'password';
+      ico.classList.replace('fa-eye-slash','fa-eye');
+    }
+  }
+
+  window.checkStrength = function() {
+    const val = document.getElementById('new-pass').value;
+    const bar = document.getElementById('strength-bar');
+    const lbl = document.getElementById('strength-label');
+    let score = 0;
+    if (val.length >= 8) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    const levels = [
+      { pct:'0%',   color:'',        text:'' },
+      { pct:'25%',  color:'#e74c3c', text:'Weak' },
+      { pct:'50%',  color:'#f39c12', text:'Fair' },
+      { pct:'75%',  color:'#2ecc71', text:'Good' },
+      { pct:'100%', color:'#27ae60', text:'Strong' },
+    ];
+    const lvl = val.length === 0 ? levels[0] : levels[score] || levels[1];
+    bar.style.width = lvl.pct;
+    bar.style.background = lvl.color;
+    lbl.textContent = lvl.text;
+    lbl.style.color = lvl.color;
+  }
+
+  window.openForgotPassword = async function() {
+    document.getElementById('settings-overlay').classList.remove('open');
+    document.getElementById('forgot-overlay').classList.add('open');
+    ['forgot-step-setup'].forEach(id => document.getElementById(id).style.display = 'none');
+
+    // Load current question if any and pre-select it
+    document.getElementById('setup-question').value = '';
+    document.getElementById('setup-answer').value = '';
+    ['err-setup-q','err-setup-a'].forEach(id => document.getElementById(id).textContent = '');
+    document.getElementById('setup-success-banner').classList.remove('show');
+
+    try {
+      const snap = await get(ref(db, 'securityQuestion'));
+      if (snap.exists()) {
+        document.getElementById('forgot-title').textContent = 'Update Security Question';
+        document.getElementById('forgot-sub').textContent   = 'Change your recovery question or answer';
+        document.getElementById('forgot-setup-banner').innerHTML = '<i class="fas fa-pencil-alt"></i><div><strong>Update Security Question</strong><p>Your current question: <em>' + snap.val().question + '</em></p></div>';
+        // Try to pre-select the matching option
+        const sel = document.getElementById('setup-question');
+        for (let opt of sel.options) { if (opt.value === snap.val().question) { sel.value = snap.val().question; break; } }
+      } else {
+        document.getElementById('forgot-title').textContent = 'Set Security Question';
+        document.getElementById('forgot-sub').textContent   = 'Add a recovery question for your account';
+        document.getElementById('forgot-setup-banner').innerHTML = '<i class="fas fa-shield-alt"></i><div><strong>Set a Security Question</strong><p>This lets you reset your password from the login page if you ever forget it.</p></div>';
+      }
+    } catch(e) {}
+    document.getElementById('forgot-step-setup').style.display = 'block';
+  }
+
+  window.closeForgotPassword = function(e) {
+    if (e && e.target !== document.getElementById('forgot-overlay')) return;
+    document.getElementById('forgot-overlay').classList.remove('open');
+  }
+
+  window.saveSecurityQuestion = async function() {
+    const q = document.getElementById('setup-question').value.trim();
+    const a = document.getElementById('setup-answer').value.trim();
+    let valid = true;
+    document.getElementById('err-setup-q').textContent = '';
+    document.getElementById('err-setup-a').textContent = '';
+    if (!q) { document.getElementById('err-setup-q').textContent = 'Please select a question.'; valid = false; }
+    if (!a) { document.getElementById('err-setup-a').textContent = 'Please enter an answer.'; valid = false; }
+    if (!valid) return;
+    const btn = document.getElementById('setup-save-btn');
+    btn.classList.add('loading');
+    try {
+      const answerHash = await hashPassword(a.toLowerCase());
+      await set(ref(db, 'securityQuestion'), { question: q, answerHash });
+      btn.classList.remove('loading');
+      document.getElementById('setup-success-banner').classList.add('show');
+      setTimeout(() => { document.getElementById('forgot-overlay').classList.remove('open'); }, 1800);
+    } catch(err) {
+      btn.classList.remove('loading');
+      document.getElementById('err-setup-a').textContent = '⚠️ Failed to save. Check connection.';
+    }
+  }
+
+  window.savePassword = async function() {
+    let valid = true;
+    const curr = document.getElementById('curr-pass').value;
+    const newP = document.getElementById('new-pass').value;
+    const conf = document.getElementById('confirm-pass').value;
+
+    // Reset errors
+    ['curr-pass','new-pass','confirm-pass'].forEach(id => document.getElementById(id).classList.remove('field-err'));
+    ['err-curr','err-new','err-confirm'].forEach(id => document.getElementById(id).textContent = '');
+    document.getElementById('success-banner').classList.remove('show');
+
+    if (!curr) {
+      document.getElementById('curr-pass').classList.add('field-err');
+      document.getElementById('err-curr').textContent = 'Please enter your current password.';
+      valid = false;
+    }
+    if (!newP) {
+      document.getElementById('new-pass').classList.add('field-err');
+      document.getElementById('err-new').textContent = 'Please enter a new password.';
+      valid = false;
+    } else if (newP.length < 6) {
+      document.getElementById('new-pass').classList.add('field-err');
+      document.getElementById('err-new').textContent = 'Password must be at least 6 characters.';
+      valid = false;
+    }
+    if (!conf) {
+      document.getElementById('confirm-pass').classList.add('field-err');
+      document.getElementById('err-confirm').textContent = 'Please confirm your new password.';
+      valid = false;
+    } else if (conf !== newP) {
+      document.getElementById('confirm-pass').classList.add('field-err');
+      document.getElementById('err-confirm').textContent = 'Passwords do not match.';
+      valid = false;
+    }
+    if (!valid) return;
+
+    const btn = document.getElementById('save-btn');
+    btn.classList.add('loading');
+
+    try {
+      const storedHash   = await getStoredHash();
+      const currHash     = await hashPassword(curr);
+      const newHash      = await hashPassword(newP);
+
+      if (currHash !== storedHash) {
+        btn.classList.remove('loading');
+        document.getElementById('curr-pass').classList.add('field-err');
+        document.getElementById('err-curr').textContent = 'Current password is incorrect.';
+        return;
+      }
+      if (newHash === storedHash) {
+        btn.classList.remove('loading');
+        document.getElementById('new-pass').classList.add('field-err');
+        document.getElementById('err-new').textContent = 'New password must differ from current.';
+        return;
+      }
+
+      // Save hashed new password to Firebase
+      await set(ref(db, 'password'), newHash);
+
+      btn.classList.remove('loading');
+      document.getElementById('success-banner').classList.add('show');
+      ['curr-pass','new-pass','confirm-pass'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('strength-bar').style.width = '0';
+      document.getElementById('strength-label').textContent = '';
+
+    } catch (err) {
+      console.error('Firebase error:', err);
+      btn.classList.remove('loading');
+      document.getElementById('err-confirm').textContent = '⚠️ Failed to save. Check your connection.';
+    }
+  }
+</script>
 
 <div class="container">
   <div class="nav-tabs">
+    <a href="admin.html" class="nav-link"><i class="fas fa-home-line"></i> Home</a>
     <a href="sales.html" class="nav-link"><i class="fas fa-chart-line"></i> Sales</a>
     <a href="orders.html" class="nav-link"><i class="fas fa-shopping-bag"></i> Orders</a>
     <a href="schedule.html" class="nav-link"><i class="fas fa-calendar-alt"></i> Schedule</a>
@@ -91,6 +440,29 @@
   // Close on resize to desktop
   window.addEventListener('resize', () => { if (window.innerWidth > 768) closeDrawer(); });
 </script>
+
+<style>
+/* ── Forgot Password button in modal footer ── */
+.btn-forgot {
+  background: none; border: none; color: var(--primary);
+  font-family: 'Poppins', sans-serif; font-size: 0.8rem; font-weight: 600;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 0; text-decoration: underline; text-underline-offset: 3px;
+  opacity: 0.85; transition: opacity 0.2s;
+}
+.btn-forgot:hover { opacity: 1; }
+
+/* ── Info banner inside forgot modal ── */
+.forgot-info-banner {
+  display: flex; align-items: flex-start; gap: 14px;
+  background: #FFF8F0; border: 1.5px solid #E8C89A;
+  border-radius: 12px; padding: 14px 16px; margin-bottom: 20px;
+  color: #7A4F20; font-size: 0.84rem;
+}
+.forgot-info-banner i { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+.forgot-info-banner strong { display: block; margin-bottom: 3px; font-size: 0.88rem; }
+.forgot-info-banner p { margin: 0; opacity: 0.85; }
+</style>
 
 </body>
 </html>

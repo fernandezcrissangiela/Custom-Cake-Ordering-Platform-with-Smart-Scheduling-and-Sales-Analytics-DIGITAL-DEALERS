@@ -336,6 +336,10 @@
 <div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()"></div>
 <div class="mobile-drawer" id="mobile-drawer">
   <div class="drawer-inner">
+    <div class="drawer-header">
+      <span class="drawer-logo">C&amp;N <span>Bakery</span></span>
+      <button class="drawer-close" onclick="closeDrawer()" aria-label="Close menu"><i class="fas fa-times"></i></button>
+    </div>
     <span class="drawer-label">Navigation</span>
     <a href="sales.html"      class="drawer-link active"><i class="fas fa-chart-line"></i> Sales</a>
     <a href="orders.html"     class="drawer-link "><i class="fas fa-shopping-bag"></i> Orders</a>
@@ -343,6 +347,7 @@
     <a href="admin_menu.html" class="drawer-link "><i class="fas fa-birthday-cake"></i> Menu</a>
     <a href="history.html"    class="drawer-link "><i class="fas fa-history"></i> History</a>
     <div class="drawer-divider"></div>
+    <button class="drawer-settings" onclick="closeDrawer(); openSettings()"><i class="fas fa-cog"></i> Account Settings</button>
     <button class="drawer-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
   </div>
 </div>
@@ -376,13 +381,16 @@
     <span class="bar"></span>
     <span class="bar"></span>
   </button>
-  <button class="btn-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  <div class="header-actions">
+    <button class="btn-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
 </header>
 
 <div class="container">
 
   <!-- Navigation -->
   <div class="nav-tabs">
+    <a href="admin.html"      class="nav-link"><i class="fas fa-home-line"></i> Home</a>
     <a href="sales.html"    class="nav-link active"><i class="fas fa-chart-line"></i> Sales</a>
     <a href="orders.html"   class="nav-link"><i class="fas fa-shopping-bag"></i> Orders</a>
     <a href="schedule.html" class="nav-link"><i class="fas fa-calendar-alt"></i> Schedule</a>

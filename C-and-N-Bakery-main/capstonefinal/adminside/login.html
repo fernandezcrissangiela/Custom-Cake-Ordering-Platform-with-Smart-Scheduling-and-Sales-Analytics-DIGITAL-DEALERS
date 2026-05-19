@@ -364,6 +364,12 @@
     <p class="error-msg" id="error-msg">
       <i class="fas fa-exclamation-circle"></i> Incorrect password. Please try again.
     </p>
+    <!-- Appears after first failed attempt -->
+    <p class="forgot-hint" id="forgot-hint">
+      <button class="btn-forgot-link" onclick="openForgotModal()">
+        <i class="fas fa-question-circle"></i> Forgot your password?
+      </button>
+    </p>
   </div>
 
   <button class="btn-login" id="login-btn" onclick="attemptLogin()">
@@ -377,18 +383,321 @@
   </div>
 </div>
 
-<script>
-  // If already logged in, skip straight to dashboard
+<!-- ========== FORGOT PASSWORD MODAL ========== -->
+<div class="fp-overlay" id="fp-overlay" onclick="closeForgotModal(event)">
+  <div class="fp-modal">
+
+    <!-- Header (shared) -->
+    <div class="fp-header">
+      <div class="fp-title-group">
+        <div class="fp-icon-wrap"><i class="fas fa-unlock-alt"></i></div>
+        <div>
+          <h2 class="fp-title" id="fp-title">Reset Password</h2>
+          <p class="fp-sub" id="fp-sub">Answer your security question to continue</p>
+        </div>
+      </div>
+      <button class="fp-close" onclick="closeForgotModal()"><i class="fas fa-times"></i></button>
+    </div>
+
+    <!-- STEP: No security question set -->
+    <div id="fp-step-noq" style="display:none">
+      <div class="fp-body">
+        <div class="fp-info-banner warn">
+          <i class="fas fa-exclamation-triangle"></i>
+          <div>
+            <strong>No Security Question Set</strong>
+            <p>A security question hasn't been configured yet. Please contact whoever set up this admin account, or log in and set one via Account Settings.</p>
+          </div>
+        </div>
+      </div>
+      <div class="fp-footer">
+        <button class="fp-btn-cancel" onclick="closeForgotModal()">Close</button>
+      </div>
+    </div>
+
+    <!-- STEP: Answer security question -->
+    <div id="fp-step-answer" style="display:none">
+      <div class="fp-body">
+        <div class="fp-field">
+          <label><i class="fas fa-question-circle"></i> Security Question</label>
+          <div class="fp-question-display" id="fp-display-question"></div>
+        </div>
+        <div class="fp-field">
+          <label><i class="fas fa-comment-dots"></i> Your Answer</label>
+          <div class="fp-input-wrap">
+            <input type="password" id="fp-answer" placeholder="Enter your answer" onkeydown="if(event.key==='Enter') fpVerifyAnswer()" />
+            <span class="fp-eye" onclick="fpToggleEye('fp-answer','fp-eye1')"><i class="fas fa-eye" id="fp-eye1"></i></span>
+          </div>
+          <p class="fp-error" id="fp-err-answer"></p>
+        </div>
+      </div>
+      <div class="fp-footer">
+        <button class="fp-btn-cancel" onclick="closeForgotModal()">Cancel</button>
+        <button class="fp-btn-primary" id="fp-verify-btn" onclick="fpVerifyAnswer()">
+          <span class="fp-btn-text"><i class="fas fa-arrow-right"></i> Verify Answer</span>
+          <span class="fp-spinner"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP: Set new password -->
+    <div id="fp-step-reset" style="display:none">
+      <div class="fp-body">
+        <div class="fp-info-banner success">
+          <i class="fas fa-check-circle"></i>
+          <div><strong>Identity Verified!</strong><p>You can now set a new password.</p></div>
+        </div>
+        <div class="fp-field">
+          <label><i class="fas fa-key"></i> New Password</label>
+          <div class="fp-input-wrap">
+            <input type="password" id="fp-new-pass" placeholder="Enter new password" oninput="fpCheckStrength()" />
+            <span class="fp-eye" onclick="fpToggleEye('fp-new-pass','fp-eye2')"><i class="fas fa-eye" id="fp-eye2"></i></span>
+          </div>
+          <div class="fp-strength-wrap"><div class="fp-strength-bar" id="fp-strength-bar"></div></div>
+          <p class="fp-strength-label" id="fp-strength-label"></p>
+          <p class="fp-error" id="fp-err-new"></p>
+        </div>
+        <div class="fp-field">
+          <label><i class="fas fa-check-double"></i> Confirm New Password</label>
+          <div class="fp-input-wrap">
+            <input type="password" id="fp-confirm-pass" placeholder="Re-enter new password" onkeydown="if(event.key==='Enter') fpResetPassword()" />
+            <span class="fp-eye" onclick="fpToggleEye('fp-confirm-pass','fp-eye3')"><i class="fas fa-eye" id="fp-eye3"></i></span>
+          </div>
+          <p class="fp-error" id="fp-err-confirm"></p>
+        </div>
+        <div class="fp-success-banner" id="fp-success-banner">
+          <i class="fas fa-check-circle"></i> Password reset! Redirecting to login…
+        </div>
+      </div>
+      <div class="fp-footer">
+        <button class="fp-btn-cancel" onclick="closeForgotModal()">Cancel</button>
+        <button class="fp-btn-primary" id="fp-reset-btn" onclick="fpResetPassword()">
+          <span class="fp-btn-text"><i class="fas fa-save"></i> Reset Password</span>
+          <span class="fp-spinner"></span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<style>
+  /* ── Forgot hint ── */
+  .forgot-hint {
+    margin-top: 10px;
+    display: none; /* shown via JS after first fail */
+    animation: fadeSlideIn 0.4s ease;
+  }
+  .forgot-hint.visible { display: block; }
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .btn-forgot-link {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 0;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: opacity 0.2s;
+  }
+  .btn-forgot-link:hover { opacity: 0.75; }
+
+  /* ── Modal overlay ── */
+  .fp-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(30,15,5,0.55);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .fp-overlay.open { display: flex; }
+
+  .fp-modal {
+    background: #fff;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 460px;
+    box-shadow: 0 24px 80px rgba(63,42,31,0.28);
+    animation: fpIn 0.35s cubic-bezier(0.22,1,0.36,1);
+    overflow: hidden;
+  }
+  @keyframes fpIn {
+    from { opacity:0; transform: scale(0.92) translateY(20px); }
+    to   { opacity:1; transform: scale(1) translateY(0); }
+  }
+
+  /* Header */
+  .fp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 26px 18px;
+    border-bottom: 1px solid #F0E0D2;
+    background: linear-gradient(135deg,#FBF5F0,#fff);
+  }
+  .fp-title-group { display: flex; align-items: center; gap: 14px; }
+  .fp-icon-wrap {
+    font-size: 1.4rem; color: #825A3C;
+    background: #F0E0D2; width: 46px; height: 46px;
+    border-radius: 13px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .fp-title { font-size: 1.1rem; font-weight: 700; color: #3F2A1F; margin: 0; }
+  .fp-sub   { font-size: 0.78rem; color: #9A7B6A; margin: 2px 0 0; }
+  .fp-close {
+    background: none; border: none; cursor: pointer;
+    color: #9A7B6A; font-size: 1rem;
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .fp-close:hover { background: #F0E0D2; color: #3F2A1F; }
+
+  /* Body */
+  .fp-body { padding: 22px 26px 8px; }
+  .fp-field { margin-bottom: 18px; }
+  .fp-field label {
+    display: block; font-size: 0.76rem; font-weight: 600;
+    color: #704233; text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 8px;
+  }
+  .fp-field label i { margin-right: 6px; opacity: 0.7; }
+  .fp-input-wrap { position: relative; }
+  .fp-input-wrap input {
+    width: 100%; padding: 12px 42px 12px 16px;
+    border: 1.5px solid #E8D5C4; border-radius: 10px;
+    font-family: 'Poppins', sans-serif; font-size: 0.92rem;
+    color: #3F2A1F; background: #F8F1EA; outline: none; transition: all 0.3s;
+  }
+  .fp-input-wrap input:focus {
+    border-color: #825A3C; background: #fff;
+    box-shadow: 0 0 0 4px rgba(130,90,60,0.10);
+  }
+  .fp-eye {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    cursor: pointer; color: #9A7B6A; font-size: 0.88rem; transition: color 0.2s;
+  }
+  .fp-eye:hover { color: #825A3C; }
+  .fp-error { color: #c0392b; font-size: 0.78rem; margin-top: 5px; min-height: 16px; font-weight: 500; }
+  .fp-question-display {
+    background: #F8F1EA; border: 1.5px solid #E8D5C4;
+    border-radius: 10px; padding: 12px 16px;
+    font-size: 0.9rem; color: #704233; font-weight: 600;
+  }
+
+  /* Strength bar */
+  .fp-strength-wrap { height: 4px; background: #E8D5C4; border-radius: 4px; margin-top: 8px; overflow: hidden; }
+  .fp-strength-bar  { height: 100%; border-radius: 4px; width: 0; transition: width 0.4s, background 0.4s; }
+  .fp-strength-label { font-size: 0.75rem; margin-top: 4px; font-weight: 500; min-height: 14px; }
+
+  /* Info banners */
+  .fp-info-banner {
+    display: flex; gap: 14px; align-items: flex-start;
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 16px;
+    font-size: 0.84rem;
+  }
+  .fp-info-banner.warn  { background: #FFF8F0; border: 1.5px solid #E8C89A; color: #7A4F20; }
+  .fp-info-banner.success { background: #e8f8f0; border: 1.5px solid #6fcf97; color: #1e7d4a; }
+  .fp-info-banner i { font-size: 1.25rem; flex-shrink: 0; margin-top: 2px; }
+  .fp-info-banner strong { display: block; margin-bottom: 3px; font-size: 0.88rem; }
+  .fp-info-banner p { margin: 0; opacity: 0.85; }
+
+  /* Success banner */
+  .fp-success-banner {
+    display: none; background: #e8f8f0; border: 1.5px solid #6fcf97;
+    border-radius: 10px; padding: 12px 16px; color: #1e7d4a;
+    font-size: 0.88rem; font-weight: 600; align-items: center; gap: 8px; margin-bottom: 8px;
+  }
+  .fp-success-banner.show { display: flex; }
+
+  /* Footer */
+  .fp-footer {
+    padding: 14px 26px 22px; display: flex; justify-content: flex-end; gap: 10px;
+  }
+  .fp-btn-cancel {
+    padding: 10px 20px; border: 1.5px solid #E8D5C4; background: #F8F1EA;
+    border-radius: 10px; color: #704233; font-family: 'Poppins',sans-serif;
+    font-size: 0.86rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+  }
+  .fp-btn-cancel:hover { background: #F0E0D2; }
+  .fp-btn-primary {
+    padding: 10px 22px; background: linear-gradient(135deg,#5C3F2A,#4A321F);
+    color: #fff; border: none; border-radius: 10px; font-family: 'Poppins',sans-serif;
+    font-size: 0.86rem; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 6px 20px rgba(92,63,42,0.3); transition: all 0.3s;
+    min-width: 140px; justify-content: center;
+  }
+  .fp-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(92,63,42,0.4); }
+  .fp-spinner {
+    display: none; width: 15px; height: 15px;
+    border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff;
+    border-radius: 50%; animation: fpSpin 0.7s linear infinite;
+  }
+  @keyframes fpSpin { to { transform: rotate(360deg); } }
+  .fp-btn-primary.loading .fp-btn-text { display: none; }
+  .fp-btn-primary.loading .fp-spinner  { display: block; }
+</style>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCWUJfDwLR5erpExZUoBWW7YJ-aDpT_zy0",
+    authDomain: "candn-bakery.firebaseapp.com",
+    databaseURL: "https://candn-bakery-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "candn-bakery"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+
+  async function hashPassword(password) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  // Auto-migrate plain text password
+  async function migratePasswordIfNeeded() {
+    try {
+      const snapshot = await get(ref(db, 'password'));
+      if (snapshot.exists()) {
+        const val = snapshot.val();
+        if (val.length !== 64) {
+          await set(ref(db, 'password'), await hashPassword(val));
+        }
+      }
+    } catch (err) { console.error('Migration error:', err); }
+  }
+  migratePasswordIfNeeded();
+
   if (sessionStorage.getItem('adminLoggedIn') === 'true') {
     window.location.replace('admin.html');
   }
 
-  function attemptLogin() {
+  let failedAttempts = 0;
+
+  window.attemptLogin = async function() {
     const input  = document.getElementById('admin-pass');
     const errMsg = document.getElementById('error-msg');
     const btn    = document.getElementById('login-btn');
 
-    // Reset error state
     input.classList.remove('error');
     errMsg.classList.remove('visible');
 
@@ -398,11 +707,14 @@
       return;
     }
 
-    // Show loading
     btn.classList.add('loading');
 
-    setTimeout(() => {
-      if (input.value === "digitaldealers") {
+    try {
+      const snapshot = await get(ref(db, 'password'));
+      const storedHash = snapshot.exists() ? snapshot.val() : await hashPassword('digitaldealers');
+      const inputHash  = await hashPassword(input.value);
+
+      if (inputHash === storedHash) {
         sessionStorage.setItem('adminLoggedIn', 'true');
         window.location.replace('admin.html');
       } else {
@@ -411,11 +723,22 @@
         errMsg.classList.add('visible');
         input.value = '';
         input.focus();
+        failedAttempts++;
+        // Show "Forgot Password?" after first failed attempt
+        if (failedAttempts >= 1) {
+          document.getElementById('forgot-hint').classList.add('visible');
+        }
       }
-    }, 600);
+    } catch (err) {
+      console.error('Firebase error:', err);
+      btn.classList.remove('loading');
+      input.classList.add('error');
+      errMsg.textContent = '⚠️ Connection error. Please try again.';
+      errMsg.classList.add('visible');
+    }
   }
 
-  function togglePassword() {
+  window.togglePassword = function() {
     const input = document.getElementById('admin-pass');
     const icon  = document.getElementById('eye-icon');
     if (input.type === 'password') {
@@ -424,6 +747,137 @@
     } else {
       input.type = 'password';
       icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+  }
+
+  // ── Forgot Password Modal ─────────────────────────────────────
+
+  window.openForgotModal = async function() {
+    document.getElementById('fp-overlay').classList.add('open');
+    // Reset all steps
+    ['fp-step-noq','fp-step-answer','fp-step-reset'].forEach(id => document.getElementById(id).style.display = 'none');
+    document.getElementById('fp-title').textContent = 'Reset Password';
+    document.getElementById('fp-sub').textContent   = 'Answer your security question to continue';
+
+    try {
+      const snap = await get(ref(db, 'securityQuestion'));
+      if (!snap.exists()) {
+        document.getElementById('fp-title').textContent = 'No Recovery Set Up';
+        document.getElementById('fp-sub').textContent   = 'Security question not configured';
+        document.getElementById('fp-step-noq').style.display = 'block';
+      } else {
+        document.getElementById('fp-display-question').textContent = snap.val().question;
+        document.getElementById('fp-answer').value = '';
+        document.getElementById('fp-err-answer').textContent = '';
+        document.getElementById('fp-step-answer').style.display = 'block';
+        setTimeout(() => document.getElementById('fp-answer').focus(), 100);
+      }
+    } catch(err) {
+      document.getElementById('fp-title').textContent = 'Connection Error';
+      document.getElementById('fp-step-noq').style.display = 'block';
+    }
+  }
+
+  window.closeForgotModal = function(e) {
+    if (e && e.target !== document.getElementById('fp-overlay')) return;
+    document.getElementById('fp-overlay').classList.remove('open');
+  }
+
+  window.fpToggleEye = function(inputId, iconId) {
+    const inp = document.getElementById(inputId);
+    const ico = document.getElementById(iconId);
+    inp.type === 'password'
+      ? (inp.type = 'text',     ico.classList.replace('fa-eye','fa-eye-slash'))
+      : (inp.type = 'password', ico.classList.replace('fa-eye-slash','fa-eye'));
+  }
+
+  window.fpVerifyAnswer = async function() {
+    const answer = document.getElementById('fp-answer').value.trim();
+    document.getElementById('fp-err-answer').textContent = '';
+    if (!answer) { document.getElementById('fp-err-answer').textContent = 'Please enter your answer.'; return; }
+
+    const btn = document.getElementById('fp-verify-btn');
+    btn.classList.add('loading');
+    try {
+      const snap       = await get(ref(db, 'securityQuestion'));
+      const inputHash  = await hashPassword(answer.toLowerCase());
+      if (inputHash !== snap.val().answerHash) {
+        btn.classList.remove('loading');
+        document.getElementById('fp-err-answer').textContent = 'Incorrect answer. Please try again.';
+        return;
+      }
+      btn.classList.remove('loading');
+      document.getElementById('fp-step-answer').style.display = 'none';
+      document.getElementById('fp-step-reset').style.display  = 'block';
+      document.getElementById('fp-title').textContent = 'Set New Password';
+      document.getElementById('fp-sub').textContent   = 'Create a new password for your account';
+      document.getElementById('fp-new-pass').value = '';
+      document.getElementById('fp-confirm-pass').value = '';
+      document.getElementById('fp-success-banner').classList.remove('show');
+      document.getElementById('fp-strength-bar').style.width = '0';
+      document.getElementById('fp-strength-label').textContent = '';
+      setTimeout(() => document.getElementById('fp-new-pass').focus(), 100);
+    } catch(err) {
+      btn.classList.remove('loading');
+      document.getElementById('fp-err-answer').textContent = '⚠️ Verification failed. Check connection.';
+    }
+  }
+
+  window.fpCheckStrength = function() {
+    const val = document.getElementById('fp-new-pass').value;
+    const bar = document.getElementById('fp-strength-bar');
+    const lbl = document.getElementById('fp-strength-label');
+    let score = 0;
+    if (val.length >= 8) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    const levels = [
+      { pct:'0%', color:'', text:'' },
+      { pct:'25%', color:'#e74c3c', text:'Weak' },
+      { pct:'50%', color:'#f39c12', text:'Fair' },
+      { pct:'75%', color:'#2ecc71', text:'Good' },
+      { pct:'100%',color:'#27ae60', text:'Strong' },
+    ];
+    const lvl = val.length === 0 ? levels[0] : levels[score] || levels[1];
+    bar.style.width = lvl.pct; bar.style.background = lvl.color;
+    lbl.textContent = lvl.text; lbl.style.color = lvl.color;
+  }
+
+  window.fpResetPassword = async function() {
+    const newP = document.getElementById('fp-new-pass').value;
+    const conf = document.getElementById('fp-confirm-pass').value;
+    document.getElementById('fp-err-new').textContent = '';
+    document.getElementById('fp-err-confirm').textContent = '';
+    let valid = true;
+    if (!newP || newP.length < 6) {
+      document.getElementById('fp-err-new').textContent = newP ? 'Minimum 6 characters.' : 'Please enter a new password.';
+      valid = false;
+    }
+    if (!conf)       { document.getElementById('fp-err-confirm').textContent = 'Please confirm your password.'; valid = false; }
+    else if (conf !== newP) { document.getElementById('fp-err-confirm').textContent = 'Passwords do not match.'; valid = false; }
+    if (!valid) return;
+
+    const btn = document.getElementById('fp-reset-btn');
+    btn.classList.add('loading');
+    try {
+      await set(ref(db, 'password'), await hashPassword(newP));
+      btn.classList.remove('loading');
+      document.getElementById('fp-success-banner').classList.add('show');
+      btn.disabled = true;
+      setTimeout(() => {
+        document.getElementById('fp-overlay').classList.remove('open');
+        btn.disabled = false;
+        // Clear login field and reset failed counter
+        document.getElementById('admin-pass').value = '';
+        document.getElementById('error-msg').classList.remove('visible');
+        document.getElementById('admin-pass').classList.remove('error');
+        failedAttempts = 0;
+        document.getElementById('forgot-hint').classList.remove('visible');
+      }, 2200);
+    } catch(err) {
+      btn.classList.remove('loading');
+      document.getElementById('fp-err-confirm').textContent = '⚠️ Failed to reset. Check connection.';
     }
   }
 </script>
