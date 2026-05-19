@@ -436,7 +436,12 @@
   margin-top: 10px;
   font-size: 0.78rem;
   color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;  /* ← centers everything */
+  text-align: center;
 }
+
 .ref-photo-img {
   width: 100%;
   max-width: 240px;
@@ -446,6 +451,9 @@
   cursor: zoom-in;
   border: 1.5px solid var(--border);
   transition: transform 0.2s;
+  display: block;
+  margin-left: auto;   /* ← center the image */
+  margin-right: auto;
 }
 .ref-photo-img:hover { transform: scale(1.02); }
 
