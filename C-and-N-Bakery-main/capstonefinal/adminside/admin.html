@@ -3,49 +3,1124 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>C&N Bakery</title>
+  <title>C&N Bakery — Admin Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="../css/admin.css" />
+  <style>
+
+    /* ══════════════════════════════════════
+       DASHBOARD LAYOUT
+    ══════════════════════════════════════ */
+    .dashboard-greeting {
+      margin: 28px 0 24px;
+    }
+    .greeting-eyebrow {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--primary);
+      margin: 0 0 6px;
+    }
+    .dashboard-greeting h1 {
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: var(--brown);
+      margin: 0 0 4px;
+      line-height: 1.15;
+    }
+    .dashboard-greeting h1 span { color: var(--primary); }
+    .greeting-sub {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin: 0;
+    }
+
+    /* ── Stat cards grid ── */
+    .dash-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .dash-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 22px 20px 18px;
+      box-shadow: 0 2px 12px rgba(130,90,60,0.08);
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      border: 1.5px solid transparent;
+      transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+      position: relative;
+      overflow: hidden;
+    }
+    .dash-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: var(--card-accent, var(--primary));
+      border-radius: 16px 16px 0 0;
+    }
+    .dash-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 28px rgba(130,90,60,0.15);
+      border-color: var(--card-accent, var(--primary));
+    }
+
+    .dash-card-icon {
+      width: 42px; height: 42px;
+      border-radius: 12px;
+      background: var(--card-icon-bg, #F8F1EA);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.15rem;
+      color: var(--card-accent, var(--primary));
+    }
+    .dash-card-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    .dash-card-value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--brown);
+      line-height: 1;
+    }
+    .dash-card-sub {
+      font-size: 0.76rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 2px;
+    }
+    .dash-card-sub .badge-up   { color: #27ae60; }
+    .dash-card-sub .badge-warn { color: #e67e22; }
+    .dash-card-sub .badge-danger { color: #e74c3c; }
+
+    .dash-card-arrow {
+      position: absolute;
+      bottom: 16px; right: 16px;
+      font-size: 0.75rem;
+      color: var(--card-accent, var(--primary));
+      opacity: 0;
+      transform: translateX(-4px);
+      transition: opacity 0.18s, transform 0.18s;
+    }
+    .dash-card:hover .dash-card-arrow {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* card colour themes */
+    .card-orders   { --card-accent: #2980b9; --card-icon-bg: #e8f4fd; }
+    .card-schedule { --card-accent: #8e44ad; --card-icon-bg: #f3e9ff; }
+    .card-sales    { --card-accent: #27ae60; --card-icon-bg: #d5f5e3; }
+    .card-history  { --card-accent: #e67e22; --card-icon-bg: #fef5e7; }
+    .card-menu     { --card-accent: #c0392b; --card-icon-bg: #fdecea; }
+
+    /* ── Section titles ── */
+    .dash-section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--brown);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 14px;
+    }
+    .dash-section-title i { color: var(--primary); }
+
+    /* ── Today's Orders ── */
+    .today-section {
+      background: #fff;
+      border-radius: 16px;
+      padding: 22px 24px;
+      box-shadow: 0 2px 12px rgba(130,90,60,0.08);
+      margin-bottom: 22px;
+    }
+
+    .today-empty {
+      text-align: center;
+      padding: 22px 0 10px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+    .today-empty i {
+      font-size: 2rem;
+      display: block;
+      margin-bottom: 8px;
+      opacity: 0.35;
+    }
+
+    .today-order-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px dashed #EDE0D4;
+      cursor: pointer;
+      transition: padding-left 0.15s;
+    }
+    .today-order-row:last-child { border-bottom: none; }
+    .today-order-row:hover { padding-left: 6px; }
+
+    .today-order-avatar {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      background: #F8F1EA;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+    .today-order-info { flex: 1; min-width: 0; }
+    .today-order-name {
+      font-weight: 600;
+      font-size: 0.88rem;
+      color: var(--brown);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .today-order-meta {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .today-order-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .today-order-amount {
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: var(--brown);
+    }
+
+    /* status pill reuse */
+    .s-pill {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .s-pending   { background:#fef9c3; color:#92400e; }
+    .s-confirmed { background:#d1fae5; color:#065f46; }
+    .s-preparing { background:#dbeafe; color:#1e40af; }
+    .s-baking    { background:#ffedd5; color:#9a3412; }
+    .s-packing   { background:#ede9fe; color:#5b21b6; }
+    .s-delivery  { background:#e0f2fe; color:#0369a1; }
+    .s-completed { background:#dcfce7; color:#166534; }
+    .s-cancelled { background:#fee2e2; color:#991b1b; }
+
+    /* ── Downpayment Alerts ── */
+    .alerts-section {
+      background: #fff;
+      border-radius: 16px;
+      padding: 22px 24px;
+      box-shadow: 0 2px 12px rgba(130,90,60,0.08);
+      margin-bottom: 22px;
+    }
+
+    .dp-alert-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px dashed #EDE0D4;
+    }
+    .dp-alert-row:last-child { border-bottom: none; }
+    .dp-alert-icon {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      background: #fef5e7;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      color: #e67e22;
+      flex-shrink: 0;
+    }
+    .dp-alert-info { flex: 1; min-width: 0; }
+    .dp-alert-name {
+      font-weight: 600;
+      font-size: 0.88rem;
+      color: var(--brown);
+    }
+    .dp-alert-meta {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .dp-alert-days {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: #fef5e7;
+      color: #e67e22;
+      border: 1px solid #fbd89d;
+      flex-shrink: 0;
+    }
+    .dp-alert-days.urgent {
+      background: #fee2e2;
+      color: #c0392b;
+      border-color: #fca5a5;
+    }
+
+    /* ── Two-col bottom grid ── */
+    .dash-bottom-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 22px;
+    }
+    @media (max-width: 760px) {
+      .dash-bottom-grid { grid-template-columns: 1fr; }
+    }
+
+    .dash-mini-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px 22px;
+      box-shadow: 0 2px 12px rgba(130,90,60,0.08);
+    }
+
+    /* capacity bar */
+    .capacity-bar-wrap {
+      margin: 12px 0 6px;
+    }
+    .capacity-bar-track {
+      height: 10px;
+      background: #F0E6DC;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .capacity-bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      background: linear-gradient(90deg, #27ae60, #2ecc71);
+      transition: width 0.8s ease;
+    }
+    .capacity-bar-fill.warn  { background: linear-gradient(90deg, #e67e22, #f39c12); }
+    .capacity-bar-fill.full  { background: linear-gradient(90deg, #c0392b, #e74c3c); }
+    .capacity-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* recent completed mini list */
+    .mini-completed-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px dashed #EDE0D4;
+      font-size: 0.82rem;
+    }
+    .mini-completed-row:last-child { border-bottom: none; }
+    .mini-completed-name { color: var(--brown); font-weight: 500; }
+    .mini-completed-amount { color: var(--primary-dark, #825A3C); font-weight: 700; }
+
+    /* loading pulse */
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .loading-pulse { animation: pulse 1.2s infinite; color: var(--muted); font-size: 0.85rem; }
+
+    /* responsive */
+    @media (max-width: 600px) {
+      .dash-cards {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .dash-card {
+        padding: 14px 12px 12px;
+        gap: 7px;
+        border-radius: 12px;
+      }
+      .dash-card::before {
+        border-radius: 12px 12px 0 0;
+      }
+      .dash-card-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        font-size: 0.95rem;
+      }
+      .dash-card-label {
+        font-size: 0.68rem;
+        letter-spacing: 0.3px;
+      }
+      .dash-card-value {
+        font-size: 1.25rem;
+      }
+      .dash-card-sub {
+        font-size: 0.7rem;
+        gap: 3px;
+      }
+      .dashboard-greeting h1 { font-size: 1.2rem; }
+      .greeting-eyebrow { font-size: 0.7rem; }
+    }
+    @media (max-width: 380px) {
+      .dash-cards { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .dash-card { padding: 12px 10px 10px; }
+      .dash-card-label { font-size: 0.62rem; }
+      .dash-card-value { font-size: 1.1rem; }
+    }
+  </style>
 </head>
 <body>
 
-<!-- SESSION GUARD: Add this same block to the TOP of EVERY admin page -->
+<!-- ========== MOBILE DRAWER ========== -->
+<div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()"></div>
+<div class="mobile-drawer" id="mobile-drawer">
+  <div class="drawer-inner">
+    <span class="drawer-label">Navigation</span>
+    <a href="admin.html"      class="drawer-link active"><i class="fas fa-home"></i> Home</a>
+    <a href="sales.html"      class="drawer-link"><i class="fas fa-chart-line"></i> Sales</a>
+    <a href="orders.html"     class="drawer-link"><i class="fas fa-shopping-bag"></i> Orders</a>
+    <a href="schedule.html"   class="drawer-link"><i class="fas fa-calendar-alt"></i> Schedule</a>
+    <a href="admin_menu.html" class="drawer-link"><i class="fas fa-birthday-cake"></i> Menu</a>
+    <a href="history.html"    class="drawer-link"><i class="fas fa-history"></i> History</a>
+    <div class="drawer-divider"></div>
+    <button class="drawer-settings" onclick="closeDrawer(); openSettings()"><i class="fas fa-cog"></i> Account Settings</button>
+    <button class="drawer-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+</div>
+
+<!-- SESSION GUARD -->
 <script>
   if (sessionStorage.getItem('adminLoggedIn') !== 'true') {
     window.location.replace('login.html');
   }
 </script>
 
+<!-- ========== HEADER ========== -->
 <header>
   <a href="admin.html" class="logo-text">C&N <span>Bakery</span></a>
-  <button class="btn-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  <button class="btn-hamburger" id="hamburger-btn" onclick="toggleDrawer()" aria-label="Open menu">
+    <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+  </button>
+  <div class="header-actions">
+    <button class="btn-settings" onclick="openSettings()" title="Account Settings"><i class="fas fa-cog"></i></button>
+    <button class="btn-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
 </header>
 
-<div class="container">
-  <div class="nav-tabs">
-    <a href="sales.html" class="nav-link"><i class="fas fa-chart-line"></i> Sales</a>
-    <a href="orders.html" class="nav-link"><i class="fas fa-shopping-bag"></i> Orders</a>
-    <a href="schedule.html" class="nav-link"><i class="fas fa-calendar-alt"></i> Schedule</a>
-    <a href="admin_menu.html" class="nav-link"><i class="fas fa-birthday-cake"></i> Menu</a>
-    <a href="history.html" class="nav-link"><i class="fas fa-history"></i> History</a>
-  </div>
-
-  <div class="welcome-card">
-    <i class="fas fa-user-shield"></i>
-    <h1>Welcome to CandN Bakery</h1>
-    <p style="color: var(--muted); margin-top: 15px; font-size: 1.1rem;">
-      Your management hub is ready. Choose a module above to get started.
-    </p>
+<!-- ========== ACCOUNT SETTINGS MODAL ========== -->
+<div class="modal-overlay" id="settings-overlay" onclick="closeSettings(event)">
+  <div class="settings-modal">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <i class="fas fa-user-cog modal-icon"></i>
+        <div>
+          <h2 class="modal-title">Account Settings</h2>
+          <p class="modal-sub">Update your admin password</p>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeSettings()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="settings-field">
+        <label><i class="fas fa-lock"></i> Current Password</label>
+        <div class="settings-input-wrap">
+          <input type="password" id="curr-pass" placeholder="Enter current password" />
+          <span class="eye-toggle" onclick="toggleEye('curr-pass','eye1')"><i class="fas fa-eye" id="eye1"></i></span>
+        </div>
+        <p class="field-error" id="err-curr"></p>
+      </div>
+      <div class="settings-field">
+        <label><i class="fas fa-key"></i> New Password</label>
+        <div class="settings-input-wrap">
+          <input type="password" id="new-pass" placeholder="Enter new password" oninput="checkStrength()" />
+          <span class="eye-toggle" onclick="toggleEye('new-pass','eye2')"><i class="fas fa-eye" id="eye2"></i></span>
+        </div>
+        <div class="strength-bar-wrap" id="strength-wrap">
+          <div class="strength-bar" id="strength-bar"></div>
+        </div>
+        <p class="strength-label" id="strength-label"></p>
+        <p class="field-error" id="err-new"></p>
+      </div>
+      <div class="settings-field">
+        <label><i class="fas fa-check-double"></i> Confirm New Password</label>
+        <div class="settings-input-wrap">
+          <input type="password" id="confirm-pass" placeholder="Re-enter new password" />
+          <span class="eye-toggle" onclick="toggleEye('confirm-pass','eye3')"><i class="fas fa-eye" id="eye3"></i></span>
+        </div>
+        <p class="field-error" id="err-confirm"></p>
+      </div>
+      <div class="success-banner" id="success-banner">
+        <i class="fas fa-check-circle"></i> Password updated successfully!
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-forgot" onclick="openForgotPassword()"><i class="fas fa-question-circle"></i> Forgot Password?</button>
+      <div style="flex:1"></div>
+      <button class="btn-cancel" onclick="closeSettings()">Cancel</button>
+      <button class="btn-save" id="save-btn" onclick="savePassword()">
+        <span class="save-text"><i class="fas fa-save"></i> Save Changes</span>
+        <span class="save-spinner"></span>
+      </button>
+    </div>
   </div>
 </div>
 
+<!-- ========== FORGOT PASSWORD MODAL ========== -->
+<div class="modal-overlay" id="forgot-overlay" onclick="closeForgotPassword(event)">
+  <div class="settings-modal">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <i class="fas fa-unlock-alt modal-icon"></i>
+        <div>
+          <h2 class="modal-title" id="forgot-title">Manage Security Question</h2>
+          <p class="modal-sub" id="forgot-sub">Set or update your recovery question</p>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeForgotPassword()"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="forgot-step-setup" style="display:none">
+      <div class="modal-body">
+        <div class="forgot-info-banner" id="forgot-setup-banner">
+          <i class="fas fa-shield-alt"></i>
+          <div>
+            <strong>Set a Security Question</strong>
+            <p>This lets you reset your password from the login page if you ever forget it.</p>
+          </div>
+        </div>
+        <div class="settings-field">
+          <label><i class="fas fa-question"></i> Security Question</label>
+          <div class="settings-input-wrap">
+            <select id="setup-question" style="width:100%;padding:12px 16px;border:1.5px solid #E8D5C4;border-radius:10px;font-family:'Poppins',sans-serif;font-size:0.88rem;color:#3F2A1F;background:#F8F1EA;outline:none;transition:all 0.3s;">
+              <option value="">— Choose a question —</option>
+              <option>What is the name of your first pet?</option>
+              <option>What is your mother's maiden name?</option>
+              <option>What city were you born in?</option>
+              <option>What was the name of your first school?</option>
+              <option>What is your favorite childhood food?</option>
+            </select>
+          </div>
+          <p class="field-error" id="err-setup-q"></p>
+        </div>
+        <div class="settings-field">
+          <label><i class="fas fa-comment-dots"></i> Your Answer</label>
+          <div class="settings-input-wrap">
+            <input type="password" id="setup-answer" placeholder="Enter your answer (case-insensitive)" />
+            <span class="eye-toggle" onclick="toggleEye('setup-answer','eye-setup')"><i class="fas fa-eye" id="eye-setup"></i></span>
+          </div>
+          <p class="field-error" id="err-setup-a"></p>
+        </div>
+        <div class="success-banner" id="setup-success-banner">
+          <i class="fas fa-check-circle"></i> Security question saved!
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeForgotPassword()">Cancel</button>
+        <button class="btn-save" id="setup-save-btn" onclick="saveSecurityQuestion()">
+          <span class="save-text"><i class="fas fa-shield-alt"></i> Save Question</span>
+          <span class="save-spinner"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MAIN CONTAINER ========== -->
+<div class="container">
+  <div class="nav-tabs">
+    <a href="admin.html"      class="nav-link active"><i class="fas fa-home"></i> Home</a>
+    <a href="sales.html"      class="nav-link"><i class="fas fa-chart-line"></i> Sales</a>
+    <a href="orders.html"     class="nav-link"><i class="fas fa-shopping-bag"></i> Orders</a>
+    <a href="schedule.html"   class="nav-link"><i class="fas fa-calendar-alt"></i> Schedule</a>
+    <a href="admin_menu.html" class="nav-link"><i class="fas fa-birthday-cake"></i> Menu</a>
+    <a href="history.html"    class="nav-link"><i class="fas fa-history"></i> History</a>
+  </div>
+
+  <!-- Greeting -->
+  <div class="dashboard-greeting">
+    <p class="greeting-eyebrow" id="greeting-date">Loading date…</p>
+    <h1>Dashboard <span>Overview</span></h1>
+    <p class="greeting-sub">Here's what's happening at C&amp;N Bakery today.</p>
+  </div>
+
+  <!-- ── Summary Cards ── -->
+  <div class="dash-cards">
+
+    <a href="orders.html" class="dash-card card-orders">
+      <div class="dash-card-icon"><i class="fas fa-shopping-bag"></i></div>
+      <div>
+        <div class="dash-card-label">Orders</div>
+        <div class="dash-card-value" id="card-orders-count"><span class="loading-pulse">…</span></div>
+        <div class="dash-card-sub" id="card-orders-sub"><span class="loading-pulse">Loading…</span></div>
+      </div>
+      <i class="fas fa-arrow-right dash-card-arrow"></i>
+    </a>
+
+    <a href="schedule.html" class="dash-card card-schedule">
+      <div class="dash-card-icon"><i class="fas fa-calendar-alt"></i></div>
+      <div>
+        <div class="dash-card-label">Schedule</div>
+        <div class="dash-card-value" id="card-schedule-count"><span class="loading-pulse">…</span></div>
+        <div class="dash-card-sub" id="card-schedule-sub"><span class="loading-pulse">Loading…</span></div>
+      </div>
+      <i class="fas fa-arrow-right dash-card-arrow"></i>
+    </a>
+
+    <a href="sales.html" class="dash-card card-sales">
+      <div class="dash-card-icon"><i class="fas fa-peso-sign"></i></div>
+      <div>
+        <div class="dash-card-label">This Month's Revenue</div>
+        <div class="dash-card-value" id="card-sales-amount"><span class="loading-pulse">…</span></div>
+        <div class="dash-card-sub" id="card-sales-sub"><span class="loading-pulse">Loading…</span></div>
+      </div>
+      <i class="fas fa-arrow-right dash-card-arrow"></i>
+    </a>
+
+    <a href="history.html" class="dash-card card-history">
+      <div class="dash-card-icon"><i class="fas fa-history"></i></div>
+      <div>
+        <div class="dash-card-label">Total Completed</div>
+        <div class="dash-card-value" id="card-history-count"><span class="loading-pulse">…</span></div>
+        <div class="dash-card-sub" id="card-history-sub"><span class="loading-pulse">Loading…</span></div>
+      </div>
+      <i class="fas fa-arrow-right dash-card-arrow"></i>
+    </a>
+
+    <a href="admin_menu.html" class="dash-card card-menu">
+      <div class="dash-card-icon"><i class="fas fa-birthday-cake"></i></div>
+      <div>
+        <div class="dash-card-label">Menu Items</div>
+        <div class="dash-card-value" id="card-menu-count"><span class="loading-pulse">…</span></div>
+        <div class="dash-card-sub" id="card-menu-sub"><span class="loading-pulse">Loading…</span></div>
+      </div>
+      <i class="fas fa-arrow-right dash-card-arrow"></i>
+    </a>
+
+  </div>
+
+  <!-- ── Downpayment Alerts ── -->
+  <div class="alerts-section" id="dp-alerts-section" style="display:none;">
+    <div class="dash-section-title">
+      <i class="fas fa-exclamation-triangle" style="color:#e67e22;"></i>
+      Downpayment Alerts
+      <span id="dp-alert-count" style="background:#fef5e7;color:#e67e22;border:1px solid #fbd89d;border-radius:20px;padding:1px 10px;font-size:0.72rem;font-weight:700;margin-left:4px;"></span>
+    </div>
+    <div id="dp-alerts-list"></div>
+  </div>
+
+  <!-- ── Today's Orders ── -->
+  <div class="today-section">
+    <div class="dash-section-title">
+      <i class="fas fa-clock"></i> Today's Orders
+      <span id="today-count-badge" style="background:#F8F1EA;color:var(--primary);border-radius:20px;padding:1px 10px;font-size:0.72rem;font-weight:700;margin-left:4px;"></span>
+    </div>
+    <div id="today-orders-list">
+      <div class="loading-pulse" style="text-align:center;padding:16px 0;">
+        <i class="fas fa-spinner fa-spin"></i> Loading…
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Bottom Two-column ── -->
+  <div class="dash-bottom-grid">
+
+    <!-- Today's capacity -->
+    <div class="dash-mini-card">
+      <div class="dash-section-title"><i class="fas fa-calendar-check"></i> Today's Capacity</div>
+      <div class="capacity-bar-wrap">
+        <div class="capacity-bar-track">
+          <div class="capacity-bar-fill" id="capacity-bar-fill" style="width:0%"></div>
+        </div>
+        <div class="capacity-bar-label">
+          <span id="capacity-label-left">0 / 3 slots used</span>
+          <span id="capacity-label-right">3 remaining</span>
+        </div>
+      </div>
+      <p id="capacity-status-text" style="font-size:0.8rem;color:var(--muted);margin:8px 0 0;"></p>
+    </div>
+
+    <!-- Recent completed orders -->
+    <div class="dash-mini-card">
+      <div class="dash-section-title"><i class="fas fa-check-circle"></i> Recent Completed</div>
+      <div id="recent-completed-list">
+        <div class="loading-pulse" style="font-size:0.82rem;padding:8px 0;">
+          <i class="fas fa-spinner fa-spin"></i> Loading…
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div><!-- /container -->
+
+
+<!-- ========== FIREBASE SCRIPTS ========== -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCWUJfDwLR5erpExZUoBWW7YJ-aDpT_zy0",
+    authDomain: "candn-bakery.firebaseapp.com",
+    databaseURL: "https://candn-bakery-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "candn-bakery"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+
+  const MAX_PER_DAY = 3;
+
+  /* ── helpers ── */
+  async function hashPassword(password) {
+    const data = new TextEncoder().encode(password);
+    const buf  = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+
+  async function getStoredHash() {
+    const snap = await get(ref(db, 'password'));
+    return snap.exists() ? snap.val() : await hashPassword('digitaldealers');
+  }
+
+  function todayStr() {
+    const n = new Date();
+    return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+  }
+
+  function hasCustomItem(order) {
+    const items = Array.isArray(order.items) ? order.items : Object.values(order.items || {});
+    return items.some(i => {
+      const cat  = (i.category || '').toLowerCase();
+      const name = (i.name     || '').toLowerCase();
+      return cat.includes('custom') || name.includes('custom');
+    });
+  }
+
+  function needsDownpaymentReminder(order) {
+    if (!hasCustomItem(order)) return false;
+    const ps = (order.paymentStatus || '').toLowerCase();
+    if (ps === 'partial' || ps === 'paid') return false;
+    const today     = new Date(); today.setHours(0,0,0,0);
+    const orderDate = new Date((order.date || '') + 'T00:00:00');
+    const diff = Math.ceil((orderDate - today) / 86400000);
+    return diff >= 0 && diff <= 3;
+  }
+
+  /* ── greeting date ── */
+  const now = new Date();
+  document.getElementById('greeting-date').textContent =
+    now.toLocaleDateString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+  /* ── status pill ── */
+  function statusPill(status) {
+    return `<span class="s-pill s-${status}">${status}</span>`;
+  }
+
+  /* ── LIVE DATA ── */
+  onValue(ref(db, 'orders'), (snapshot) => {
+    const orders  = snapshot.val() || {};
+    const entries = Object.entries(orders);
+    const today   = todayStr();
+
+    /* compute buckets */
+    const pending   = entries.filter(([,o]) => (o.status||'').toLowerCase() === 'pending');
+    const active    = entries.filter(([,o]) => !['pending','cancelled','completed'].includes((o.status||'').toLowerCase()));
+    const todayOrds = entries.filter(([,o]) => o.date === today && !['cancelled'].includes((o.status||'').toLowerCase()));
+    const completed = entries.filter(([,o]) => (o.status||'').toLowerCase() === 'completed');
+    const cancelled = entries.filter(([,o]) => (o.status||'').toLowerCase() === 'cancelled');
+    const dpAlerts  = entries.filter(([,o]) => needsDownpaymentReminder(o));
+
+    /* this month revenue */
+    const nm = now.getFullYear(), mm = now.getMonth();
+    const monthRev = completed
+      .filter(([,o]) => {
+        const d = new Date(o.completedAt || o.createdAt || 0);
+        return d.getFullYear() === nm && d.getMonth() === mm;
+      })
+      .reduce((s, [,o]) => s + (parseFloat(o.totalAmount) || 0), 0);
+
+    /* ── Orders card ── */
+    document.getElementById('card-orders-count').textContent = pending.length + active.length;
+    document.getElementById('card-orders-sub').innerHTML =
+      `<span class="badge-warn"><i class="fas fa-pause-circle"></i> ${pending.length} new</span>
+       &nbsp;·&nbsp; ${active.length} active`;
+
+    /* ── Schedule card ── */
+    document.getElementById('card-schedule-count').textContent = `${todayOrds.length} / ${MAX_PER_DAY}`;
+    const remaining = Math.max(0, MAX_PER_DAY - todayOrds.length);
+    const schedClass = todayOrds.length >= MAX_PER_DAY ? 'badge-danger' : (todayOrds.length === MAX_PER_DAY-1 ? 'badge-warn' : 'badge-up');
+    document.getElementById('card-schedule-sub').innerHTML =
+      `<span class="${schedClass}"><i class="fas fa-calendar-day"></i> ${remaining} slot${remaining!==1?'s':''} left today</span>`;
+
+    /* ── Sales card ── */
+    document.getElementById('card-sales-amount').textContent = `₱${monthRev.toLocaleString('en-PH')}`;
+    document.getElementById('card-sales-sub').innerHTML =
+      `<span class="badge-up"><i class="fas fa-check-circle"></i> ${completed.length} total orders completed</span>`;
+
+    /* ── History card ── */
+    document.getElementById('card-history-count').textContent = completed.length + cancelled.length;
+    document.getElementById('card-history-sub').innerHTML =
+      `<i class="fas fa-check-circle" style="color:#27ae60;"></i> ${completed.length} completed
+       &nbsp;·&nbsp;
+       <i class="fas fa-times-circle" style="color:#e74c3c;"></i> ${cancelled.length} cancelled`;
+
+    /* ── Today's orders list ── */
+    const todayEl = document.getElementById('today-orders-list');
+    document.getElementById('today-count-badge').textContent = todayOrds.length;
+    if (todayOrds.length === 0) {
+      todayEl.innerHTML = `
+        <div class="today-empty">
+          <i class="fas fa-calendar-check"></i>
+          <p>No orders scheduled for today.</p>
+        </div>`;
+    } else {
+      const statusIcons = {
+        pending:'pause-circle', confirmed:'check-circle', preparing:'utensils',
+        baking:'fire-burner', packing:'box', delivery:'truck', completed:'check-double'
+      };
+      todayEl.innerHTML = todayOrds.map(([id, o]) => {
+        const st      = (o.status || 'pending').toLowerCase();
+        const items   = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
+        const summary = items.slice(0,2).map(i=>`${i.quantity||1}× ${i.name}`).join(', ')
+                      + (items.length > 2 ? ` +${items.length-2} more` : '');
+        const icon    = statusIcons[st] || 'box';
+        return `
+          <a href="orders.html" class="today-order-row" style="text-decoration:none;">
+            <div class="today-order-avatar"><i class="fas fa-${icon}"></i></div>
+            <div class="today-order-info">
+              <div class="today-order-name">${o.customerName || 'Customer'}</div>
+              <div class="today-order-meta">${summary}</div>
+            </div>
+            <div class="today-order-right">
+              <div class="today-order-amount">₱${parseFloat(o.totalAmount||0).toLocaleString('en-PH')}</div>
+              ${statusPill(st)}
+            </div>
+          </a>`;
+      }).join('');
+    }
+
+    /* ── Capacity bar ── */
+    const used = todayOrds.length;
+    const pct  = Math.min(100, Math.round((used / MAX_PER_DAY) * 100));
+    const bar  = document.getElementById('capacity-bar-fill');
+    bar.style.width = pct + '%';
+    bar.className = 'capacity-bar-fill' + (used >= MAX_PER_DAY ? ' full' : used === MAX_PER_DAY-1 ? ' warn' : '');
+    document.getElementById('capacity-label-left').textContent  = `${used} / ${MAX_PER_DAY} slots used`;
+    document.getElementById('capacity-label-right').textContent = `${Math.max(0, MAX_PER_DAY - used)} remaining`;
+    document.getElementById('capacity-status-text').textContent =
+      used >= MAX_PER_DAY ? '🔴 Fully booked for today.'
+      : used === MAX_PER_DAY-1 ? '🟡 Almost full — 1 slot left.'
+      : `🟢 ${MAX_PER_DAY - used} slots still available today.`;
+
+    /* ── Downpayment Alerts ── */
+    const dpSection = document.getElementById('dp-alerts-section');
+    const dpList    = document.getElementById('dp-alerts-list');
+    if (dpAlerts.length === 0) {
+      dpSection.style.display = 'none';
+    } else {
+      dpSection.style.display = 'block';
+      document.getElementById('dp-alert-count').textContent = dpAlerts.length;
+      dpList.innerHTML = dpAlerts.map(([id, o]) => {
+        const orderDate = new Date((o.date || '') + 'T00:00:00');
+        const todayD    = new Date(); todayD.setHours(0,0,0,0);
+        const diff      = Math.ceil((orderDate - todayD) / 86400000);
+        const label     = diff === 0 ? 'TODAY' : diff === 1 ? 'Tomorrow' : `in ${diff} days`;
+        return `
+          <div class="dp-alert-row">
+            <div class="dp-alert-icon"><i class="fas fa-exclamation"></i></div>
+            <div class="dp-alert-info">
+              <div class="dp-alert-name">${o.customerName || 'Customer'} — ₱${parseFloat(o.totalAmount||0).toLocaleString('en-PH')}</div>
+              <div class="dp-alert-meta">Custom cake · Pickup/Delivery: ${o.date || '—'} · Payment: ${(o.paymentStatus||'unpaid').toUpperCase()}</div>
+            </div>
+            <a href="schedule.html" class="dp-alert-days ${diff <= 1 ? 'urgent' : ''}" style="text-decoration:none;">${label}</a>
+          </div>`;
+      }).join('');
+    }
+
+    /* ── Recent completed ── */
+    const recentEl = document.getElementById('recent-completed-list');
+    const recent   = [...completed]
+      .sort(([,a],[,b]) => new Date(b.completedAt||b.createdAt||0) - new Date(a.completedAt||a.createdAt||0))
+      .slice(0, 5);
+    if (recent.length === 0) {
+      recentEl.innerHTML = `<p style="color:var(--muted);font-size:0.82rem;padding:6px 0;">No completed orders yet.</p>`;
+    } else {
+      recentEl.innerHTML = recent.map(([,o]) => {
+        const d = new Date(o.completedAt || o.createdAt || 0);
+        const dateStr = d.toLocaleDateString('en-PH', { month:'short', day:'numeric' });
+        return `
+          <div class="mini-completed-row">
+            <div>
+              <div class="mini-completed-name">${o.customerName || 'Customer'}</div>
+              <div style="font-size:0.72rem;color:var(--muted);">${dateStr}</div>
+            </div>
+            <div class="mini-completed-amount">₱${parseFloat(o.totalAmount||0).toLocaleString('en-PH')}</div>
+          </div>`;
+      }).join('');
+    }
+  });
+
+  /* ── Menu items count ── */
+  onValue(ref(db, 'menuItems'), (snapshot) => {
+    const items = snapshot.val() || {};
+    const count = Object.keys(items).length;
+    document.getElementById('card-menu-count').textContent = count;
+    document.getElementById('card-menu-sub').innerHTML =
+      `<i class="fas fa-layer-group" style="color:var(--primary);"></i> ${count} item${count!==1?'s':''} on the menu`;
+  });
+
+  /* ══════════════════════════════════════
+     ACCOUNT SETTINGS LOGIC (unchanged)
+  ══════════════════════════════════════ */
+  window.openSettings = function() {
+    document.getElementById('settings-overlay').classList.add('open');
+    ['curr-pass','new-pass','confirm-pass'].forEach(id => {
+      const el = document.getElementById(id); el.value = ''; el.classList.remove('field-err');
+    });
+    ['err-curr','err-new','err-confirm'].forEach(id => document.getElementById(id).textContent = '');
+    document.getElementById('success-banner').classList.remove('show');
+    document.getElementById('save-btn').classList.remove('loading');
+    document.getElementById('strength-bar').style.width = '0';
+    document.getElementById('strength-label').textContent = '';
+  };
+
+  window.closeSettings = function(e) {
+    if (e && e.target !== document.getElementById('settings-overlay')) return;
+    document.getElementById('settings-overlay').classList.remove('open');
+  };
+
+  window.toggleEye = function(inputId, iconId) {
+    const inp = document.getElementById(inputId);
+    const ico = document.getElementById(iconId);
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    ico.classList.toggle('fa-eye'); ico.classList.toggle('fa-eye-slash');
+  };
+
+  window.checkStrength = function() {
+    const val = document.getElementById('new-pass').value;
+    const bar = document.getElementById('strength-bar');
+    const lbl = document.getElementById('strength-label');
+    let score = 0;
+    if (val.length >= 8) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    const levels = [
+      {pct:'0%',color:'',text:''},
+      {pct:'25%',color:'#e74c3c',text:'Weak'},
+      {pct:'50%',color:'#f39c12',text:'Fair'},
+      {pct:'75%',color:'#2ecc71',text:'Good'},
+      {pct:'100%',color:'#27ae60',text:'Strong'},
+    ];
+    const lvl = val.length === 0 ? levels[0] : (levels[score] || levels[1]);
+    bar.style.width = lvl.pct; bar.style.background = lvl.color;
+    lbl.textContent = lvl.text; lbl.style.color = lvl.color;
+  };
+
+  window.openForgotPassword = async function() {
+    document.getElementById('settings-overlay').classList.remove('open');
+    document.getElementById('forgot-overlay').classList.add('open');
+    document.getElementById('forgot-step-setup').style.display = 'none';
+    document.getElementById('setup-question').value = '';
+    document.getElementById('setup-answer').value = '';
+    ['err-setup-q','err-setup-a'].forEach(id => document.getElementById(id).textContent = '');
+    document.getElementById('setup-success-banner').classList.remove('show');
+    try {
+      const snap = await get(ref(db, 'securityQuestion'));
+      if (snap.exists()) {
+        document.getElementById('forgot-title').textContent = 'Update Security Question';
+        document.getElementById('forgot-sub').textContent   = 'Change your recovery question or answer';
+        document.getElementById('forgot-setup-banner').innerHTML =
+          `<i class="fas fa-pencil-alt"></i><div><strong>Update Security Question</strong><p>Your current question: <em>${snap.val().question}</em></p></div>`;
+        const sel = document.getElementById('setup-question');
+        for (let opt of sel.options) { if (opt.value === snap.val().question) { sel.value = snap.val().question; break; } }
+      } else {
+        document.getElementById('forgot-title').textContent = 'Set Security Question';
+        document.getElementById('forgot-sub').textContent   = 'Add a recovery question for your account';
+        document.getElementById('forgot-setup-banner').innerHTML =
+          `<i class="fas fa-shield-alt"></i><div><strong>Set a Security Question</strong><p>This lets you reset your password from the login page if you ever forget it.</p></div>`;
+      }
+    } catch(e) {}
+    document.getElementById('forgot-step-setup').style.display = 'block';
+  };
+
+  window.closeForgotPassword = function(e) {
+    if (e && e.target !== document.getElementById('forgot-overlay')) return;
+    document.getElementById('forgot-overlay').classList.remove('open');
+  };
+
+  window.saveSecurityQuestion = async function() {
+    const q = document.getElementById('setup-question').value.trim();
+    const a = document.getElementById('setup-answer').value.trim();
+    let valid = true;
+    document.getElementById('err-setup-q').textContent = '';
+    document.getElementById('err-setup-a').textContent = '';
+    if (!q) { document.getElementById('err-setup-q').textContent = 'Please select a question.'; valid = false; }
+    if (!a) { document.getElementById('err-setup-a').textContent = 'Please enter an answer.';   valid = false; }
+    if (!valid) return;
+    const btn = document.getElementById('setup-save-btn');
+    btn.classList.add('loading');
+    try {
+      const answerHash = await hashPassword(a.toLowerCase());
+      await set(ref(db, 'securityQuestion'), { question: q, answerHash });
+      btn.classList.remove('loading');
+      document.getElementById('setup-success-banner').classList.add('show');
+      setTimeout(() => document.getElementById('forgot-overlay').classList.remove('open'), 1800);
+    } catch(err) {
+      btn.classList.remove('loading');
+      document.getElementById('err-setup-a').textContent = '⚠️ Failed to save. Check connection.';
+    }
+  };
+
+  window.savePassword = async function() {
+    let valid = true;
+    const curr = document.getElementById('curr-pass').value;
+    const newP = document.getElementById('new-pass').value;
+    const conf = document.getElementById('confirm-pass').value;
+    ['curr-pass','new-pass','confirm-pass'].forEach(id => document.getElementById(id).classList.remove('field-err'));
+    ['err-curr','err-new','err-confirm'].forEach(id => document.getElementById(id).textContent = '');
+    document.getElementById('success-banner').classList.remove('show');
+    if (!curr) { document.getElementById('curr-pass').classList.add('field-err'); document.getElementById('err-curr').textContent = 'Please enter your current password.'; valid = false; }
+    if (!newP) { document.getElementById('new-pass').classList.add('field-err'); document.getElementById('err-new').textContent = 'Please enter a new password.'; valid = false; }
+    else if (newP.length < 6) { document.getElementById('new-pass').classList.add('field-err'); document.getElementById('err-new').textContent = 'Password must be at least 6 characters.'; valid = false; }
+    if (!conf) { document.getElementById('confirm-pass').classList.add('field-err'); document.getElementById('err-confirm').textContent = 'Please confirm your new password.'; valid = false; }
+    else if (conf !== newP) { document.getElementById('confirm-pass').classList.add('field-err'); document.getElementById('err-confirm').textContent = 'Passwords do not match.'; valid = false; }
+    if (!valid) return;
+    const btn = document.getElementById('save-btn');
+    btn.classList.add('loading');
+    try {
+      const storedHash = await getStoredHash();
+      const currHash   = await hashPassword(curr);
+      const newHash    = await hashPassword(newP);
+      if (currHash !== storedHash) {
+        btn.classList.remove('loading');
+        document.getElementById('curr-pass').classList.add('field-err');
+        document.getElementById('err-curr').textContent = 'Current password is incorrect.';
+        return;
+      }
+      if (newHash === storedHash) {
+        btn.classList.remove('loading');
+        document.getElementById('new-pass').classList.add('field-err');
+        document.getElementById('err-new').textContent = 'New password must differ from current.';
+        return;
+      }
+      await set(ref(db, 'password'), newHash);
+      btn.classList.remove('loading');
+      document.getElementById('success-banner').classList.add('show');
+      ['curr-pass','new-pass','confirm-pass'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('strength-bar').style.width = '0';
+      document.getElementById('strength-label').textContent = '';
+    } catch (err) {
+      btn.classList.remove('loading');
+      document.getElementById('err-confirm').textContent = '⚠️ Failed to save. Check your connection.';
+    }
+  };
+</script>
+
+<!-- ========== LOGOUT + DRAWER ========== -->
 <script>
   function handleLogout() {
     sessionStorage.removeItem('adminLoggedIn');
     window.location.replace('login.html');
   }
+  function toggleDrawer() {
+    const drawer   = document.getElementById('mobile-drawer');
+    const backdrop = document.getElementById('drawer-backdrop');
+    const btn      = document.getElementById('hamburger-btn');
+    if (drawer.classList.contains('open')) { closeDrawer(); } else {
+      drawer.classList.add('open');
+      backdrop.classList.add('open');
+      btn.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+  }
+  function closeDrawer() {
+    document.getElementById('mobile-drawer').classList.remove('open');
+    document.getElementById('drawer-backdrop').classList.remove('open');
+    const btn = document.getElementById('hamburger-btn');
+    if (btn) btn.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  window.addEventListener('resize', () => { if (window.innerWidth > 768) closeDrawer(); });
 </script>
+
+<style>
+.btn-forgot {
+  background: none; border: none; color: var(--primary);
+  font-family: 'Poppins', sans-serif; font-size: 0.8rem; font-weight: 600;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 0; text-decoration: underline; text-underline-offset: 3px;
+  opacity: 0.85; transition: opacity 0.2s;
+}
+.btn-forgot:hover { opacity: 1; }
+.forgot-info-banner {
+  display: flex; align-items: flex-start; gap: 14px;
+  background: #FFF8F0; border: 1.5px solid #E8C89A;
+  border-radius: 12px; padding: 14px 16px; margin-bottom: 20px;
+  color: #7A4F20; font-size: 0.84rem;
+}
+.forgot-info-banner i { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+.forgot-info-banner strong { display: block; margin-bottom: 3px; font-size: 0.88rem; }
+.forgot-info-banner p { margin: 0; opacity: 0.85; }
+
+/* ── Mobile modal footer fix ── */
+@media (max-width: 600px) {
+  .modal-footer {
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 20px 20px;
+  }
+  .modal-footer .btn-forgot {
+    order: 2;
+    align-self: center;
+    font-size: 0.78rem;
+    padding: 6px 0;
+    opacity: 0.75;
+  }
+  .modal-footer > div[style] {
+    display: none;
+  }
+  .modal-footer .btn-cancel,
+  .modal-footer .btn-save {
+    order: 1;
+    width: 100%;
+    justify-content: center;
+    padding: 13px 16px;
+    font-size: 0.92rem;
+    border-radius: 12px;
+  }
+  /* Put Cancel + Save side by side, Forgot below */
+  .modal-footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "cancel save"
+      "forgot forgot";
+    gap: 10px;
+  }
+  .modal-footer .btn-cancel { grid-area: cancel; }
+  .modal-footer .btn-save   { grid-area: save; min-width: unset; }
+  .modal-footer .btn-forgot { grid-area: forgot; justify-self: center; }
+  .modal-footer > div[style] { display: none !important; }
+}
+</style>
 
 </body>
 </html>

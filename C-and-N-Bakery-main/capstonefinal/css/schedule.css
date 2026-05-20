@@ -130,7 +130,7 @@
   border-color: var(--primary-dark);
   box-shadow: 0 4px 14px rgba(92,63,42,0.30);
 }
-.cal-day.selected span  { color: #fff; }
+.cal-day.selected span  { color: #3F2A1F; }
 .cal-day.selected .dot-container { opacity: 0.85; }
 
 .cal-day.past {
@@ -140,16 +140,16 @@
 .cal-day.past:hover { opacity: 1; }
 
 .cal-day.full {
-  background: #fff5f5;
-  border-color: #f5a0a0;
+  background: #bf0000;
+  border-color: #5a0000;
 }
 .cal-day.almost-full {
-  background: #fffbee;
-  border-color: #f5e090;
+  background: #ffdf77;
+  border-color: #4f3f00;
 }
 .cal-day.has-booking {
-  background: #f0fbf5;
-  border-color: #a8e0bc;
+  background: #F0E0D2;
+  border-color: #3F2A1F;
 }
 
 /* ── Dot / Capacity Label ── */
