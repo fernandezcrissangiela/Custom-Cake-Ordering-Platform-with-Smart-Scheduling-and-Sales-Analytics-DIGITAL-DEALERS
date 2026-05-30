@@ -386,27 +386,57 @@
 }
 
 @media (max-width: 768px) {
-  /* Switch table to card layout */
   .history-table thead { display: none; }
   .history-table,
-  .history-table tbody,
-  .history-table tr,
-  .history-table td { display: block; width: 100%; }
+  .history-table tbody { display: block; width: 100%; }
 
+  /* Each row becomes a clean flex card */
   .history-table tbody tr {
-    border-bottom: none;
-    margin-bottom: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 10px;
+    background: var(--white);
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: background 0.18s, box-shadow 0.18s;
   }
-  .history-table tbody tr:last-child { border-bottom: none; }
+  .history-table tbody tr:hover {
+    background: var(--cream);
+    box-shadow: var(--shadow-xs);
+  }
 
+  /* Hide ALL cells by default */
   .history-table td {
-    padding: 8px 16px;
-    font-size: 0.83rem;
-    border-bottom: 1px dashed var(--border);
+    display: none;
+    padding: 0;
+    border: none;
   }
-  .history-table td:last-child { border-bottom: 2px solid var(--border); padding-bottom: 14px; }
 
-  .products-cell { max-width: none; white-space: normal; }
+  /* Show only customer name cell */
+  .history-table td.customer-cell {
+    display: flex;
+    align-items: center;
+    flex: 1;
+  }
+
+  /* Hide phone number — name only */
+  .customer-cell small { display: none; }
+
+  .customer-cell strong {
+    font-size: 0.9rem;
+    color: var(--brown);
+  }
+
+  /* Show only the last cell (View button) */
+  .history-table td:last-child {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    margin-left: 12px;
+  }
 }
 
 @media (max-width: 580px) {
