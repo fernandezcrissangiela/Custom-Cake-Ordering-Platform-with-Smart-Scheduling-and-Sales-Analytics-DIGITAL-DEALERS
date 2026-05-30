@@ -41,6 +41,10 @@
                 "destination": "/userside/user.html"
             },
             {
+                "source": "/login.html",
+                "destination": "/adminside/login.html"
+            },
+            {
                 "source": "/admin.html",
                 "destination": "/adminside/admin.html"
             },

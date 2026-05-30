@@ -1,0 +1,54 @@
+[debug] [2026-05-30T05:06:05.290Z] ----------------------------------------------------------------------
+[debug] [2026-05-30T05:06:05.293Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\user\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting
+[debug] [2026-05-30T05:06:05.294Z] CLI Version:   15.19.0
+[debug] [2026-05-30T05:06:05.294Z] Platform:      win32
+[debug] [2026-05-30T05:06:05.294Z] Node Version:  v22.14.0
+[debug] [2026-05-30T05:06:05.294Z] Time:          Sat May 30 2026 13:06:05 GMT+0800 (Philippine Standard Time)
+[debug] [2026-05-30T05:06:05.294Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-05-30T05:06:07.140Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-05-30T05:06:07.140Z] > authorizing via signed-in user (fernandezcrissangiela@gmail.com)
+[debug] [2026-05-30T05:06:07.140Z] [iam] checking project candn-bakery for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-05-30T05:06:07.141Z] Checked if tokens are valid: true, expires at: 1780120325053
+[debug] [2026-05-30T05:06:07.141Z] Checked if tokens are valid: true, expires at: 1780120325053
+[debug] [2026-05-30T05:06:07.142Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/candn-bakery:testIamPermissions [none]
+[debug] [2026-05-30T05:06:07.142Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/candn-bakery:testIamPermissions  x-goog-user-project=candn-bakery
+[debug] [2026-05-30T05:06:07.142Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/candn-bakery:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-05-30T05:06:08.200Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/candn-bakery:testIamPermissions 200
+[debug] [2026-05-30T05:06:08.200Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/candn-bakery:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-05-30T05:06:08.200Z] Checked if tokens are valid: true, expires at: 1780120325053
+[debug] [2026-05-30T05:06:08.200Z] Checked if tokens are valid: true, expires at: 1780120325053
+[debug] [2026-05-30T05:06:08.201Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/candn-bakery [none]
+[debug] [2026-05-30T05:06:08.651Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/candn-bakery 200
+[debug] [2026-05-30T05:06:08.652Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/candn-bakery {"projectId":"candn-bakery","projectNumber":"620414447517","displayName":"CandN Bakery","name":"projects/candn-bakery","resources":{"hostingSite":"candn-bakery","realtimeDatabaseInstance":"candn-bakery-default-rtdb"},"state":"ACTIVE","etag":"1_a2d22909-20a8-4ef6-8338-3092423b6993"}
+[info] 
+[info] === Deploying to 'candn-bakery'...
+[info] 
+[info] i  deploying hosting 
+[debug] [2026-05-30T05:06:08.658Z] Checked if tokens are valid: true, expires at: 1780120325053
+[debug] [2026-05-30T05:06:08.658Z] Checked if tokens are valid: true, expires at: 1780120325053
+[debug] [2026-05-30T05:06:08.658Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/candn-bakery/sites/candn-bakery [none]
+[debug] [2026-05-30T05:06:09.589Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/candn-bakery/sites/candn-bakery 200
+[debug] [2026-05-30T05:06:09.590Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/candn-bakery/sites/candn-bakery {"name":"projects/candn-bakery/sites/candn-bakery","defaultUrl":"https://candn-bakery.web.app","type":"DEFAULT_SITE"}
+[debug] [2026-05-30T05:06:09.594Z] Checked if tokens are valid: true, expires at: 1780120325053
+[debug] [2026-05-30T05:06:09.594Z] Checked if tokens are valid: true, expires at: 1780120325053
+[debug] [2026-05-30T05:06:09.594Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/candn-bakery/versions [none]
+[debug] [2026-05-30T05:06:09.594Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/candn-bakery/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase"}}
+[debug] [2026-05-30T05:06:10.612Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/candn-bakery/versions 200
+[debug] [2026-05-30T05:06:10.612Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/candn-bakery/versions {"name":"projects/620414447517/sites/candn-bakery/versions/ee0eec314e9a3f40","status":"CREATED","config":{},"labels":{"deployment-tool":"cli-firebase"}}
+[info] i  hosting[candn-bakery]: beginning deploy... 
+[info] i  hosting[candn-bakery]: found 410176 files in . 
+[debug] [2026-05-30T05:06:55.643Z] [hosting] uploading with 200 concurrency
+[debug] [2026-05-30T05:06:55.645Z] [hosting] hash cache [] not populated
+[debug] [2026-05-30T05:06:55.753Z] Error: EBUSY: resource busy or locked, open 'C:\Users\user\ntuser.dat.LOG2'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-05-30T05:06:55.754Z] Error: EBUSY: resource busy or locked, open 'C:\Users\user\ntuser.dat.LOG1'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-05-30T05:06:55.755Z] Error: EBUSY: resource busy or locked, open 'C:\Users\user\NTUSER.DAT'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-05-30T05:06:55.766Z] Error: EISDIR: illegal operation on a directory, read
+[error] 
+[error] Error: An unexpected error has occurred.
