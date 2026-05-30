@@ -351,3 +351,81 @@
   flex-shrink: 0;       /* prevents buttons from squishing */
   white-space: nowrap;  /* keeps text on one line */
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   FEATURED CAKES — Responsive Fix
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Desktop: wrap freely, cards stay 200px */
+#featured-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+/* Tablet (≤ 800px): horizontal scroll row, 2 cards visible */
+@media (max-width: 800px) {
+  #featured-list {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 8px;
+    gap: 12px;
+  }
+  #featured-list::-webkit-scrollbar {
+    display: none;
+  }
+  /* Each featured card: fixed width that fits ~2 on screen */
+  #featured-list .product-card {
+    width: calc(50vw - 28px) !important;
+    min-width: 150px !important;
+    max-width: 200px !important;
+    flex-shrink: 0;
+  }
+}
+
+/* Mobile (≤ 560px): 2 cards per row using grid */
+@media (max-width: 560px) {
+  #featured-list {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    flex-wrap: unset;
+    overflow-x: unset;
+    gap: 10px;
+  }
+  /* Reset the inline width set by JS on mobile */
+  #featured-list .product-card {
+    width: 100% !important;
+    min-width: unset !important;
+    max-width: unset !important;
+    flex-shrink: unset;
+  }
+  /* Tighten up card content on small screens */
+  #featured-list .product-info {
+    padding: 10px 10px 9px;
+  }
+  #featured-list .product-info h4 {
+    font-size: 0.80rem;
+  }
+  #featured-list .product-info small {
+    font-size: 0.74rem;
+  }
+  /* Reorder arrows: stack them side-by-side, full width */
+  #featured-list .product-info > div:has(button[title]) {
+    gap: 4px;
+  }
+  #featured-list .card-actions .edit-btn,
+  #featured-list .card-actions .delete-btn {
+    font-size: 0.72rem;
+    padding: 7px 6px;
+  }
+}
+
+/* Extra small (≤ 380px): single column */
+@media (max-width: 380px) {
+  #featured-list {
+    grid-template-columns: 1fr !important;
+  }
+}
