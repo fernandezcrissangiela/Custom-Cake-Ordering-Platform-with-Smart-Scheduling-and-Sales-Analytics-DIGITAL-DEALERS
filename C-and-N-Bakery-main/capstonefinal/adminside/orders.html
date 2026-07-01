@@ -667,6 +667,13 @@
         <i class="${fulfillmentIcon}"></i> ${fulfillmentLabel}
       </span>`;
 
+    const remarksRow = order.remarks
+      ? `<div class="info-row" style="align-items:flex-start;">
+           <i class="fas fa-comment-dots" style="color:#e67e22; margin-top:2px;"></i>
+           <span><strong>Remarks:</strong> ${order.remarks}</span>
+         </div>`
+      : '';
+
     const addressRow = !isPickup && order.address
       ? `<div class="info-row" style="align-items:flex-start;">
            <i class="fas fa-map-marker-alt" style="color:#e74c3c; margin-top:2px;"></i>
@@ -689,6 +696,7 @@
         <span>Fulfillment: ${fulfillmentBadge}</span>
       </div>
       ${addressRow}
+      ${remarksRow}
       <div class="info-row"><i class="fas fa-credit-card"></i> ${payMethodLabel(order.paymentMethod)}</div>
       <div class="info-row">
         <i class="fas fa-tag"></i>
@@ -739,15 +747,29 @@
         const message  = item.message  || cd.message  || '';
         const notes    = item.notes    || cd.notes    || '';
         const refPhoto = item.referencePhoto || cd.referencePhoto || '';
+        const tiers    = item.tiers    || cd.tiers    || [];
 
         const detailRows = [
           { label: '🍰 Number of Layers', value: layers },
-          { label: '🧁 Chiffon Flavor',   value: flavor },
-          { label: '🍦 Frosting Kind',     value: frosting },
+          { label: '🍦 Frosting Kind',    value: frosting },
           { label: '🎨 Design Style',      value: design },
           { label: '💬 Special Message',   value: message },
           { label: '📝 Notes',             value: notes },
         ].filter(r => r.value);
+
+        const tiersHtml = tiers.length > 0
+          ? `<div class="detail-row" style="flex-direction:column; align-items:stretch;">
+               <strong style="margin-bottom:6px;">📐 Tier Breakdown</strong>
+               <div style="display:flex; flex-direction:column; gap:6px;">
+                 ${tiers.map(t => `
+                   <div style="background:#faf6f2; border:1px solid #eee0d5; border-radius:8px; padding:8px 10px; font-size:0.85rem;">
+                     <strong>Tier ${t.tier}:</strong>
+                     Size — ${t.size || '—'} &nbsp;|&nbsp;
+                     Flavor — ${t.flavor || '—'}
+                   </div>`).join('')}
+               </div>
+             </div>`
+          : '';
 
         const refPhotoHtml = (refPhoto && !refPhoto.includes('placeholder'))
           ? `<div class="ref-photo-wrap">
@@ -760,12 +782,12 @@
              </div>`
           : '';
 
-        const detailHtml = detailRows.length > 0
+        const detailHtml = (detailRows.length > 0 || tiersHtml)
           ? detailRows.map(r =>
               `<div class="detail-row">
                  <strong>${r.label}</strong>
                  <span>${r.value}</span>
-               </div>`).join('')
+               </div>`).join('') + tiersHtml
           : '<p style="font-size:0.82rem;color:#aaa;margin:6px 0 0;">No customization details recorded.</p>';
 
         html += `

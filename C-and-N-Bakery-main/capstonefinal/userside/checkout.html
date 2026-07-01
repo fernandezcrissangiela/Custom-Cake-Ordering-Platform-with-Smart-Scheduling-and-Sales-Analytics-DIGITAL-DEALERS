@@ -71,6 +71,12 @@
                     <label>Facebook Profile Link <span style="color:var(--muted);">(optional)</span></label>
                     <input type="url" id="cust-fb" placeholder="https://facebook.com/yourprofile">
                 </div>
+                <!-- NEW: Order Remarks / Notes -->
+                <div class="form-group">
+                    <label>Remarks / Notes for the Bakery <span style="color:var(--muted);">(optional)</span></label>
+                    <textarea id="cust-remarks" rows="3"
+                              placeholder="Any special requests or notes about your order (e.g. regarding the cake design, allergy info, preferred delivery time, gate code, etc.)"></textarea>
+                </div>
             </div>
 
             <!-- Fulfillment Method -->
@@ -395,6 +401,7 @@
         const fb      = document.getElementById('cust-fb').value.trim();     
         const date    = document.getElementById('order-date').value;
         const address = document.getElementById('cust-address').value.trim();
+        const remarks = document.getElementById('cust-remarks').value.trim();
         const btn     = document.getElementById('btn-place-order');
 
         // Updated validation: fb is now optional
@@ -422,6 +429,7 @@
                 category:       getItemCategory(item),
                 description:    item.description    || '',
                 layers:         item.layers         || cd.layers   || '',
+                tiers:          item.tiers          || cd.tiers    || [],
                 flavor:         item.flavor         || cd.flavor   || '',
                 frosting:       item.frosting       || cd.frosting || '',
                 design:         item.design         || cd.design   || '',
@@ -439,6 +447,7 @@
             customerName:  name,
             phone,
             facebookLink:  fb || null,                    // Save as null if empty
+            remarks:       remarks || null,                // NEW: customer remarks/notes, visible to admin
             date,
             address:       fulfillmentMethod === 'pickup' ? "Store Pickup" : address,
             method:        fulfillmentMethod,

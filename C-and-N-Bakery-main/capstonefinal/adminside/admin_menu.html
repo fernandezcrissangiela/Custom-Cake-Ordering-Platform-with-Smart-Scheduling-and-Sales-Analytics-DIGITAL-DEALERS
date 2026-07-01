@@ -346,6 +346,15 @@
             <label id="opt-price-label">Price (₱) *</label>
             <input type="number" id="opt-price" placeholder="0" step="1" min="0">
           </div>
+          <div class="form-group" id="opt-frosting-tiers-group" style="display:none;">
+            <label>Price by Tier Count *</label>
+            <div id="opt-frosting-tiers-list"></div>
+            <button type="button" id="opt-add-frosting-tier-btn"
+                    style="margin-top:4px; padding:8px 14px; border-radius:10px; border:1.5px dashed var(--border); background:var(--cream); color:var(--brown); font-family:'Poppins',sans-serif; font-size:0.85rem; cursor:pointer;">
+              <i class="fas fa-plus"></i> Add Tier Price
+            </button>
+            <small style="color:var(--muted); display:block; margin-top:6px;">Set a price for each tier count, e.g. 1 tier = ₱800, 2 tiers = ₱1,400.</small>
+          </div>
           <div class="form-group">
             <label>Status</label>
             <select id="opt-enabled">
@@ -370,7 +379,7 @@
             <option value="layers">Layers</option>
             <option value="sizes">Cake Sizes (per tier)</option>
             <option value="flavors">Chiffon Flavors</option>
-            <option value="frostings">Frostings</option>
+            <option value="frostings">Frostings (priced by tier count)</option>
             <option value="designs">Design Styles</option>
           </select>
         </div>
@@ -581,6 +590,15 @@
       <div class="form-group" id="edit-opt-price-group">
         <label>Price (₱)</label>
         <input type="number" id="edit-opt-price" placeholder="0" step="1" min="0">
+      </div>
+      <div class="form-group" id="edit-opt-frosting-tiers-group" style="display:none;">
+        <label>Price by Tier Count *</label>
+        <div id="edit-opt-frosting-tiers-list"></div>
+        <button type="button" id="edit-opt-add-frosting-tier-btn"
+                style="margin-top:4px; padding:8px 14px; border-radius:10px; border:1.5px dashed var(--border); background:var(--cream); color:var(--brown); font-family:'Poppins',sans-serif; font-size:0.85rem; cursor:pointer;">
+          <i class="fas fa-plus"></i> Add Tier Price
+        </button>
+        <small style="color:var(--muted); display:block; margin-top:6px;">Set a price for each tier count, e.g. 1 tier = ₱800, 2 tiers = ₱1,400.</small>
       </div>
       <div class="form-group">
         <label>Status</label>
@@ -807,6 +825,48 @@
 
   initSizeToggle('has-sizes', 'single-price-group', 'sizes-group', 'sizes-list', 'add-size-btn');
   initSizeToggle('edit-has-sizes', 'edit-single-price-group', 'edit-sizes-group', 'edit-sizes-list', 'edit-add-size-btn');
+
+  // ══════════════════════════════════════════════
+  // FROSTING TIER-PRICE ROWS
+  // Lets the admin set a different frosting price depending on
+  // how many tiers the customer's cake has (e.g. 1 tier vs 2 tiers).
+  // ══════════════════════════════════════════════
+  function createFrostingTierRow(tierCount = '', price = '') {
+    const row = document.createElement('div');
+    row.className = 'ftier-row';
+    row.style.cssText = 'display:flex; gap:8px; margin-bottom:8px; align-items:center;';
+    row.innerHTML = `
+      <input type="number" class="ftier-count" placeholder="Tiers" step="1" min="1" max="10" value="${tierCount}"
+             style="flex:1; padding:9px 10px; border:1.5px solid var(--border); border-radius:10px; font-family:'Poppins',sans-serif; font-size:0.88rem;">
+      <input type="number" class="ftier-price" placeholder="₱0.00" step="0.01" min="0" value="${price}"
+             style="flex:1.5; padding:9px 10px; border:1.5px solid var(--border); border-radius:10px; font-family:'Poppins',sans-serif; font-size:0.88rem;">
+      <button type="button" class="remove-ftier-btn" title="Remove tier price"
+              style="background:none; border:none; color:var(--muted); cursor:pointer; font-size:1.15rem; padding:4px 6px; flex-shrink:0;">
+        <i class="fas fa-times"></i>
+      </button>`;
+    row.querySelector('.remove-ftier-btn').addEventListener('click', () => row.remove());
+    return row;
+  }
+
+  // Reads tier-price rows from a container into a clean { tierCount: price } object.
+  function readFrostingTierRows(listId) {
+    const rows = document.querySelectorAll(`#${listId} .ftier-row`);
+    const tierPrices = {};
+    for (const row of rows) {
+      const tierCount = parseInt(row.querySelector('.ftier-count').value);
+      const price     = parseFloat(row.querySelector('.ftier-price').value);
+      if (!tierCount || tierCount < 1 || isNaN(price) || price < 0) continue; // skip blank rows silently
+      tierPrices[tierCount] = price;
+    }
+    return tierPrices;
+  }
+
+  document.getElementById('opt-add-frosting-tier-btn').addEventListener('click', () => {
+    document.getElementById('opt-frosting-tiers-list').appendChild(createFrostingTierRow());
+  });
+  document.getElementById('edit-opt-add-frosting-tier-btn').addEventListener('click', () => {
+    document.getElementById('edit-opt-frosting-tiers-list').appendChild(createFrostingTierRow());
+  });
 
   // ── Auto-generate key from display name (internal) ──
   function generateKey(displayName) {
@@ -1375,12 +1435,16 @@
   document.getElementById('product-filter-category').addEventListener('change', renderFilteredProducts);
 
   // ── Custom Cake Options ──
+  let cachedOptionsData = {}; // id -> raw option data, used by openEditOption
+
   window.loadCurrentOptions = function () {
     const category  = document.getElementById('option-category').value;
     const container = document.getElementById('options-list');
     container.innerHTML = '<p><i class="fas fa-spinner fa-spin"></i> Loading…</p>';
 
     onValue(ref(db, `customization-options/${category}`), (snapshot) => {
+      cachedOptionsData = {};
+
       if (!snapshot.exists()) {
         container.innerHTML = '<p>No options yet for this category.</p>';
         return;
@@ -1389,20 +1453,32 @@
       container.innerHTML = '';
       snapshot.forEach(child => {
         const data = child.val();
+        cachedOptionsData[child.key] = data;
+
+        let priceDisplay;
+        if (category === 'layers') {
+          priceDisplay = `<span class="option-price">${data.tiers || 1} tier${(data.tiers || 1) > 1 ? 's' : ''}</span>`;
+        } else if (category === 'frostings') {
+          const entries = Object.entries(data.tierPrices || {}).sort((a, b) => a[0] - b[0]);
+          priceDisplay = entries.length
+            ? `<span class="option-price">${entries.map(([t, p]) => `${t}-tier: ₱${p}`).join(' &middot; ')}</span>`
+            : `<span class="option-price">₱${data.price || 0}</span>`;
+        } else {
+          priceDisplay = `<span class="option-price">₱${data.price || 0}</span>`;
+        }
+
         const row  = document.createElement('div');
         row.className = 'option-row';
         row.innerHTML = `
           <div class="option-row-left">
             <strong>${data.name}</strong>
-            ${category !== 'layers' ? `<span class="option-price">₱${data.price || 0}</span>` : ''}
-            ${category === 'layers' ? `<span class="option-price">${data.tiers || 1} tier${(data.tiers || 1) > 1 ? 's' : ''}</span>` : ''}
+            ${priceDisplay}
             <span class="option-enabled ${data.enabled ? 'opt-on' : 'opt-off'}">
               ${data.enabled ? 'Enabled' : 'Disabled'}
             </span>
           </div>
           <div class="option-row-actions">
-            <button class="btn-edit-opt"
-                    onclick="openEditOption('${category}','${child.key}','${data.name}',${data.price || 0},'${data.enabled}',${data.tiers || 0})">
+            <button class="btn-edit-opt" onclick="openEditOption('${category}','${child.key}')">
               <i class="fas fa-pen"></i> Edit
             </button>
             <button class="btn-delete-opt"
@@ -1420,24 +1496,33 @@
     e.preventDefault();
     const category = document.getElementById('option-category').value;
     const name     = document.getElementById('opt-name').value.trim();
-    const price    = parseFloat(document.getElementById('opt-price').value) || 0;
     const enabled  = document.getElementById('opt-enabled').value === "true";
     const tiers    = parseInt(document.getElementById('opt-tiers').value) || 0;
 
     if (!name) { alert("Please enter an option name."); return; }
     if (category === 'layers' && tiers < 1) { alert("Please enter how many tiers this layer option represents."); return; }
-    if (category !== 'layers' && price <= 0) { alert("Please enter a price for this option."); return; }
 
     const payload = { name, enabled, createdAt: Date.now() };
+
     if (category === 'layers') {
       payload.tiers = tiers;
+    } else if (category === 'frostings') {
+      const tierPrices = readFrostingTierRows('opt-frosting-tiers-list');
+      if (Object.keys(tierPrices).length === 0) {
+        alert("Please enter at least one tier count and price.");
+        return;
+      }
+      payload.tierPrices = tierPrices;
     } else {
+      const price = parseFloat(document.getElementById('opt-price').value) || 0;
+      if (price <= 0) { alert("Please enter a price for this option."); return; }
       payload.price = price;
     }
 
     try {
       await push(ref(db, `customization-options/${category}`), payload);
       document.getElementById('add-option-form').reset();
+      document.getElementById('opt-frosting-tiers-list').innerHTML = '';
       toggleOptFieldsForCategory();
       loadCurrentOptions();
     } catch (err) {
@@ -1484,15 +1569,33 @@
   });
 
   // ── Edit Option ──
-  window.openEditOption = function (category, id, name, price, enabled, tiers) {
+  window.openEditOption = function (category, id) {
+    const data = cachedOptionsData[id] || {};
+    const isLayers    = category === 'layers';
+    const isFrostings = category === 'frostings';
+
     document.getElementById('edit-opt-category').value = category;
     document.getElementById('edit-opt-id').value       = id;
-    document.getElementById('edit-opt-name').value     = name;
-    document.getElementById('edit-opt-price').value    = price;
-    document.getElementById('edit-opt-enabled').value  = enabled;
-    document.getElementById('edit-opt-tiers').value    = tiers || 1;
-    document.getElementById('edit-opt-tiers-group').style.display = category === 'layers' ? 'block' : 'none';
-    document.getElementById('edit-opt-price-group').style.display = category === 'layers' ? 'none' : 'block';
+    document.getElementById('edit-opt-name').value     = data.name || '';
+    document.getElementById('edit-opt-price').value    = data.price || '';
+    document.getElementById('edit-opt-enabled').value  = data.enabled ? 'true' : 'false';
+    document.getElementById('edit-opt-tiers').value    = data.tiers || 1;
+
+    document.getElementById('edit-opt-tiers-group').style.display          = isLayers ? 'block' : 'none';
+    document.getElementById('edit-opt-price-group').style.display          = (!isLayers && !isFrostings) ? 'block' : 'none';
+    document.getElementById('edit-opt-frosting-tiers-group').style.display = isFrostings ? 'block' : 'none';
+
+    const tierList = document.getElementById('edit-opt-frosting-tiers-list');
+    tierList.innerHTML = '';
+    if (isFrostings) {
+      const entries = Object.entries(data.tierPrices || {}).sort((a, b) => a[0] - b[0]);
+      if (entries.length === 0) {
+        tierList.appendChild(createFrostingTierRow(1, ''));
+        tierList.appendChild(createFrostingTierRow(2, ''));
+      } else {
+        entries.forEach(([t, p]) => tierList.appendChild(createFrostingTierRow(t, p)));
+      }
+    }
 
     // Swap "Option Name *" for the selected category's own name
     const label = OPTION_CATEGORY_LABELS[category] || 'Option';
@@ -1519,7 +1622,6 @@
     const category = document.getElementById('edit-opt-category').value;
     const id       = document.getElementById('edit-opt-id').value;
     const name     = document.getElementById('edit-opt-name').value.trim();
-    const price    = parseFloat(document.getElementById('edit-opt-price').value) || 0;
     const enabled  = document.getElementById('edit-opt-enabled').value === 'true';
     const tiers    = parseInt(document.getElementById('edit-opt-tiers').value) || 1;
 
@@ -1528,10 +1630,22 @@
 
     const updates = { name, enabled };
     if (category === 'layers') {
-      updates.tiers = tiers;
-      updates.price = null; // remove any legacy price value from layer options
+      updates.tiers      = tiers;
+      updates.price      = null; // remove any legacy price value from layer options
+      updates.tierPrices = null;
+    } else if (category === 'frostings') {
+      const tierPrices = readFrostingTierRows('edit-opt-frosting-tiers-list');
+      if (Object.keys(tierPrices).length === 0) {
+        alert("Please enter at least one tier count and price.");
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+        return;
+      }
+      updates.tierPrices = tierPrices;
+      updates.price      = null; // remove any legacy flat price
     } else {
-      updates.price = price;
+      updates.price      = parseFloat(document.getElementById('edit-opt-price').value) || 0;
+      updates.tierPrices = null;
     }
 
     try {
@@ -1561,12 +1675,22 @@
 
   // ── Toggle "Number of Tiers" field for the Layers category ──
   window.toggleOptFieldsForCategory = function () {
-    const category = document.getElementById('option-category').value;
-    const isLayers = category === 'layers';
+    const category    = document.getElementById('option-category').value;
+    const isLayers    = category === 'layers';
+    const isFrostings = category === 'frostings';
+
     document.getElementById('opt-tiers-group').style.display = isLayers ? 'block' : 'none';
     document.getElementById('opt-tiers').required = isLayers;
-    document.getElementById('opt-price-group').style.display = isLayers ? 'none' : 'block';
-    document.getElementById('opt-price').required = !isLayers;
+
+    document.getElementById('opt-price-group').style.display = (!isLayers && !isFrostings) ? 'block' : 'none';
+    document.getElementById('opt-price').required = (!isLayers && !isFrostings);
+
+    document.getElementById('opt-frosting-tiers-group').style.display = isFrostings ? 'block' : 'none';
+    const tierList = document.getElementById('opt-frosting-tiers-list');
+    if (isFrostings && tierList.children.length === 0) {
+      tierList.appendChild(createFrostingTierRow(1, ''));
+      tierList.appendChild(createFrostingTierRow(2, ''));
+    }
 
     // Swap "Option Name *" for the selected category's own name
     const label = OPTION_CATEGORY_LABELS[category] || 'Option';
