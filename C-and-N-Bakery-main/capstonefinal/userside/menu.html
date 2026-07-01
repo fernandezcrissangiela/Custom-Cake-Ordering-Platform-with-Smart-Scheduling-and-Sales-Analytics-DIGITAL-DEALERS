@@ -185,7 +185,7 @@
       const buttonAttrs = this.hasSizes()
         ? `class="btn-primary btn-choose-size" data-id="${p.id}"`
         : `class="btn-primary btn-add" data-id="${p.id}"`;
-      const buttonText = this.hasSizes() ? 'Choose Size' : this.getButtonLabel();
+      const buttonText = this.hasSizes() ? 'Add to Cart' : this.getButtonLabel();
       return `
         <img src="${p.image || `https://via.placeholder.com/300x250?text=${encodeURIComponent(p.name)}`}"
              alt="${p.name}" loading="lazy">
