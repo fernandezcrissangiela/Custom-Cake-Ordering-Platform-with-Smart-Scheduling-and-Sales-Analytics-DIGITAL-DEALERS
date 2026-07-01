@@ -117,6 +117,31 @@
         <span id="day-limit-status" style="font-size:0.8rem; color:var(--muted); width:100%;"></span>
       </div>
 
+      <!-- ========== Per-day Fulfillment Settings (moved inside Daily Schedule) ========== -->
+      <div id="day-fulfillment-control" style="display:none; margin-bottom:14px; padding:10px 14px; background:#fff8ee; border:1px solid #f0dfc4; border-radius:10px; flex-wrap:wrap; gap:10px;">
+        <span style="font-weight:600; color:var(--brown); width:100%; display:block; margin-bottom:4px;">
+          <i class="fas fa-toggle-on"></i> Fulfillment options for this day:
+        </span>
+        <p style="font-size:0.78rem; color:var(--muted); margin:0 0 8px 0; width:100%;">
+          Turn a method OFF to hide it from customers at checkout for this specific date only.
+        </p>
+        <div class="fulfillment-settings" style="flex-direction:row; flex-wrap:wrap; gap:10px; width:100%;">
+          <div class="fulfillment-row" style="flex:1; min-width:160px;">
+            <span class="fulfillment-label"><i class="fas fa-truck"></i> Delivery</span>
+            <button class="btn-fulfillment-toggle" id="toggle-day-delivery" data-method="delivery">
+              <i class="fas fa-circle"></i> <span id="day-delivery-status-text">Available</span>
+            </button>
+          </div>
+          <div class="fulfillment-row" style="flex:1; min-width:160px;">
+            <span class="fulfillment-label"><i class="fas fa-store"></i> Store Pickup</span>
+            <button class="btn-fulfillment-toggle" id="toggle-day-pickup" data-method="pickup">
+              <i class="fas fa-circle"></i> <span id="day-pickup-status-text">Available</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- ========== END Per-day Fulfillment Settings ========== -->
+
       <div id="day-orders-list">
         <p>Select a date to view bookings.</p>
       </div>
@@ -230,6 +255,10 @@
   let selectedDate    = null;
   let dayLimits       = {};   // { "2026-07-15": 3, ... } — custom per-day order caps
 
+  // ── Per-day fulfillment availability settings ───────────────────────────────
+  // { "2026-07-15": { delivery: false, pickup: true }, ... }
+  let dayFulfillment  = {};
+
   function pad(n) { return String(n).padStart(2, '0'); }
 
   function todayMidnight() {
@@ -256,6 +285,15 @@
       : DEFAULT_MAX_ORDERS_PER_DAY;
   }
 
+  /** Effective fulfillment availability for a given date string, defaulting to available. */
+  function getDayFulfillment(dateStr) {
+    const d = dayFulfillment[dateStr];
+    return {
+      delivery: (d && d.delivery !== undefined) ? d.delivery : true,
+      pickup:   (d && d.pickup   !== undefined) ? d.pickup   : true
+    };
+  }
+
   onValue(ref(db, 'orders'), (snapshot) => {
     allOrders = snapshot.val() || {};
     renderCalendar();
@@ -267,6 +305,46 @@
     renderCalendar();
     if (selectedDate) viewDay(selectedDate);
   });
+
+  // ── Listen for per-day fulfillment settings changes ─────────────────────────
+  onValue(ref(db, 'dayFulfillment'), (snapshot) => {
+    dayFulfillment = snapshot.val() || {};
+    if (selectedDate) renderDayFulfillment(selectedDate);
+  });
+
+  function renderDayFulfillment(dateStr) {
+    const state = getDayFulfillment(dateStr);
+    ['delivery', 'pickup'].forEach(method => {
+      const btn      = document.getElementById(`toggle-day-${method}`);
+      const statusEl = document.getElementById(`day-${method}-status-text`);
+      if (!btn || !statusEl) return;
+      const isAvailable = state[method];
+      statusEl.textContent = isAvailable ? 'Available' : 'Unavailable';
+      btn.classList.toggle('is-available', isAvailable);
+      btn.classList.toggle('is-unavailable', !isAvailable);
+    });
+  }
+
+  const toggleDayDeliveryBtn = document.getElementById('toggle-day-delivery');
+  if (toggleDayDeliveryBtn) {
+    toggleDayDeliveryBtn.onclick = () => {
+      if (!selectedDate) return;
+      const state = getDayFulfillment(selectedDate);
+      update(ref(db, `dayFulfillment/${selectedDate}`), { delivery: !state.delivery })
+        .catch(err => alert('Failed to update delivery setting: ' + err.message));
+    };
+  }
+
+  const toggleDayPickupBtn = document.getElementById('toggle-day-pickup');
+  if (toggleDayPickupBtn) {
+    toggleDayPickupBtn.onclick = () => {
+      if (!selectedDate) return;
+      const state = getDayFulfillment(selectedDate);
+      update(ref(db, `dayFulfillment/${selectedDate}`), { pickup: !state.pickup })
+        .catch(err => alert('Failed to update pickup setting: ' + err.message));
+    };
+  }
+  // ── End per-day fulfillment settings logic ──────────────────────────────────
 
   window.changeMonth = (off) => {
     currentViewDate.setMonth(currentViewDate.getMonth() + off);
@@ -350,6 +428,17 @@
         subHtml += `<span class="capacity-label" style="background:#eef2ff;color:#4338ca;" title="Custom order limit: ${dayLimits[dStr]}">✎ ${dayLimits[dStr]}</span>`;
       }
 
+      // 🚫 Fulfillment badge — show if this day has a restricted delivery/pickup option
+      if (!isPast) {
+        const dayFul = getDayFulfillment(dStr);
+        if (!dayFul.delivery || !dayFul.pickup) {
+          const label = (!dayFul.delivery && !dayFul.pickup)
+            ? 'No delivery/pickup'
+            : (!dayFul.delivery ? 'No delivery' : 'No pickup');
+          subHtml += `<span class="capacity-label" style="background:#fdecea;color:#922b21;" title="${label}"><i class="fas fa-ban"></i></span>`;
+        }
+      }
+
       const div = document.createElement('div');
       div.className = classes.join(' ');
       div.innerHTML = `
@@ -395,6 +484,15 @@
       limitStatus.textContent = (dayLimits[date] != null)
         ? `Custom limit set for ${formatDateLabel(date)} (default is ${DEFAULT_MAX_ORDERS_PER_DAY}).`
         : `Using the default limit of ${DEFAULT_MAX_ORDERS_PER_DAY} for ${formatDateLabel(date)}.`;
+    }
+
+    // ── Show/hide + populate the per-day fulfillment control ──
+    const fulfillmentControl = document.getElementById('day-fulfillment-control');
+    if (isPast) {
+      fulfillmentControl.style.display = 'none';
+    } else {
+      fulfillmentControl.style.display = 'flex';
+      renderDayFulfillment(date);
     }
 
     const orders = Object.values(allOrders).filter(o => o.date === date);

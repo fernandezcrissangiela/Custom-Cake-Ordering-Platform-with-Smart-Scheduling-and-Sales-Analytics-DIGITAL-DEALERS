@@ -7,6 +7,26 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../css/checkout.css">
+    <!-- NEW: styling for disabled fulfillment option (delivery/pickup unavailable) -->
+    <style>
+        .choice-btn.choice-disabled {
+            opacity: 0.45;
+            cursor: not-allowed !important;
+            pointer-events: none;
+            filter: grayscale(0.3);
+            position: relative;
+        }
+        .choice-btn.choice-disabled::after {
+            content: "Unavailable";
+            display: block;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            color: #922b21;
+            margin-top: 4px;
+        }
+    </style>
 </head>
 <body>
 
@@ -177,6 +197,39 @@
     let hasCustomCake    = false;
     let allOrders        = {};
 
+    // ── Fulfillment availability settings (NEW) ────────────────────────────────
+    // Read from the same Firebase path the admin Schedule page writes to:
+    // settings/fulfillment => { delivery: true/false, pickup: true/false }
+    let fulfillmentSettings = { delivery: true, pickup: true };
+
+    onValue(ref(db, 'settings/fulfillment'), (snapshot) => {
+        const val = snapshot.val();
+        fulfillmentSettings = {
+            delivery: (val && val.delivery !== undefined) ? val.delivery : true,
+            pickup:   (val && val.pickup   !== undefined) ? val.pickup   : true
+        };
+        applyFulfillmentAvailability();
+    });
+
+    function applyFulfillmentAvailability() {
+        document.querySelectorAll('.choice-btn').forEach(btn => {
+            const method      = btn.dataset.method;
+            const isAvailable = fulfillmentSettings[method] !== false;
+            btn.classList.toggle('choice-disabled', !isAvailable);
+        });
+
+        // If the currently selected method just became unavailable,
+        // automatically switch to the other method if it IS available.
+        if (fulfillmentSettings[fulfillmentMethod] === false) {
+            const fallback = fulfillmentMethod === 'delivery' ? 'pickup' : 'delivery';
+            if (fulfillmentSettings[fallback] !== false) {
+                const fallbackBtn = document.querySelector(`.choice-btn[data-method="${fallback}"]`);
+                if (fallbackBtn) fallbackBtn.click();
+            }
+        }
+    }
+    // ── End fulfillment settings logic (NEW) ────────────────────────────────────
+
     onValue(ref(db, 'orders'), (snapshot) => {
         allOrders = snapshot.val() || {};
         updateAvailableDates();
@@ -286,6 +339,9 @@
     // Fulfillment toggle
     document.querySelectorAll('.choice-btn').forEach(btn => {
         btn.addEventListener('click', () => {
+            // NEW: block selecting a method the admin has marked Unavailable
+            if (btn.classList.contains('choice-disabled')) return;
+
             document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             fulfillmentMethod = btn.dataset.method;
@@ -327,6 +383,12 @@
 
     async function placeOrder() {
         if (!currentUser) return alert("Login session issue. Please refresh and try again.");
+
+        // NEW: guard against submitting with a fulfillment method the admin disabled
+        if (fulfillmentSettings[fulfillmentMethod] === false) {
+            alert(`${fulfillmentMethod === 'delivery' ? 'Delivery' : 'Store Pickup'} is currently unavailable. Please choose the other option.`);
+            return;
+        }
 
         const name    = document.getElementById('cust-name').value.trim();
         const phone   = document.getElementById('cust-phone').value.trim();
