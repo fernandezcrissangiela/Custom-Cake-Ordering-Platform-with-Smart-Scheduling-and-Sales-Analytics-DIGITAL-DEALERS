@@ -114,8 +114,21 @@
             <input type="text" id="name" required placeholder="e.g. Chocolate Truffle Cake">
           </div>
           <div class="form-group">
+            <label class="checkbox-label" style="display:flex; align-items:center; gap:8px; font-weight:600; cursor:pointer; color:var(--brown);">
+              <input type="checkbox" id="has-sizes" style="width:auto; margin:0;">
+              Sizes
+            </label>
+          </div>
+          <div class="form-group" id="single-price-group">
             <label>Price (₱) *</label>
-            <input type="number" id="price" step="0.01" min="0" required placeholder="0.00">
+            <input type="number" id="price" step="0.01" min="0" placeholder="0.00">
+          </div>
+          <div class="form-group" id="sizes-group" style="display:none;">
+            <label>Sizes &amp; Prices *</label>
+            <div id="sizes-list"></div>
+            <button type="button" id="add-size-btn" style="margin-top:4px; padding:8px 14px; border-radius:10px; border:1.5px dashed var(--border); background:var(--cream); color:var(--brown); font-family:'Poppins',sans-serif; font-size:0.85rem; cursor:pointer;">
+              <i class="fas fa-plus"></i> Add Size
+            </button>
           </div>
           <div class="form-group">
             <label>Category *</label>
@@ -231,9 +244,14 @@
             <label>Option Name *</label>
             <input type="text" id="opt-name" placeholder="e.g. Red Velvet" required>
           </div>
-          <div class="form-group">
-            <label>Price (₱)</label>
-            <input type="number" id="opt-price" placeholder="0" step="1" min="0" required>
+          <div class="form-group" id="opt-tiers-group" style="display:none;">
+            <label>Number of Tiers *</label>
+            <input type="number" id="opt-tiers" placeholder="e.g. 2" step="1" min="1" max="10">
+            <small style="color:var(--muted);">How many size dropdowns this layer option shows to the customer.</small>
+          </div>
+          <div class="form-group" id="opt-price-group">
+            <label id="opt-price-label">Price (₱) *</label>
+            <input type="number" id="opt-price" placeholder="0" step="1" min="0">
           </div>
           <div class="form-group">
             <label>Status</label>
@@ -257,6 +275,7 @@
         <div class="filter-bar">
           <select id="option-category">
             <option value="layers">Layers</option>
+            <option value="sizes">Cake Sizes (per tier)</option>
             <option value="flavors">Chiffon Flavors</option>
             <option value="frostings">Frostings</option>
             <option value="designs">Design Styles</option>
@@ -396,10 +415,24 @@
           <label>Product Name *</label>
           <input type="text" id="edit-name" required placeholder="e.g. Chocolate Truffle Cake">
         </div>
-        <div class="form-group">
+        <div class="form-group" id="edit-single-price-group">
           <label>Price (₱) *</label>
-          <input type="number" id="edit-price" step="0.01" min="0" required placeholder="0.00">
+          <input type="number" id="edit-price" step="0.01" min="0" placeholder="0.00">
         </div>
+      </div>
+
+      <div class="form-group">
+        <label class="checkbox-label" style="display:flex; align-items:center; gap:8px; font-weight:600; cursor:pointer; color:var(--brown);">
+          <input type="checkbox" id="edit-has-sizes" style="width:auto; margin:0;">
+          Sizes
+        </label>
+      </div>
+      <div class="form-group" id="edit-sizes-group" style="display:none;">
+        <label>Sizes &amp; Prices *</label>
+        <div id="edit-sizes-list"></div>
+        <button type="button" id="edit-add-size-btn" style="margin-top:4px; padding:8px 14px; border-radius:10px; border:1.5px dashed var(--border); background:var(--cream); color:var(--brown); font-family:'Poppins',sans-serif; font-size:0.85rem; cursor:pointer;">
+          <i class="fas fa-plus"></i> Add Size
+        </button>
       </div>
 
       <div class="form-group">
@@ -441,9 +474,14 @@
         <label>Option Name *</label>
         <input type="text" id="edit-opt-name" required placeholder="e.g. Red Velvet">
       </div>
-      <div class="form-group">
+      <div class="form-group" id="edit-opt-tiers-group" style="display:none;">
+        <label>Number of Tiers *</label>
+        <input type="number" id="edit-opt-tiers" placeholder="e.g. 2" step="1" min="1" max="10">
+        <small style="color:var(--muted);">How many size dropdowns this layer option shows to the customer.</small>
+      </div>
+      <div class="form-group" id="edit-opt-price-group">
         <label>Price (₱)</label>
-        <input type="number" id="edit-opt-price" placeholder="0" step="1" min="0" required>
+        <input type="number" id="edit-opt-price" placeholder="0" step="1" min="0">
       </div>
       <div class="form-group">
         <label>Status</label>
@@ -609,6 +647,67 @@
     };
     reader.readAsDataURL(file);
   });
+
+  // ══════════════════════════════════════════════
+  // SIZE-BASED PRICING (multiple sizes per product)
+  // ══════════════════════════════════════════════
+  function createSizeRow(label = '', price = '') {
+    const row = document.createElement('div');
+    row.className = 'size-row';
+    row.style.cssText = 'display:flex; gap:8px; margin-bottom:8px; align-items:center;';
+    row.innerHTML = `
+      <input type="text" class="size-label" placeholder="e.g. Small (6in)" value="${label.replace(/"/g,'&quot;')}"
+             style="flex:2; padding:9px 10px; border:1.5px solid var(--border); border-radius:10px; font-family:'Poppins',sans-serif; font-size:0.88rem;">
+      <input type="number" class="size-price" placeholder="₱0.00" step="0.01" min="0" value="${price}"
+             style="flex:1; padding:9px 10px; border:1.5px solid var(--border); border-radius:10px; font-family:'Poppins',sans-serif; font-size:0.88rem;">
+      <button type="button" class="remove-size-btn" title="Remove size"
+              style="background:none; border:none; color:var(--muted); cursor:pointer; font-size:1.15rem; padding:4px 6px; flex-shrink:0;">
+        <i class="fas fa-times"></i>
+      </button>`;
+    row.querySelector('.remove-size-btn').addEventListener('click', () => row.remove());
+    return row;
+  }
+
+  function initSizeToggle(checkboxId, singlePriceGroupId, sizesGroupId, sizesListId, addBtnId) {
+    const checkbox   = document.getElementById(checkboxId);
+    const singleGrp  = document.getElementById(singlePriceGroupId);
+    const sizesGrp   = document.getElementById(sizesGroupId);
+    const sizesList  = document.getElementById(sizesListId);
+    const addBtn     = document.getElementById(addBtnId);
+
+    checkbox.addEventListener('change', () => {
+      if (checkbox.checked) {
+        singleGrp.style.display = 'none';
+        sizesGrp.style.display  = 'block';
+        if (sizesList.children.length === 0) {
+          sizesList.appendChild(createSizeRow());
+          sizesList.appendChild(createSizeRow());
+        }
+      } else {
+        singleGrp.style.display = 'block';
+        sizesGrp.style.display  = 'none';
+      }
+    });
+
+    addBtn.addEventListener('click', () => sizesList.appendChild(createSizeRow()));
+  }
+
+  // Reads sizes rows from a container into a clean [{label, price}] array.
+  // Returns null if a row is invalid (and alerts the user).
+  function readSizeRows(sizesListId) {
+    const rows = document.querySelectorAll(`#${sizesListId} .size-row`);
+    const sizes = [];
+    for (const row of rows) {
+      const label = row.querySelector('.size-label').value.trim();
+      const price = parseFloat(row.querySelector('.size-price').value);
+      if (!label || isNaN(price) || price <= 0) continue; // skip blank rows silently
+      sizes.push({ label, price });
+    }
+    return sizes;
+  }
+
+  initSizeToggle('has-sizes', 'single-price-group', 'sizes-group', 'sizes-list', 'add-size-btn');
+  initSizeToggle('edit-has-sizes', 'edit-single-price-group', 'edit-sizes-group', 'edit-sizes-list', 'edit-add-size-btn');
 
   // ── Auto-generate key from display name (internal) ──
   function generateKey(displayName) {
@@ -873,13 +972,22 @@
     filtered.forEach(p => {
       const catObj   = cachedCategories.find(c => c.key === p.category);
       const catLabel = catObj ? catObj.displayName : (p.category.charAt(0).toUpperCase() + p.category.slice(1));
+      const hasSizes  = Array.isArray(p.sizes) && p.sizes.length > 0;
+      const pricePill = hasSizes
+        ? `From ₱${Number(Math.min(...p.sizes.map(s => s.price))).toFixed(2)}`
+        : `₱${Number(p.price).toFixed(2)}`;
+      const sizesSummary = hasSizes
+        ? `<div class="sizes-summary" style="display:flex; flex-wrap:wrap; gap:5px; margin:4px 0;">
+            ${p.sizes.map(s => `<span style="background:var(--cream); border:1px solid var(--border); border-radius:20px; padding:2px 9px; font-size:0.72rem; color:var(--brown);">${s.label} · ₱${Number(s.price).toFixed(2)}</span>`).join('')}
+          </div>`
+        : '';
       const card = document.createElement('div');
       card.className = 'product-card';
       card.innerHTML = `
         <div class="img-wrapper">
           <img src="${p.image || 'https://via.placeholder.com/280x185?text=No+Image'}" alt="${p.name}"
                onerror="this.src='https://via.placeholder.com/280x185?text=Image+Error'">
-          <span class="price-pill">₱${Number(p.price).toFixed(2)}</span>
+          <span class="price-pill">${pricePill}</span>
         </div>
         <div class="product-info">
           <div class="top-row">
@@ -887,6 +995,7 @@
             <span class="product-cat-badge cat-${p.category}">${catLabel}</span>
           </div>
           <small>${p.description ? p.description.substring(0, 72) + (p.description.length > 72 ? '…' : '') : '<em style="opacity:0.45;">No description</em>'}</small>
+          ${sizesSummary}
           <div class="card-divider"></div>
           <div class="card-actions">
             <button class="edit-btn" data-id="${p.id}" data-cat="${p.category}">
@@ -917,6 +1026,19 @@
     document.getElementById('edit-price').value       = product.price || '';
     document.getElementById('edit-category').value    = product.category || 'cakes';
     document.getElementById('edit-description').value = product.description || '';
+
+    const editSizesList = document.getElementById('edit-sizes-list');
+    editSizesList.innerHTML = '';
+    const hasSizes = Array.isArray(product.sizes) && product.sizes.length > 0;
+    document.getElementById('edit-has-sizes').checked = hasSizes;
+    if (hasSizes) {
+      product.sizes.forEach(s => editSizesList.appendChild(createSizeRow(s.label || '', s.price ?? '')));
+      document.getElementById('edit-single-price-group').style.display = 'none';
+      document.getElementById('edit-sizes-group').style.display = 'block';
+    } else {
+      document.getElementById('edit-single-price-group').style.display = 'block';
+      document.getElementById('edit-sizes-group').style.display = 'none';
+    }
 
     const preview = document.getElementById('edit-img-preview');
     if (product.image) { preview.src = product.image; preview.style.display = 'block'; }
@@ -950,14 +1072,34 @@
     const oldCat   = document.getElementById('edit-cat').value;
     const newCat   = document.getElementById('edit-category').value;
     const name     = document.getElementById('edit-name').value.trim();
-    const price    = parseFloat(document.getElementById('edit-price').value);
     const desc     = document.getElementById('edit-description').value.trim();
+    const editHasSizes = document.getElementById('edit-has-sizes').checked;
 
-    if (!name || isNaN(price) || price <= 0) {
-      alert("Please fill in a valid name and price.");
+    if (!name) {
+      alert("Please enter a product name.");
       btn.disabled = false;
       btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
       return;
+    }
+
+    let price, sizes = null;
+    if (editHasSizes) {
+      sizes = readSizeRows('edit-sizes-list');
+      if (sizes.length === 0) {
+        alert("Please add at least one size with a valid label and price.");
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+        return;
+      }
+      price = Math.min(...sizes.map(s => s.price));
+    } else {
+      price = parseFloat(document.getElementById('edit-price').value);
+      if (isNaN(price) || price <= 0) {
+        alert("Please fill in a valid price.");
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+        return;
+      }
     }
 
     try {
@@ -966,11 +1108,12 @@
         const snap = await get(ref(db, `products/${oldCat}/${id}`));
         const existing = snap.val() || {};
         const newData = { ...existing, name, price, description: desc, category: newCat };
+        newData.sizes = sizes; // null clears sizes when switching back to single price
         if (editBase64) newData.image = editBase64;
         await push(ref(db, `products/${newCat}`), newData);
         await remove(ref(db, `products/${oldCat}/${id}`));
       } else {
-        const updates = { name, price, description: desc };
+        const updates = { name, price, description: desc, sizes };
         if (editBase64) updates.image = editBase64;
         await update(ref(db, `products/${oldCat}/${id}`), updates);
       }
@@ -1052,24 +1195,49 @@
       return;
     }
 
+    const hasSizes = document.getElementById('has-sizes').checked;
+
     const data = {
       name:        document.getElementById('name').value.trim(),
-      price:       parseFloat(document.getElementById('price').value),
       image:       productBase64 || '',
       description: document.getElementById('description').value.trim(),
       createdAt:   Date.now()
     };
 
-    if (!data.name || isNaN(data.price) || data.price <= 0) {
-      alert("Please fill in a valid name and price.");
+    if (!data.name) {
+      alert("Please enter a product name.");
       btn.disabled = false;
       btn.innerHTML = '<i class="fas fa-plus"></i> Add Product to Menu';
       return;
     }
 
+    if (hasSizes) {
+      const sizes = readSizeRows('sizes-list');
+      if (sizes.length === 0) {
+        alert("Please add at least one size with a valid label and price.");
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-plus"></i> Add Product to Menu';
+        return;
+      }
+      data.sizes = sizes;
+      data.price = Math.min(...sizes.map(s => s.price)); // base/lowest price, used for filtering & sorting
+    } else {
+      data.price = parseFloat(document.getElementById('price').value);
+      if (isNaN(data.price) || data.price <= 0) {
+        alert("Please fill in a valid price.");
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-plus"></i> Add Product to Menu';
+        return;
+      }
+    }
+
     try {
       await push(ref(db, `products/${category}`), data);
       document.getElementById('add-product-form').reset();
+      document.getElementById('sizes-list').innerHTML = '';
+      document.getElementById('has-sizes').checked = false;
+      document.getElementById('single-price-group').style.display = 'block';
+      document.getElementById('sizes-group').style.display = 'none';
       productBase64 = "";
       document.getElementById('admin-img-preview').style.display = "none";
       loadProducts();
@@ -1105,14 +1273,15 @@
         row.innerHTML = `
           <div class="option-row-left">
             <strong>${data.name}</strong>
-            <span class="option-price">₱${data.price || 0}</span>
+            ${category !== 'layers' ? `<span class="option-price">₱${data.price || 0}</span>` : ''}
+            ${category === 'layers' ? `<span class="option-price">${data.tiers || 1} tier${(data.tiers || 1) > 1 ? 's' : ''}</span>` : ''}
             <span class="option-enabled ${data.enabled ? 'opt-on' : 'opt-off'}">
               ${data.enabled ? 'Enabled' : 'Disabled'}
             </span>
           </div>
           <div class="option-row-actions">
             <button class="btn-edit-opt"
-                    onclick="openEditOption('${category}','${child.key}','${data.name}',${data.price || 0},'${data.enabled}')">
+                    onclick="openEditOption('${category}','${child.key}','${data.name}',${data.price || 0},'${data.enabled}',${data.tiers || 0})">
               <i class="fas fa-pen"></i> Edit
             </button>
             <button class="btn-delete-opt"
@@ -1132,14 +1301,23 @@
     const name     = document.getElementById('opt-name').value.trim();
     const price    = parseFloat(document.getElementById('opt-price').value) || 0;
     const enabled  = document.getElementById('opt-enabled').value === "true";
+    const tiers    = parseInt(document.getElementById('opt-tiers').value) || 0;
 
     if (!name) { alert("Please enter an option name."); return; }
+    if (category === 'layers' && tiers < 1) { alert("Please enter how many tiers this layer option represents."); return; }
+    if (category !== 'layers' && price <= 0) { alert("Please enter a price for this option."); return; }
+
+    const payload = { name, enabled, createdAt: Date.now() };
+    if (category === 'layers') {
+      payload.tiers = tiers;
+    } else {
+      payload.price = price;
+    }
 
     try {
-      await push(ref(db, `customization-options/${category}`), {
-        name, price, enabled, createdAt: Date.now()
-      });
+      await push(ref(db, `customization-options/${category}`), payload);
       document.getElementById('add-option-form').reset();
+      toggleOptFieldsForCategory();
       loadCurrentOptions();
     } catch (err) {
       alert("Error adding option: " + err.message);
@@ -1185,12 +1363,15 @@
   });
 
   // ── Edit Option ──
-  window.openEditOption = function (category, id, name, price, enabled) {
+  window.openEditOption = function (category, id, name, price, enabled, tiers) {
     document.getElementById('edit-opt-category').value = category;
     document.getElementById('edit-opt-id').value       = id;
     document.getElementById('edit-opt-name').value     = name;
     document.getElementById('edit-opt-price').value    = price;
     document.getElementById('edit-opt-enabled').value  = enabled;
+    document.getElementById('edit-opt-tiers').value    = tiers || 1;
+    document.getElementById('edit-opt-tiers-group').style.display = category === 'layers' ? 'block' : 'none';
+    document.getElementById('edit-opt-price-group').style.display = category === 'layers' ? 'none' : 'block';
     document.getElementById('edit-option-modal').style.display = 'flex';
   };
 
@@ -1213,11 +1394,21 @@
     const name     = document.getElementById('edit-opt-name').value.trim();
     const price    = parseFloat(document.getElementById('edit-opt-price').value) || 0;
     const enabled  = document.getElementById('edit-opt-enabled').value === 'true';
+    const tiers    = parseInt(document.getElementById('edit-opt-tiers').value) || 1;
 
     if (!name) { alert("Please enter an option name."); btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save Changes'; return; }
+    if (category === 'layers' && tiers < 1) { alert("Please enter how many tiers this layer option represents."); btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save Changes'; return; }
+
+    const updates = { name, enabled };
+    if (category === 'layers') {
+      updates.tiers = tiers;
+      updates.price = null; // remove any legacy price value from layer options
+    } else {
+      updates.price = price;
+    }
 
     try {
-      await update(ref(db, `customization-options/${category}/${id}`), { name, price, enabled });
+      await update(ref(db, `customization-options/${category}/${id}`), updates);
       closeEditOptionModal();
       loadCurrentOptions();
     } catch (err) {
@@ -1241,10 +1432,24 @@
   // ── Initial load ──
   loadCategories().then(() => loadProducts());
 
+  // ── Toggle "Number of Tiers" field for the Layers category ──
+  window.toggleOptFieldsForCategory = function () {
+    const category = document.getElementById('option-category').value;
+    const isLayers = category === 'layers';
+    document.getElementById('opt-tiers-group').style.display = isLayers ? 'block' : 'none';
+    document.getElementById('opt-tiers').required = isLayers;
+    document.getElementById('opt-price-group').style.display = isLayers ? 'none' : 'block';
+    document.getElementById('opt-price').required = !isLayers;
+  };
+
   // ── Auto-load options when select changes ──
-  document.getElementById('option-category').addEventListener('change', loadCurrentOptions);
+  document.getElementById('option-category').addEventListener('change', () => {
+    toggleOptFieldsForCategory();
+    loadCurrentOptions();
+  });
 
   // ── Load default option category on page load ──
+  toggleOptFieldsForCategory();
   loadCurrentOptions();
 
   // ══════════════════════════════════════════════

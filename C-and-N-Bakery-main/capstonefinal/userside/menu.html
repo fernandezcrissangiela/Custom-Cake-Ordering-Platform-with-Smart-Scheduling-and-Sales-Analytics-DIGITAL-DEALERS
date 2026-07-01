@@ -81,9 +81,16 @@
         <h2 id="modalTitle"></h2>
         <div class="modal-price" id="modalPrice"></div>
         <p class="modal-desc" id="modalDesc"></p>
+        <div id="modalSizeSelector" class="modal-size-selector" style="display:none; margin:10px 0 16px;"></div>
         <button id="modalAddToCart" class="btn-primary full-width">Add to Cart</button>
       </div>
     </div>
+  </div>
+
+  <!-- Add-to-cart confirmation toast -->
+  <div id="cartToast" class="cart-toast" style="position:fixed; left:50%; bottom:28px; transform:translateX(-50%) translateY(20px); background:#2f2118; color:#fff; padding:12px 22px; border-radius:30px; font-family:'Poppins',sans-serif; font-size:0.92rem; box-shadow:0 8px 24px rgba(0,0,0,0.25); z-index:10000; opacity:0; pointer-events:none; transition:opacity 0.25s ease, transform 0.25s ease; display:flex; align-items:center; gap:8px;">
+    <i class="fas fa-check-circle" style="color:#7fd88f;"></i>
+    <span id="cartToastText">Added to cart!</span>
   </div>
 
 <script type="module">
@@ -135,7 +142,12 @@
 
     addItem(product, categoryLabel) {
       const cart = this.getCart();
-      const item = { ...product, category: categoryLabel, id: product.id || Date.now().toString() };
+      // Drop the image before it ever touches storage — cart data gets synced
+      // to Firebase, and duplicating (often base64) images across every cart
+      // entry is what was filling up the database. The cart only needs the
+      // product's text details.
+      const { image, ...productWithoutImage } = product;
+      const item = { ...productWithoutImage, category: categoryLabel, id: product.id || Date.now().toString() };
       const existing = cart.find(i => i.id === item.id);
       if (existing) {
         existing.quantity = (existing.quantity || 1) + 1;
@@ -157,16 +169,30 @@
       this.product = product;
     }
 
+    // Whether this product has multiple sizes with different prices
+    hasSizes() {
+      return Array.isArray(this.product.sizes) && this.product.sizes.length > 0;
+    }
+
     // Shared template — delegates to getButtonLabel() for flexibility
     render() { // OOP - Polymorphism (calls overridden getButtonLabel)
       const p = this.product;
+      const priceLabel = this.hasSizes()
+        ? `From ₱${Number(Math.min(...p.sizes.map(s => s.price))).toFixed(2)}`
+        : `₱${Number(p.price).toFixed(2)}`;
+      // Products with sizes require picking a size first, so the card
+      // button opens the detail modal instead of adding directly to cart.
+      const buttonAttrs = this.hasSizes()
+        ? `class="btn-primary btn-choose-size" data-id="${p.id}"`
+        : `class="btn-primary btn-add" data-id="${p.id}"`;
+      const buttonText = this.hasSizes() ? 'Choose Size' : this.getButtonLabel();
       return `
         <img src="${p.image || `https://via.placeholder.com/300x250?text=${encodeURIComponent(p.name)}`}"
              alt="${p.name}" loading="lazy">
         <h3>${p.name}</h3>
         <p class="card-desc">${p.description || "Freshly baked daily with love and the finest ingredients."}</p>
-        <p class="price">₱${Number(p.price).toFixed(2)}</p>
-        <button class="btn-primary btn-add" data-id="${p.id}">${this.getButtonLabel()}</button>`;
+        <p class="price">${priceLabel}</p>
+        <button ${buttonAttrs}>${buttonText}</button>`;
     }
 
     // Default label — subclasses override for different text
@@ -216,6 +242,7 @@
   // ============================================================
   class ProductModal { // OOP - Encapsulation
     #currentProduct = null;
+    #selectedSize = null; // { label, price } when the product has sizes
     #el;
 
     constructor(modalId) {
@@ -225,21 +252,66 @@
 
     open(product) {
       this.#currentProduct = product;
+      const hasSizes = Array.isArray(product.sizes) && product.sizes.length > 0;
+      this.#selectedSize = hasSizes ? product.sizes[0] : null;
+
       document.getElementById('modalImg').src   = product.image || `https://via.placeholder.com/420x300?text=${encodeURIComponent(product.name)}`;
       document.getElementById('modalImg').alt   = product.name;
       document.getElementById('modalTitle').textContent = product.name;
-      document.getElementById('modalPrice').textContent = `₱${Number(product.price).toFixed(2)}`;
       document.getElementById('modalDesc').textContent  = product.description || "Freshly baked daily with love and the finest ingredients.";
+
+      const selectorEl = document.getElementById('modalSizeSelector');
+      if (hasSizes) {
+        selectorEl.style.display = 'flex';
+        selectorEl.style.flexWrap = 'wrap';
+        selectorEl.style.gap = '8px';
+        selectorEl.innerHTML = product.sizes.map((s, i) => `
+          <label class="size-option${i === 0 ? ' selected' : ''}"
+                 style="display:flex; align-items:center; gap:6px; border:1.5px solid ${i === 0 ? 'var(--primary,#d17b4f)' : '#ddd'}; border-radius:20px; padding:6px 12px; cursor:pointer; font-size:0.88rem;">
+            <input type="radio" name="modal-size" value="${i}" ${i === 0 ? 'checked' : ''} style="margin:0;">
+            ${s.label} — ₱${Number(s.price).toFixed(2)}
+          </label>`).join('');
+
+        selectorEl.querySelectorAll('input[name="modal-size"]').forEach(input => {
+          input.addEventListener('change', () => {
+            const idx = Number(input.value);
+            this.#selectedSize = product.sizes[idx];
+            document.getElementById('modalPrice').textContent = `₱${Number(this.#selectedSize.price).toFixed(2)}`;
+            selectorEl.querySelectorAll('.size-option').forEach((lbl, i) => {
+              lbl.style.borderColor = i === idx ? 'var(--primary,#d17b4f)' : '#ddd';
+              lbl.classList.toggle('selected', i === idx);
+            });
+          });
+        });
+
+        document.getElementById('modalPrice').textContent = `₱${Number(this.#selectedSize.price).toFixed(2)}`;
+      } else {
+        selectorEl.style.display = 'none';
+        selectorEl.innerHTML = '';
+        document.getElementById('modalPrice').textContent = `₱${Number(product.price).toFixed(2)}`;
+      }
+
       this.#el.classList.add('active');
     }
 
     close() {
       this.#el.classList.remove('active');
       this.#currentProduct = null;
+      this.#selectedSize = null;
     }
 
+    // Returns the product to add to cart — merged with the chosen size
+    // (price + a size-qualified id/name) when the product has sizes.
     getCurrentProduct() {
-      return this.#currentProduct; // controlled access to private state
+      if (!this.#currentProduct) return null;
+      if (!this.#selectedSize) return this.#currentProduct;
+      return {
+        ...this.#currentProduct,
+        price: this.#selectedSize.price,
+        size: this.#selectedSize.label,
+        name: `${this.#currentProduct.name} (${this.#selectedSize.label})`,
+        id: `${this.#currentProduct.id}__${this.#selectedSize.label}`
+      };
     }
   }
 
@@ -300,12 +372,33 @@
       const label  = catObj ? catObj.displayName : (product.category || "Others");
       this.#cartManager.addItem(product, label); // OOP - Encapsulation
 
-      document.querySelectorAll(`.btn-add[data-id="${product.id}"]`).forEach(btn => {
+      // The cart id for a sized item is "<baseId>__<size label>" — strip the
+      // size suffix so we can still flash the matching card button, whether
+      // it's the plain "Add to Cart" (.btn-add) or "Choose Size" (.btn-choose-size).
+      const baseId = String(product.id).split('__')[0];
+      document.querySelectorAll(`.btn-add[data-id="${baseId}"], .btn-choose-size[data-id="${baseId}"]`).forEach(btn => {
         const original = btn.innerHTML;
         btn.innerHTML = '<i class="fas fa-check"></i> Added';
         btn.disabled = true;
         setTimeout(() => { btn.innerHTML = original; btn.disabled = false; }, 1400);
       });
+
+      this.#showCartToast(`${product.name} added to cart!`);
+    }
+
+    // Always-visible confirmation, since the modal (used for sized products)
+    // closes immediately and wouldn't otherwise give the user any feedback.
+    #showCartToast(message) { // OOP - Encapsulation (private method)
+      const toast = document.getElementById('cartToast');
+      if (!toast) return;
+      document.getElementById('cartToastText').textContent = message;
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateX(-50%) translateY(0)';
+      clearTimeout(this._toastTimer);
+      this._toastTimer = setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(20px)';
+      }, 2000);
     }
 
     // ── Rendering
@@ -327,9 +420,19 @@
       const minPrice = parseFloat(activePriceBtn?.dataset.min || 0);
       const maxPrice = parseFloat(activePriceBtn?.dataset.max || Infinity);
 
-      const items = (this.#productsByCategory[categoryKey] || []).filter(p =>
-        p.price >= minPrice && p.price <= maxPrice
-      );
+      // Products with per-size pricing have no top-level `price` field, so
+      // fall back to their cheapest size when checking the price filter.
+      // (Without this, sized products always fail `undefined >= minPrice`
+      // and get filtered out of the grid entirely — even under "Any".)
+      const getEffectivePrice = p =>
+        Array.isArray(p.sizes) && p.sizes.length > 0
+          ? Math.min(...p.sizes.map(s => s.price))
+          : p.price;
+
+      const items = (this.#productsByCategory[categoryKey] || []).filter(p => {
+        const price = getEffectivePrice(p);
+        return price >= minPrice && price <= maxPrice;
+      });
 
       this.#grid.innerHTML = items.length === 0
         ? '<p class="no-products">No products found in this price range.</p>'
@@ -411,12 +514,21 @@
     // ── Wire up grid click delegation for Add to Cart buttons
     #bindGridClicks() { // OOP - Encapsulation (private method)
       this.#grid.addEventListener('click', e => {
+        const activeCat = document.querySelector('.category-btn.active')?.dataset.category;
+
+        const chooseBtn = e.target.closest('.btn-choose-size');
+        if (chooseBtn) {
+          e.stopPropagation();
+          const product = this.#productsByCategory[activeCat]?.find(p => p.id === chooseBtn.dataset.id);
+          if (product) this.#modal.open(product); // let them pick a size in the modal
+          return;
+        }
+
         const btn = e.target.closest('.btn-add');
         if (!btn) return;
         e.stopPropagation();
-        const id        = btn.dataset.id;
-        const activeCat = document.querySelector('.category-btn.active')?.dataset.category;
-        const product   = this.#productsByCategory[activeCat]?.find(p => p.id === id);
+        const id      = btn.dataset.id;
+        const product = this.#productsByCategory[activeCat]?.find(p => p.id === id);
         if (product) this.addToCart(product); // OOP - Abstraction
       });
     }

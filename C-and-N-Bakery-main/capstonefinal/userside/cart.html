@@ -35,6 +35,15 @@
             display: none;
         }
 
+        /* ─── Cart items no longer show a product photo (keeps DB storage
+               small — cart data is synced to Firebase per user) ─── */
+        .cart-item-no-image {
+            display: flex;
+        }
+        .cart-item-no-image .item-details {
+            width: 100%;
+        }
+
         /* ─── Mobile Sticky Checkout Bar ─── */
         #mobile-checkout-bar {
             display: none;
@@ -234,8 +243,7 @@
                 wrapper.className = 'cart-item-wrapper';
                 wrapper.innerHTML = `
                     <input type="checkbox" class="item-checkbox" ${isChecked ? 'checked' : ''} onchange="toggleSelect(${index})">
-                    <div class="cart-item">
-                        <img src="${item.image || 'https://via.placeholder.com/110?text=Cake'}" alt="${item.name}">
+                    <div class="cart-item cart-item-no-image">
                         <div class="item-details">
                             <h3>${item.name}</h3>
                             ${item.customDetails
@@ -312,7 +320,6 @@
                     name:            item.name,
                     price:           item.price,
                     quantity:        item.quantity,
-                    image:           item.image || 'https://via.placeholder.com/110?text=Bakery+Item',
                     description:     item.description    || '',
                     category:        item.category       || '',
                     customDetails:   item.customDetails  || null,
