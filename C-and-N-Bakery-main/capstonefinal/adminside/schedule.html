@@ -100,6 +100,23 @@
       <h2 class="daily-panel-title">
         <i class="fas fa-clock"></i> Daily Schedule
       </h2>
+
+      <!-- Per-day order limit control -->
+      <div id="day-limit-control" style="display:none; margin-bottom:14px; padding:10px 14px; background:#fff8ee; border:1px solid #f0dfc4; border-radius:10px; align-items:center; gap:10px; flex-wrap:wrap;">
+        <span style="font-weight:600; color:var(--brown);">
+          <i class="fas fa-sliders-h"></i> Order limit for this day:
+        </span>
+        <input type="number" id="day-limit-input" min="1" max="50"
+               style="width:70px; padding:6px 8px; border:1px solid #ddd; border-radius:6px; text-align:center;">
+        <button class="btn-action" id="day-limit-save" style="padding:6px 14px;">
+          <i class="fas fa-save"></i> Save
+        </button>
+        <button class="btn-action" id="day-limit-reset" style="padding:6px 14px; background:#eee; color:#555;">
+          Reset to default
+        </button>
+        <span id="day-limit-status" style="font-size:0.8rem; color:var(--muted); width:100%;"></span>
+      </div>
+
       <div id="day-orders-list">
         <p>Select a date to view bookings.</p>
       </div>
@@ -172,7 +189,9 @@
     projectId: "candn-bakery"
   };
 
-  const MAX_ORDERS_PER_DAY = 3;
+  // Default order cap used for any day that doesn't have a custom limit set.
+  const DEFAULT_MAX_ORDERS_PER_DAY = 5;
+
   const app = initializeApp(firebaseConfig);
   const db  = getDatabase(app);
 
@@ -209,6 +228,7 @@
   let currentViewDate = new Date();
   let allOrders       = {};
   let selectedDate    = null;
+  let dayLimits       = {};   // { "2026-07-15": 3, ... } — custom per-day order caps
 
   function pad(n) { return String(n).padStart(2, '0'); }
 
@@ -228,8 +248,22 @@
     });
   }
 
+  /** Effective max orders for a given date string, falling back to the default. */
+  function getMaxOrders(dateStr) {
+    const custom = dayLimits[dateStr];
+    return (custom !== undefined && custom !== null && custom > 0)
+      ? custom
+      : DEFAULT_MAX_ORDERS_PER_DAY;
+  }
+
   onValue(ref(db, 'orders'), (snapshot) => {
     allOrders = snapshot.val() || {};
+    renderCalendar();
+    if (selectedDate) viewDay(selectedDate);
+  });
+
+  onValue(ref(db, 'dayLimits'), (snapshot) => {
+    dayLimits = snapshot.val() || {};
     renderCalendar();
     if (selectedDate) viewDay(selectedDate);
   });
@@ -274,8 +308,9 @@
       const dayOrders    = Object.values(allOrders).filter(o => o.date === dStr);
       const activeOrders = dayOrders.filter(o => !['cancelled'].includes((o.status||'').toLowerCase()));
       const orderCount   = activeOrders.length;
-      const isFull       = !isPast && orderCount >= MAX_ORDERS_PER_DAY;
-      const isAlmost     = !isPast && !isFull && orderCount === MAX_ORDERS_PER_DAY - 1;
+      const maxForDay    = getMaxOrders(dStr);
+      const isFull       = !isPast && orderCount >= maxForDay;
+      const isAlmost     = !isPast && !isFull && orderCount === maxForDay - 1;
 
       let capacityClass = 'ok';
       if (isFull)        capacityClass = 'full';
@@ -300,7 +335,7 @@
         ).length;
         subHtml = `<span class="capacity-label warn">${done}/${dayOrders.length} done</span>`;
       } else if (!isPast && orderCount > 0) {
-        subHtml = `<span class="capacity-label ${capacityClass}">${orderCount}/${MAX_ORDERS_PER_DAY}</span>`;
+        subHtml = `<span class="capacity-label ${capacityClass}">${orderCount}/${maxForDay}</span>`;
         if (isFull) subHtml += `<span class="full-text">FULL</span>`;
       }
 
@@ -308,6 +343,11 @@
       const hasUnpaidCustom = !isPast && activeOrders.some(needsDownpaymentReminder);
       if (hasUnpaidCustom) {
         subHtml += `<span class="capacity-label warn" title="Custom order — downpayment not yet received">⚠ DP</span>`;
+      }
+
+      // ✎ Custom-limit badge — show if this day has an admin-set order cap
+      if (!isPast && dayLimits[dStr] != null) {
+        subHtml += `<span class="capacity-label" style="background:#eef2ff;color:#4338ca;" title="Custom order limit: ${dayLimits[dStr]}">✎ ${dayLimits[dStr]}</span>`;
       }
 
       const div = document.createElement('div');
@@ -321,7 +361,7 @@
       // Only non-past full days are blocked
       if (isFull && !isPast) {
         div.style.cursor = 'not-allowed';
-        div.title = `Max capacity reached (${MAX_ORDERS_PER_DAY} orders)`;
+        div.title = `Max capacity reached (${maxForDay} orders)`;
       } else {
         div.onclick = () => {
           selectedDate = dStr;
@@ -340,6 +380,22 @@
     const today    = todayMidnight();
     const cellDate = new Date(date + 'T00:00:00');
     const isPast   = cellDate < today;
+    const maxForDay = getMaxOrders(date);
+
+    // ── Show/hide + populate the per-day limit control ──
+    const limitControl = document.getElementById('day-limit-control');
+    const limitInput    = document.getElementById('day-limit-input');
+    const limitStatus   = document.getElementById('day-limit-status');
+
+    if (isPast) {
+      limitControl.style.display = 'none';
+    } else {
+      limitControl.style.display = 'flex';
+      limitInput.value = maxForDay;
+      limitStatus.textContent = (dayLimits[date] != null)
+        ? `Custom limit set for ${formatDateLabel(date)} (default is ${DEFAULT_MAX_ORDERS_PER_DAY}).`
+        : `Using the default limit of ${DEFAULT_MAX_ORDERS_PER_DAY} for ${formatDateLabel(date)}.`;
+    }
 
     const orders = Object.values(allOrders).filter(o => o.date === date);
 
@@ -357,7 +413,7 @@
       !['cancelled'].includes((o.status||'').toLowerCase())
     ).length;
 
-    const isFull = activeCount >= MAX_ORDERS_PER_DAY;
+    const isFull = activeCount >= maxForDay;
 
     list.innerHTML = `
       <h3>
@@ -365,7 +421,7 @@
            style="color:var(--primary); margin-right:6px;"></i>
         ${isPast ? 'History for' : 'Bookings for'} ${formatDateLabel(date)}
         <span class="status-full">
-          ${activeCount}/${MAX_ORDERS_PER_DAY}${isFull && !isPast ? ' — FULL' : ''}
+          ${activeCount}/${maxForDay}${isFull && !isPast ? ' — FULL' : ''}
         </span>
       </h3>`;
 
@@ -400,6 +456,25 @@
       card.onclick = () => openOrderModal(orderId);
       list.appendChild(card);
     });
+  };
+
+  // ── Save / reset the per-day order limit ──────────────────────────────────
+  document.getElementById('day-limit-save').onclick = () => {
+    if (!selectedDate) return;
+    const val = parseInt(document.getElementById('day-limit-input').value, 10);
+    if (!val || val < 1) {
+      alert('Please enter a valid number (1 or more).');
+      return;
+    }
+    update(ref(db, 'dayLimits'), { [selectedDate]: val })
+      .catch(err => alert('Failed to save limit: ' + err.message));
+  };
+
+  document.getElementById('day-limit-reset').onclick = () => {
+    if (!selectedDate) return;
+    // Setting the key to null removes it from Firebase, so the day falls back to the default.
+    update(ref(db, 'dayLimits'), { [selectedDate]: null })
+      .catch(err => alert('Failed to reset limit: ' + err.message));
   };
 
   // ── Order Detail Modal ──
