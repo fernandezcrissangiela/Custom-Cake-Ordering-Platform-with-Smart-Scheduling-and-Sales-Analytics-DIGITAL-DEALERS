@@ -81,7 +81,7 @@
         <h2 id="modalTitle"></h2>
         <div class="modal-price" id="modalPrice"></div>
         <p class="modal-desc" id="modalDesc"></p>
-        <div id="modalSizeSelector" class="modal-size-selector" style="display:none; margin:10px 0 16px;"></div>
+        <div id="modalSizeSelector" class="modal-size-selector" style="display:none;"></div>
         <button id="modalAddToCart" class="btn-primary full-width">Add to Cart</button>
       </div>
     </div>
@@ -263,13 +263,10 @@
       const selectorEl = document.getElementById('modalSizeSelector');
       if (hasSizes) {
         selectorEl.style.display = 'flex';
-        selectorEl.style.flexWrap = 'wrap';
-        selectorEl.style.gap = '8px';
         selectorEl.innerHTML = product.sizes.map((s, i) => `
-          <label class="size-option${i === 0 ? ' selected' : ''}"
-                 style="display:flex; align-items:center; gap:6px; border:1.5px solid ${i === 0 ? 'var(--primary,#d17b4f)' : '#ddd'}; border-radius:20px; padding:6px 12px; cursor:pointer; font-size:0.88rem;">
-            <input type="radio" name="modal-size" value="${i}" ${i === 0 ? 'checked' : ''} style="margin:0;">
-            ${s.label} — ₱${Number(s.price).toFixed(2)}
+          <label class="size-option${i === 0 ? ' selected' : ''}">
+            <input type="radio" name="modal-size" value="${i}" ${i === 0 ? 'checked' : ''}>
+            <span class="size-option-text">${s.label} — ₱${Number(s.price).toFixed(2)}</span>
           </label>`).join('');
 
         selectorEl.querySelectorAll('input[name="modal-size"]').forEach(input => {
@@ -278,7 +275,6 @@
             this.#selectedSize = product.sizes[idx];
             document.getElementById('modalPrice').textContent = `₱${Number(this.#selectedSize.price).toFixed(2)}`;
             selectorEl.querySelectorAll('.size-option').forEach((lbl, i) => {
-              lbl.style.borderColor = i === idx ? 'var(--primary,#d17b4f)' : '#ddd';
               lbl.classList.toggle('selected', i === idx);
             });
           });

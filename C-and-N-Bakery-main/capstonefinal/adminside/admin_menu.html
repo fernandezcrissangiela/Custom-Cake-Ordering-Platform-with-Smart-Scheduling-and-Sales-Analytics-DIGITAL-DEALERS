@@ -8,6 +8,93 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="../css/admin.css">
   <link rel="stylesheet" href="../css/admin_menu.css">
+  <style>
+    /* ===== Redesigned "Sizes" toggle switch (replaces plain checkbox) ===== */
+    .size-toggle-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      cursor:pointer;
+      background:var(--cream);
+      border:1.5px solid var(--border);
+      border-radius:14px;
+      padding:12px 16px;
+      transition:border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    .size-toggle-row:hover{
+      border-color:var(--primary);
+    }
+    .size-toggle-row:has(input:checked){
+      border-color:var(--primary);
+      box-shadow:0 0 0 3px rgba(130,90,60,0.10);
+    }
+    .size-toggle-text{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .size-toggle-label{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-weight:600;
+      color:var(--brown);
+      font-size:0.92rem;
+    }
+    .size-toggle-label i{
+      color:var(--primary);
+      font-size:0.95rem;
+      width:16px;
+      text-align:center;
+    }
+    .size-toggle-sub{
+      font-size:0.74rem;
+      color:var(--muted);
+      margin-left:24px;
+    }
+    .toggle-switch{
+      position:relative;
+      display:inline-block;
+      width:46px;
+      height:26px;
+      flex-shrink:0;
+    }
+    .toggle-switch input{
+      opacity:0;
+      width:0;
+      height:0;
+      position:absolute;
+    }
+    .toggle-slider{
+      position:absolute;
+      inset:0;
+      background:#d9c9ba;
+      border-radius:30px;
+      transition:background 0.28s ease;
+    }
+    .toggle-slider::before{
+      content:"";
+      position:absolute;
+      height:20px;
+      width:20px;
+      left:3px;
+      top:3px;
+      background:var(--white);
+      border-radius:50%;
+      box-shadow:0 2px 6px rgba(0,0,0,0.2);
+      transition:transform 0.28s cubic-bezier(0.68,-0.55,0.265,1.4);
+    }
+    .toggle-switch input:checked + .toggle-slider{
+      background:linear-gradient(135deg, var(--primary), var(--primary-dark, var(--primary)));
+    }
+    .toggle-switch input:checked + .toggle-slider::before{
+      transform:translateX(20px);
+    }
+    .toggle-switch input:focus-visible + .toggle-slider{
+      box-shadow:0 0 0 3px rgba(130,90,60,0.28);
+    }
+  </style>
 </head>
 <body>
 <!-- ========== MOBILE DRAWER ========== -->
@@ -114,9 +201,15 @@
             <input type="text" id="name" required placeholder="e.g. Chocolate Truffle Cake">
           </div>
           <div class="form-group">
-            <label class="checkbox-label" style="display:flex; align-items:center; gap:8px; font-weight:600; cursor:pointer; color:var(--brown);">
-              <input type="checkbox" id="has-sizes" style="width:auto; margin:0;">
-              Sizes
+            <label class="size-toggle-row" for="has-sizes">
+              <span class="size-toggle-text">
+                <span class="size-toggle-label"><i class="fas fa-layer-group"></i> Multiple Sizes</span>
+                <span class="size-toggle-sub">Offer this product in different sizes &amp; prices</span>
+              </span>
+              <span class="toggle-switch">
+                <input type="checkbox" id="has-sizes">
+                <span class="toggle-slider"></span>
+              </span>
             </label>
           </div>
           <div class="form-group" id="single-price-group">
@@ -241,7 +334,7 @@
         <p class="card-sub">Fill in the details to add an option to the selected category.</p>
         <form id="add-option-form">
           <div class="form-group">
-            <label>Option Name *</label>
+            <label id="opt-name-label">Option Name *</label>
             <input type="text" id="opt-name" placeholder="e.g. Red Velvet" required>
           </div>
           <div class="form-group" id="opt-tiers-group" style="display:none;">
@@ -422,9 +515,15 @@
       </div>
 
       <div class="form-group">
-        <label class="checkbox-label" style="display:flex; align-items:center; gap:8px; font-weight:600; cursor:pointer; color:var(--brown);">
-          <input type="checkbox" id="edit-has-sizes" style="width:auto; margin:0;">
-          Sizes
+        <label class="size-toggle-row" for="edit-has-sizes">
+          <span class="size-toggle-text">
+            <span class="size-toggle-label"><i class="fas fa-layer-group"></i> Multiple Sizes</span>
+            <span class="size-toggle-sub">Offer this product in different sizes &amp; prices</span>
+          </span>
+          <span class="toggle-switch">
+            <input type="checkbox" id="edit-has-sizes">
+            <span class="toggle-slider"></span>
+          </span>
         </label>
       </div>
       <div class="form-group" id="edit-sizes-group" style="display:none;">
@@ -471,7 +570,7 @@
       <input type="hidden" id="edit-opt-category">
       <input type="hidden" id="edit-opt-id">
       <div class="form-group">
-        <label>Option Name *</label>
+        <label id="edit-opt-name-label">Option Name *</label>
         <input type="text" id="edit-opt-name" required placeholder="e.g. Red Velvet">
       </div>
       <div class="form-group" id="edit-opt-tiers-group" style="display:none;">
@@ -713,6 +812,28 @@
   function generateKey(displayName) {
     return displayName.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
   }
+
+  // ══════════════════════════════════════════════
+  // DYNAMIC "OPTION NAME" LABEL (Manage Custom Cake)
+  // Instead of the generic "Option Name *" label, show the
+  // selected category's own name — e.g. "Layers *", "Cake Sizes *",
+  // "Chiffon Flavors *", "Frostings *", "Design Styles *".
+  // ══════════════════════════════════════════════
+  const OPTION_CATEGORY_LABELS = {
+    layers:    'Layers',
+    sizes:     'Cake Sizes',
+    flavors:   'Chiffon Flavors',
+    frostings: 'Frostings',
+    designs:   'Design Styles'
+  };
+
+  const OPTION_CATEGORY_PLACEHOLDERS = {
+    layers:    'e.g. 2 Layers',
+    sizes:     'e.g. Small (6in)',
+    flavors:   'e.g. Chocolate',
+    frostings: 'e.g. Buttercream',
+    designs:   'e.g. Floral'
+  };
 
   // ══════════════════════════════════════════════
   // CATEGORY MANAGEMENT
@@ -1372,6 +1493,12 @@
     document.getElementById('edit-opt-tiers').value    = tiers || 1;
     document.getElementById('edit-opt-tiers-group').style.display = category === 'layers' ? 'block' : 'none';
     document.getElementById('edit-opt-price-group').style.display = category === 'layers' ? 'none' : 'block';
+
+    // Swap "Option Name *" for the selected category's own name
+    const label = OPTION_CATEGORY_LABELS[category] || 'Option';
+    document.getElementById('edit-opt-name-label').textContent = `${label} *`;
+    document.getElementById('edit-opt-name').placeholder = OPTION_CATEGORY_PLACEHOLDERS[category] || 'e.g. Option name';
+
     document.getElementById('edit-option-modal').style.display = 'flex';
   };
 
@@ -1440,6 +1567,11 @@
     document.getElementById('opt-tiers').required = isLayers;
     document.getElementById('opt-price-group').style.display = isLayers ? 'none' : 'block';
     document.getElementById('opt-price').required = !isLayers;
+
+    // Swap "Option Name *" for the selected category's own name
+    const label = OPTION_CATEGORY_LABELS[category] || 'Option';
+    document.getElementById('opt-name-label').textContent = `${label} *`;
+    document.getElementById('opt-name').placeholder = OPTION_CATEGORY_PLACEHOLDERS[category] || 'e.g. Option name';
   };
 
   // ── Auto-load options when select changes ──
