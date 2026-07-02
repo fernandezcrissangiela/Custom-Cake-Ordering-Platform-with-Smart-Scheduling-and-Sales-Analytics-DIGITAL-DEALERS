@@ -10,6 +10,37 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="../css/menu.css">
+
+  <style>
+    /* Full-photo lightbox (only for the "click photo to see full photo" feature) */
+    #modalImg { cursor: zoom-in; }
+    .image-lightbox {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      z-index: 20000;
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out;
+    }
+    .image-lightbox.active { display: flex; }
+    .image-lightbox img {
+      max-width: 90vw;
+      max-height: 90vh;
+      border-radius: 8px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+    .image-lightbox .lightbox-close {
+      position: absolute;
+      top: 20px; right: 30px;
+      color: #fff;
+      font-size: 2.2rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+  </style>
 </head>
 <body>
 
@@ -85,6 +116,12 @@
         <button id="modalAddToCart" class="btn-primary full-width">Add to Cart</button>
       </div>
     </div>
+  </div>
+
+  <!-- Full-photo lightbox -->
+  <div id="imageLightbox" class="image-lightbox">
+    <span class="lightbox-close">&times;</span>
+    <img id="lightboxImg" src="" alt="Full photo">
   </div>
 
   <!-- Add-to-cart confirmation toast -->
@@ -538,11 +575,30 @@
       };
     }
 
+    // ── Wire up clicking the product photo to view it full-size
+    #bindImageLightbox() { // OOP - Encapsulation (private method)
+      const modalImg = document.getElementById('modalImg');
+      const lightbox = document.getElementById('imageLightbox');
+      const lightboxImg = document.getElementById('lightboxImg');
+
+      modalImg.addEventListener('click', e => {
+        e.stopPropagation();
+        lightboxImg.src = modalImg.src;
+        lightboxImg.alt = modalImg.alt;
+        lightbox.classList.add('active');
+      });
+
+      lightbox.addEventListener('click', () => {
+        lightbox.classList.remove('active');
+      });
+    }
+
     // ── Public initializer — single entry point
     async init() { // OOP - Abstraction (hides all setup complexity behind one call)
       this.#bindPriceFilters();
       this.#bindGridClicks();
       this.#bindModalCart();
+      this.#bindImageLightbox();
       await this.#loadCategories();
     }
   }
