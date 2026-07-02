@@ -125,7 +125,7 @@
 
 <!-- ── EARLY SHIP WARNING MODAL ── -->
 <div id="ship-warning-modal" style="
-  display:none; position:fixed; inset:0; z-index:9999;
+  display:none; position:fixed; inset:0; z-index:10001;
   background:rgba(0,0,0,0.55); align-items:center; justify-content:center;">
   <div style="
     background:#fff; border-radius:16px; padding:32px 28px; max-width:420px; width:90%;
@@ -159,7 +159,7 @@
 
 <!-- ── GENERIC CONFIRM MODAL ── -->
 <div id="confirm-modal" style="
-  display:none; position:fixed; inset:0; z-index:9999;
+  display:none; position:fixed; inset:0; z-index:10001;
   background:rgba(0,0,0,0.55); align-items:center; justify-content:center;">
   <div style="
     background:#fff; border-radius:16px; padding:32px 28px; max-width:400px; width:90%;
@@ -351,13 +351,13 @@
         sendEmail(email, order.customerName, id, newStatus, order);
       }
     }
-
-    const fresh = await get(ref(db, `orders/${id}`));
-    if (fresh.exists()) openOrderModal(id, fresh.val());
   }
 
   // ── UPDATE STATUS ──
   window.updateStatus = async (id, newStatus, silent = false) => {
+    // Close the detail modal immediately so it never sits behind the confirm popup
+    closeOrderModal();
+
     const snap = await get(ref(db, `orders/${id}`));
     if (!snap.exists()) return alert("Order not found!");
     const order = snap.val();
@@ -414,6 +414,9 @@
   };
 
   window.updatePayment = async (id, newPayStatus) => {
+    // Close the detail modal immediately so it never sits behind the confirm popup
+    closeOrderModal();
+
     const payLabels = {
       unpaid:  { icon: '❌', title: 'Mark as Unpaid?',        body: 'This will set the payment status back to unpaid.',                    okLabel: 'Yes, Mark Unpaid',  okColor: '#e74c3c' },
       partial: { icon: '💰', title: 'Confirm Downpayment?',   body: 'Mark that the customer has paid the 50% downpayment for this order.', okLabel: 'Yes, Confirm',      okColor: '#e67e22' },
@@ -458,9 +461,6 @@
         sendEmail(email, order.customerName, id, 'confirmed', fresh || order);
       }
     }
-
-    const fresh = await get(ref(db, `orders/${id}`));
-    if (fresh.exists()) openOrderModal(id, fresh.val());
   };
 
   function isCustomItem(item) {
@@ -540,6 +540,9 @@
   }
 
   window.markReceived = async (id) => {
+    // Close the detail modal immediately so it never sits behind the confirm popup
+    closeOrderModal();
+
     const confirmed = await showConfirm({
       icon: '🎉', title: 'Mark as Received?',
       body: 'Confirm that the customer has successfully received this order.',
@@ -559,17 +562,17 @@
 
     const email = await getEmailForOrder(order);
     if (email) sendEmail(email, order.customerName, id, 'completed', order);
-
-    closeOrderModal();
   };
 
   window.markNotReceived = async (id) => {
+    // Close the detail modal immediately so it never sits behind the confirm popup
+    closeOrderModal();
+
     await showConfirm({
       icon: 'ℹ️', title: 'Order Not Yet Received',
       body: 'The order will remain as "Out for Delivery". Please follow up with the customer.',
       okLabel: 'Got it', okColor: '#2980b9'
     });
-    closeOrderModal();
   };
 
   function hasCustomCake(items = []) {
