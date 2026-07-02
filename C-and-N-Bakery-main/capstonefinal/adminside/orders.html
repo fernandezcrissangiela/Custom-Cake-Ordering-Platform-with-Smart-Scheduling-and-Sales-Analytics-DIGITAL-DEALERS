@@ -615,7 +615,7 @@
     const isCancelled = status === 'cancelled';
 
     document.getElementById('modal-title').textContent =
-      `Order #${shortId} — ${order.customerName || 'Customer'}`;
+      `${order.customerName || 'Customer'}`;
 
     let html = '';
 
@@ -937,7 +937,7 @@
            onclick="openOrderModal('${id}', ${JSON.stringify(order).replace(/'/g,"\\x27").replace(/"/g,'&quot;')})">
         <div class="order-header">
           <div>
-            <strong>#${shortId} — ${order.customerName || 'Customer'}</strong><br>
+            <strong>${order.customerName || 'Customer'}</strong><br>
             <small><i class="fas fa-phone"></i> ${order.phone || '—'}</small>
           </div>
           <div style="text-align:right; display:flex; flex-direction:column; gap:5px; align-items:flex-end;">
