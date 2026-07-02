@@ -458,7 +458,8 @@ nav a.active {
     margin: 0 14px 12px;
 }
 
-.cake-item .btn-add {
+.cake-item .btn-add,
+.cake-item .btn-choose-size {
     margin: auto 14px 14px;
     width: calc(100% - 28px);
     padding: 10px 16px;
@@ -509,7 +510,8 @@ nav a.active {
         margin: 0 8px 6px;
     }
 
-    .cake-item .btn-add {
+    .cake-item .btn-add,
+    .cake-item .btn-choose-size {
         margin: auto 8px 8px;
         width: calc(100% - 16px);
         padding: 7px 10px;
@@ -536,6 +538,9 @@ nav a.active {
         font-size: 0.9rem;
     }
 
+    /* FIX: price row was cutting buttons off mid-scroll with no edge
+       breathing room. scroll-snap keeps it resting on a full button,
+       and scroll-padding + inner padding keep buttons off the edges. */
     .price-range-buttons {
         flex-wrap: nowrap;
         overflow-x: auto;
@@ -544,7 +549,11 @@ nav a.active {
         scrollbar-width: none;
         -ms-overflow-style: none;
         -webkit-overflow-scrolling: touch;
-        justify-content: center;
+        justify-content: flex-start;
+        scroll-snap-type: x proximity;
+        scroll-padding-left: 6px;
+        scroll-padding-right: 6px;
+        padding: 2px 4px;
     }
 
     .price-range-buttons::-webkit-scrollbar {
@@ -556,18 +565,28 @@ nav a.active {
         font-size: 0.76rem;
         white-space: nowrap;
         flex-shrink: 0;
+        scroll-snap-align: start;
     }
 
     /* Category buttons */
+    /* FIX: same cut-off issue as the price row above. The row is pulled
+       out to the full viewport width (negative margin) then given its
+       own inline padding, so buttons never sit flush against the screen
+       edge, and scroll-snap makes it always settle on a whole button
+       instead of stopping mid-slice. */
     .categories {
         flex-wrap: nowrap;
         overflow-x: auto;
-        justify-content: center;
+        justify-content: flex-start;
         gap: 8px;
-        margin-bottom: 18px;
-        padding: 4px 0 10px;
+        margin: 0 -16px 18px;
+        padding: 4px 16px 10px;
         scrollbar-width: none;
         -ms-overflow-style: none;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x proximity;
+        scroll-padding-left: 16px;
+        scroll-padding-right: 16px;
     }
 
     .categories::-webkit-scrollbar {
@@ -578,6 +597,7 @@ nav a.active {
         flex-shrink: 0;
         padding: 8px 18px;
         font-size: 0.82rem;
+        scroll-snap-align: start;
     }
 
     /* Menu header */
