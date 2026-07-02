@@ -226,6 +226,7 @@
     .s-delivery  { background:#e0f2fe; color:#0369a1; }
     .s-completed { background:#dcfce7; color:#166534; }
     .s-cancelled { background:#fee2e2; color:#991b1b; }
+    .s-downpayment-received { background:#ffedd5; color:#9a3412; }
 
     /* ── Downpayment Alerts ── */
     .alerts-section {
@@ -595,7 +596,7 @@
     <a href="history.html" class="dash-card card-history">
       <div class="dash-card-icon"><i class="fas fa-history"></i></div>
       <div>
-        <div class="dash-card-label">Total Completed</div>
+        <div class="dash-card-label">Order History</div>
         <div class="dash-card-value" id="card-history-count"><span class="loading-pulse">…</span></div>
         <div class="dash-card-sub" id="card-history-sub"><span class="loading-pulse">Loading…</span></div>
       </div>
@@ -648,8 +649,8 @@
           <div class="capacity-bar-fill" id="capacity-bar-fill" style="width:0%"></div>
         </div>
         <div class="capacity-bar-label">
-          <span id="capacity-label-left">0 / 3 slots used</span>
-          <span id="capacity-label-right">3 remaining</span>
+          <span id="capacity-label-left">0 / 5 slots used</span>
+          <span id="capacity-label-right">5 remaining</span>
         </div>
       </div>
       <p id="capacity-status-text" style="font-size:0.8rem;color:var(--muted);margin:8px 0 0;"></p>
@@ -685,7 +686,9 @@
   const app = initializeApp(firebaseConfig);
   const db  = getDatabase(app);
 
-  const MAX_PER_DAY = 3;
+  // Must match schedule.html's DEFAULT_MAX_ORDERS_PER_DAY so the two pages
+  // always agree on "today's capacity".
+  const DEFAULT_MAX_ORDERS_PER_DAY = 5;
 
   /* ── helpers ── */
   async function hashPassword(password) {
@@ -730,61 +733,46 @@
 
   /* ── status pill ── */
   function statusPill(status) {
-    return `<span class="s-pill s-${status}">${status}</span>`;
+    return `<span class="s-pill s-${status}">${status.replace('-', ' ')}</span>`;
   }
 
-  /* ── LIVE DATA ── */
-  onValue(ref(db, 'orders'), (snapshot) => {
-    const orders  = snapshot.val() || {};
-    const entries = Object.entries(orders);
-    const today   = todayStr();
+  /* ── shared live state ──
+     Orders and per-day custom limits arrive from two separate Firebase
+     listeners. Both the "Schedule" card and the "Today's Capacity" panel
+     depend on both pieces of data (order counts + the custom limit for
+     today), so we cache each dataset here and re-render whenever either
+     one changes — this keeps the dashboard's capacity numbers in sync
+     with schedule.html at all times. */
+  let latestOrderEntries = null; // [[id, order], ...]
+  let latestDayLimits    = {};   // { "2026-07-15": 3, ... }
 
-    /* compute buckets */
-    const pending   = entries.filter(([,o]) => (o.status||'').toLowerCase() === 'pending');
-    const active    = entries.filter(([,o]) => !['pending','cancelled','completed'].includes((o.status||'').toLowerCase()));
-    const todayOrds = entries.filter(([,o]) => o.date === today && !['cancelled'].includes((o.status||'').toLowerCase()));
-    const completed = entries.filter(([,o]) => (o.status||'').toLowerCase() === 'completed');
-    const cancelled = entries.filter(([,o]) => (o.status||'').toLowerCase() === 'cancelled');
-    const dpAlerts  = entries.filter(([,o]) => needsDownpaymentReminder(o));
+  /** Effective max orders for a date string, falling back to the shared default. */
+  function getMaxOrdersForDate(dateStr) {
+    const custom = latestDayLimits[dateStr];
+    return (custom !== undefined && custom !== null && custom > 0)
+      ? custom
+      : DEFAULT_MAX_ORDERS_PER_DAY;
+  }
 
-    /* this month revenue */
-    const nm = now.getFullYear(), mm = now.getMonth();
-    const monthRev = completed
-      .filter(([,o]) => {
-        const d = new Date(o.completedAt || o.createdAt || 0);
-        return d.getFullYear() === nm && d.getMonth() === mm;
-      })
-      .reduce((s, [,o]) => s + (parseFloat(o.totalAmount) || 0), 0);
+  function renderScheduleAndCapacity() {
+    if (!latestOrderEntries) return; // wait until orders have loaded at least once
 
-    /* ── Orders card ── */
-    document.getElementById('card-orders-count').textContent = pending.length + active.length;
-    document.getElementById('card-orders-sub').innerHTML =
-      `<span class="badge-warn"><i class="fas fa-pause-circle"></i> ${pending.length} new</span>
-       &nbsp;·&nbsp; ${active.length} active`;
+    const today     = todayStr();
+    const todayOrds = latestOrderEntries.filter(([, o]) => o.date === today && (o.status || '').toLowerCase() !== 'cancelled');
+    const maxToday  = getMaxOrdersForDate(today);
+    const used       = todayOrds.length;
 
     /* ── Schedule card ── */
-    document.getElementById('card-schedule-count').textContent = `${todayOrds.length} / ${MAX_PER_DAY}`;
-    const remaining = Math.max(0, MAX_PER_DAY - todayOrds.length);
-    const schedClass = todayOrds.length >= MAX_PER_DAY ? 'badge-danger' : (todayOrds.length === MAX_PER_DAY-1 ? 'badge-warn' : 'badge-up');
+    document.getElementById('card-schedule-count').textContent = `${used} / ${maxToday}`;
+    const remaining  = Math.max(0, maxToday - used);
+    const schedClass = used >= maxToday ? 'badge-danger' : (used === maxToday - 1 ? 'badge-warn' : 'badge-up');
     document.getElementById('card-schedule-sub').innerHTML =
       `<span class="${schedClass}"><i class="fas fa-calendar-day"></i> ${remaining} slot${remaining!==1?'s':''} left today</span>`;
 
-    /* ── Sales card ── */
-    document.getElementById('card-sales-amount').textContent = `₱${monthRev.toLocaleString('en-PH')}`;
-    document.getElementById('card-sales-sub').innerHTML =
-      `<span class="badge-up"><i class="fas fa-check-circle"></i> ${completed.length} total orders completed</span>`;
-
-    /* ── History card ── */
-    document.getElementById('card-history-count').textContent = completed.length + cancelled.length;
-    document.getElementById('card-history-sub').innerHTML =
-      `<i class="fas fa-check-circle" style="color:#27ae60;"></i> ${completed.length} completed
-       &nbsp;·&nbsp;
-       <i class="fas fa-times-circle" style="color:#e74c3c;"></i> ${cancelled.length} cancelled`;
-
     /* ── Today's orders list ── */
     const todayEl = document.getElementById('today-orders-list');
-    document.getElementById('today-count-badge').textContent = todayOrds.length;
-    if (todayOrds.length === 0) {
+    document.getElementById('today-count-badge').textContent = used;
+    if (used === 0) {
       todayEl.innerHTML = `
         <div class="today-empty">
           <i class="fas fa-calendar-check"></i>
@@ -792,8 +780,8 @@
         </div>`;
     } else {
       const statusIcons = {
-        pending:'pause-circle', confirmed:'check-circle', preparing:'utensils',
-        baking:'fire-burner', packing:'box', delivery:'truck', completed:'check-double'
+        pending:'pause-circle', confirmed:'check-circle', 'downpayment-received':'hand-holding-usd',
+        preparing:'utensils', baking:'fire-burner', packing:'box', delivery:'truck', completed:'check-double'
       };
       todayEl.innerHTML = todayOrds.map(([id, o]) => {
         const st      = (o.status || 'pending').toLowerCase();
@@ -817,17 +805,57 @@
     }
 
     /* ── Capacity bar ── */
-    const used = todayOrds.length;
-    const pct  = Math.min(100, Math.round((used / MAX_PER_DAY) * 100));
-    const bar  = document.getElementById('capacity-bar-fill');
+    const pct = Math.min(100, Math.round((used / maxToday) * 100));
+    const bar = document.getElementById('capacity-bar-fill');
     bar.style.width = pct + '%';
-    bar.className = 'capacity-bar-fill' + (used >= MAX_PER_DAY ? ' full' : used === MAX_PER_DAY-1 ? ' warn' : '');
-    document.getElementById('capacity-label-left').textContent  = `${used} / ${MAX_PER_DAY} slots used`;
-    document.getElementById('capacity-label-right').textContent = `${Math.max(0, MAX_PER_DAY - used)} remaining`;
+    bar.className = 'capacity-bar-fill' + (used >= maxToday ? ' full' : used === maxToday - 1 ? ' warn' : '');
+    document.getElementById('capacity-label-left').textContent  = `${used} / ${maxToday} slots used`;
+    document.getElementById('capacity-label-right').textContent = `${Math.max(0, maxToday - used)} remaining`;
     document.getElementById('capacity-status-text').textContent =
-      used >= MAX_PER_DAY ? '🔴 Fully booked for today.'
-      : used === MAX_PER_DAY-1 ? '🟡 Almost full — 1 slot left.'
-      : `🟢 ${MAX_PER_DAY - used} slots still available today.`;
+      used >= maxToday ? '🔴 Fully booked for today.'
+      : used === maxToday - 1 ? '🟡 Almost full — 1 slot left.'
+      : `🟢 ${maxToday - used} slots still available today.`;
+  }
+
+  /* ── LIVE ORDERS DATA ── */
+  onValue(ref(db, 'orders'), (snapshot) => {
+    const orders  = snapshot.val() || {};
+    const entries = Object.entries(orders);
+    latestOrderEntries = entries;
+
+    /* compute buckets */
+    const pending   = entries.filter(([,o]) => (o.status||'').toLowerCase() === 'pending');
+    const active    = entries.filter(([,o]) => !['pending','cancelled','completed'].includes((o.status||'').toLowerCase()));
+    const completed = entries.filter(([,o]) => (o.status||'').toLowerCase() === 'completed');
+    const cancelled = entries.filter(([,o]) => (o.status||'').toLowerCase() === 'cancelled');
+    const dpAlerts  = entries.filter(([,o]) => needsDownpaymentReminder(o));
+
+    /* this month revenue */
+    const nm = now.getFullYear(), mm = now.getMonth();
+    const monthRev = completed
+      .filter(([,o]) => {
+        const d = new Date(o.completedAt || o.createdAt || 0);
+        return d.getFullYear() === nm && d.getMonth() === mm;
+      })
+      .reduce((s, [,o]) => s + (parseFloat(o.totalAmount) || 0), 0);
+
+    /* ── Orders card ── */
+    document.getElementById('card-orders-count').textContent = pending.length + active.length;
+    document.getElementById('card-orders-sub').innerHTML =
+      `<span class="badge-warn"><i class="fas fa-pause-circle"></i> ${pending.length} new</span>
+       &nbsp;·&nbsp; ${active.length} active`;
+
+    /* ── Sales card ── */
+    document.getElementById('card-sales-amount').textContent = `₱${monthRev.toLocaleString('en-PH')}`;
+    document.getElementById('card-sales-sub').innerHTML =
+      `<span class="badge-up"><i class="fas fa-check-circle"></i> ${completed.length} total orders completed</span>`;
+
+    /* ── History card (mirrors history.html: completed + cancelled = total) ── */
+    document.getElementById('card-history-count').textContent = completed.length + cancelled.length;
+    document.getElementById('card-history-sub').innerHTML =
+      `<i class="fas fa-check-circle" style="color:#27ae60;"></i> ${completed.length} completed
+       &nbsp;·&nbsp;
+       <i class="fas fa-times-circle" style="color:#e74c3c;"></i> ${cancelled.length} cancelled`;
 
     /* ── Downpayment Alerts ── */
     const dpSection = document.getElementById('dp-alerts-section');
@@ -875,12 +903,32 @@
           </div>`;
       }).join('');
     }
+
+    /* Orders + custom day limits both affect capacity — recompute now. */
+    renderScheduleAndCapacity();
   });
 
-  /* ── Menu items count ── */
-  onValue(ref(db, 'menuItems'), (snapshot) => {
-    const items = snapshot.val() || {};
-    const count = Object.keys(items).length;
+  /* ── LIVE DAY LIMITS (custom per-day caps set on schedule.html) ── */
+  onValue(ref(db, 'dayLimits'), (snapshot) => {
+    latestDayLimits = snapshot.val() || {};
+    renderScheduleAndCapacity();
+  });
+
+  /* ── Menu items count ──
+     Products are stored per-category at products/{categoryKey}/{productId}
+     (see admin_menu.html), not under a flat "menuItems" node — count
+     across every category and skip the internal "_placeholder" entries
+     used to keep empty categories visible in Firebase. */
+  onValue(ref(db, 'products'), (snapshot) => {
+    const data = snapshot.val() || {};
+    let count = 0;
+    Object.values(data).forEach(categoryProducts => {
+      if (!categoryProducts || typeof categoryProducts !== 'object') return;
+      Object.keys(categoryProducts).forEach(key => {
+        if (key === '_placeholder') return;
+        count++;
+      });
+    });
     document.getElementById('card-menu-count').textContent = count;
     document.getElementById('card-menu-sub').innerHTML =
       `<i class="fas fa-layer-group" style="color:var(--primary);"></i> ${count} item${count!==1?'s':''} on the menu`;
