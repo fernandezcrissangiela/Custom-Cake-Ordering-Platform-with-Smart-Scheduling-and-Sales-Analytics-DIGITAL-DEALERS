@@ -667,10 +667,16 @@
         <i class="${fulfillmentIcon}"></i> ${fulfillmentLabel}
       </span>`;
 
+    // ── Remarks / Notes — made bold & highlighted so admin can't miss it ──
     const remarksRow = order.remarks
-      ? `<div class="info-row" style="align-items:flex-start;">
-           <i class="fas fa-comment-dots" style="color:#e67e22; margin-top:2px;"></i>
-           <span><strong>Remarks:</strong> ${order.remarks}</span>
+      ? `<div class="remarks-box" style="
+           background:#fff8e1; border:2px solid #f0c869; border-radius:10px;
+           padding:10px 14px; margin:10px 0; display:flex; gap:10px; align-items:flex-start;">
+           <i class="fas fa-comment-dots" style="color:#d97706; margin-top:2px; font-size:1rem;"></i>
+           <span>
+             <strong style="color:#a05a00; text-transform:uppercase; font-size:0.75rem; letter-spacing:0.3px;">Remarks / Notes</strong>
+             <div style="font-weight:700; color:#3a2a00; margin-top:2px; line-height:1.4;">${order.remarks}</div>
+           </span>
          </div>`
       : '';
 
@@ -914,6 +920,18 @@
            <i class="fas fa-circle-question" style="margin-right:4px;"></i>Click to confirm delivery
          </div>` : '';
 
+    // ── Remarks/Notes preview on the card itself — bold & highlighted ──
+    const remarksPreview = order.remarks
+      ? `<div style="
+           margin-top:8px; background:#fff8e1; border:1.5px solid #f0c869; border-radius:8px;
+           padding:6px 10px; font-size:0.8rem; color:#7a4a00; display:flex; gap:6px; align-items:flex-start;">
+           <i class="fas fa-comment-dots" style="margin-top:1px; color:#d97706;"></i>
+           <span><strong style="text-transform:uppercase; font-size:0.68rem; letter-spacing:0.3px; color:#a05a00;">Note:</strong>
+             <strong style="color:#3a2a00;">${order.remarks.length > 70 ? order.remarks.slice(0, 70) + '…' : order.remarks}</strong>
+           </span>
+         </div>`
+      : '';
+
     return `
       <div class="order-card"
            onclick="openOrderModal('${id}', ${JSON.stringify(order).replace(/'/g,"\\x27").replace(/"/g,'&quot;')})">
@@ -944,6 +962,7 @@
               </span>`;
             })()}
           </div>
+          ${remarksPreview}
         </div>
 
         ${stepper}
