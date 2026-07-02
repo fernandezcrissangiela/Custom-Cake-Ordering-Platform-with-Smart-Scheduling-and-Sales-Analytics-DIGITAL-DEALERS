@@ -203,38 +203,52 @@
     let hasCustomCake    = false;
     let allOrders        = {};
 
-    // ── Fulfillment availability settings (NEW) ────────────────────────────────
-    // Read from the same Firebase path the admin Schedule page writes to:
-    // settings/fulfillment => { delivery: true/false, pickup: true/false }
-    let fulfillmentSettings = { delivery: true, pickup: true };
+    // ── Fulfillment availability settings ────────────────────────────────
+    // NOTE: There is no admin UI that writes to a global "settings/fulfillment"
+    // node — the admin Schedule page only sets per-day overrides. So availability
+    // is driven purely by that per-day data below (defaults to available).
 
-    onValue(ref(db, 'settings/fulfillment'), (snapshot) => {
-        const val = snapshot.val();
-        fulfillmentSettings = {
-            delivery: (val && val.delivery !== undefined) ? val.delivery : true,
-            pickup:   (val && val.pickup   !== undefined) ? val.pickup   : true
-        };
+    // Per-day overrides written by the admin Schedule page:
+    // dayFulfillment/{date} => { delivery: true/false, pickup: true/false }
+    let dayFulfillmentSettings = {};
+
+    // listen to the same 'dayFulfillment' node the admin Schedule page writes to
+    onValue(ref(db, 'dayFulfillment'), (snapshot) => {
+        dayFulfillmentSettings = snapshot.val() || {};
         applyFulfillmentAvailability();
     });
 
+    // Returns availability for the currently selected date.
+    // No date selected yet => always available (nothing to restrict against).
+    function getEffectiveFulfillment(dateStr) {
+        const dayVal = (dateStr && dayFulfillmentSettings[dateStr]) || {};
+        return {
+            delivery: dayVal.delivery !== false,
+            pickup:   dayVal.pickup   !== false
+        };
+    }
+
     function applyFulfillmentAvailability() {
+        const dateStr   = document.getElementById('order-date')?.value || '';
+        const effective = getEffectiveFulfillment(dateStr);
+
         document.querySelectorAll('.choice-btn').forEach(btn => {
             const method      = btn.dataset.method;
-            const isAvailable = fulfillmentSettings[method] !== false;
+            const isAvailable = effective[method] !== false;
             btn.classList.toggle('choice-disabled', !isAvailable);
         });
 
         // If the currently selected method just became unavailable,
         // automatically switch to the other method if it IS available.
-        if (fulfillmentSettings[fulfillmentMethod] === false) {
+        if (effective[fulfillmentMethod] === false) {
             const fallback = fulfillmentMethod === 'delivery' ? 'pickup' : 'delivery';
-            if (fulfillmentSettings[fallback] !== false) {
+            if (effective[fallback] !== false) {
                 const fallbackBtn = document.querySelector(`.choice-btn[data-method="${fallback}"]`);
                 if (fallbackBtn) fallbackBtn.click();
             }
         }
     }
-    // ── End fulfillment settings logic (NEW) ────────────────────────────────────
+    // ── End fulfillment settings logic ────────────────────────────────────
 
     onValue(ref(db, 'orders'), (snapshot) => {
         allOrders = snapshot.val() || {};
@@ -340,12 +354,13 @@
 
         updateButtonState();
         updateAvailableDates();
+        applyFulfillmentAvailability();
     }
 
     // Fulfillment toggle
     document.querySelectorAll('.choice-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            // NEW: block selecting a method the admin has marked Unavailable
+            // block selecting a method the admin has marked Unavailable
             if (btn.classList.contains('choice-disabled')) return;
 
             document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('active'));
@@ -387,14 +402,16 @@
         if (el) el.addEventListener('input', updateButtonState);
     });
 
+    // NEW: re-check delivery/pickup availability whenever the chosen date changes,
+    // since fulfillment can be restricted per-day from the admin Schedule page.
+    const orderDateInput = document.getElementById('order-date');
+    if (orderDateInput) {
+        orderDateInput.addEventListener('input', applyFulfillmentAvailability);
+        orderDateInput.addEventListener('change', applyFulfillmentAvailability);
+    }
+
     async function placeOrder() {
         if (!currentUser) return alert("Login session issue. Please refresh and try again.");
-
-        // NEW: guard against submitting with a fulfillment method the admin disabled
-        if (fulfillmentSettings[fulfillmentMethod] === false) {
-            alert(`${fulfillmentMethod === 'delivery' ? 'Delivery' : 'Store Pickup'} is currently unavailable. Please choose the other option.`);
-            return;
-        }
 
         const name    = document.getElementById('cust-name').value.trim();
         const phone   = document.getElementById('cust-phone').value.trim();
@@ -403,6 +420,14 @@
         const address = document.getElementById('cust-address').value.trim();
         const remarks = document.getElementById('cust-remarks').value.trim();
         const btn     = document.getElementById('btn-place-order');
+
+        // guard against submitting with a fulfillment method that's unavailable
+        // for the specifically selected date (per-day OR global setting)
+        const dateFulfillment = getEffectiveFulfillment(date);
+        if (dateFulfillment[fulfillmentMethod] === false) {
+            alert(`${fulfillmentMethod === 'delivery' ? 'Delivery' : 'Store Pickup'} is unavailable for the selected date. Please choose another date or fulfillment option.`);
+            return;
+        }
 
         // Updated validation: fb is now optional
         if (!name || phone.length < 10 || !date ||
@@ -447,7 +472,7 @@
             customerName:  name,
             phone,
             facebookLink:  fb || null,                    // Save as null if empty
-            remarks:       remarks || null,                // NEW: customer remarks/notes, visible to admin
+            remarks:       remarks || null,                // customer remarks/notes, visible to admin
             date,
             address:       fulfillmentMethod === 'pickup' ? "Store Pickup" : address,
             method:        fulfillmentMethod,
