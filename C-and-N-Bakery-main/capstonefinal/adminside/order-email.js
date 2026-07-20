@@ -1,5 +1,5 @@
 // EMAILJS ID's
-const EMAILJS_SERVICE_ID = "";   // EmailJS service
+const EMAILJS_SERVICE_ID = "service_06n33to";   // EmailJS service
 const EMAILJS_TEMPLATE_ID = "template_xh0chdq";  // Order confirmation template
 const EMAILJS_DOWNPAY_TMPL_ID = "template_5mznngl";  // Downpayment received template
 const EMAILJS_SHIP_TMPL_ID = "template_xh0chdq";  // Shipped / ready for pickup template
@@ -151,7 +151,7 @@ export function sendShipEmail(order, orderId, email) {
     const payload = {
         to_email: email,
         customer_name: order.customerName || 'Customer',
-        order_id: orderId.slice(-6), 
+        order_id: orderId.slice(-6),
         order_date: order.date || '—',
         fulfillment_method: order.method || '—',
         address: order.address || 'Store Pickup',

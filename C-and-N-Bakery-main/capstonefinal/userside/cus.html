@@ -688,7 +688,7 @@
     function addToCart() {
       const price = parseFloat(document.getElementById('total-price').innerText.replace(/[₱,]/g, '')) || 0;
       const refImage = document.getElementById('image-preview').src || '';
-      const message = document.getElementById('message').value.trim();
+      const message = document.getElementById('message')?.value.trim() || '';
 
       const customCake = {
         name: "Customized Cake",

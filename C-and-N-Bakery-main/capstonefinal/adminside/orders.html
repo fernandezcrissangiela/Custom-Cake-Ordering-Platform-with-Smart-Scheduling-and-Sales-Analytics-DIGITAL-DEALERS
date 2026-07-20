@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="../css/orders.css">
   <link rel="stylesheet" href="../css/admin.css">
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <script>emailjs.init("");</script>
+  <script>emailjs.init("LjFPVh32OznI3FhJv");</script>
 </head>
 <body>
 <!-- ========== MOBILE DRAWER ========== -->
@@ -499,7 +499,7 @@
       order_total:         order.totalAmount   || 0,
       downpayment_amount:  calcCustomDownpayment(order),
       order_items:         itemList,
-      message: '✅ We have received your downpayment for your custom cake(s)! Your order is now being processed. The remaining balance is due upon pickup or delivery.'
+      message: '✅ We have received your downpayment for your custom cake! Your order is now being processed. The remaining balance is due upon pickup or delivery.'
     })
     .then(() => console.log("[order-email] Downpayment email sent to:", email))
     .catch(err => console.error("[order-email] Downpayment email error:", err));
@@ -514,8 +514,8 @@
       : '🎉 Your order is ready for pickup!';
 
     const message = isDelivery
-      ? '🚚 Great news! Your order is now out for delivery. Our rider is on the way — please be available to receive it.'
-      : '🎉 Your order is ready for pickup!\n\n📍 C&N Bakery stall at Passi Public Market, in front of Andoks food truck — Entrance of the market (look for C&N Bakery stall)\n🕐 Store Hours: Mon–Sat, 8AM–6PM\n📞 09814535981';
+      ? '🚚 Great news! Your order is now out for delivery. Our delivery team is on the way to your location. Please be available to receive your order. Thank you!'
+      : '🎉 Your order is ready for pickup!\n\n📍 C&N Bakery stall at Passi Public Market, Entrance of the market (look for C&N Bakery stall)\n🕐 Store Hours: Mon–Sat, 8AM–6PM\n📞 09814535981';
 
     const items = (order.items || [])
       .map(i => `${i.quantity || 1}× ${i.name} (${i.category || 'Item'})`)
