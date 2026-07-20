@@ -304,6 +304,12 @@
         : (o.date || '—');
       const payStatus = (o.paymentStatus || 'unpaid').toLowerCase();
 
+      // If the customer cancelled it themselves (set from user.html), show a small tag
+      // underneath the status badge so admin can tell at a glance who cancelled it.
+      const cancelledByTag = (status === 'cancelled' && (o.cancelledBy || '').toLowerCase() === 'customer')
+        ? `<br><small style="color:#c0392b;font-size:0.68rem;font-weight:600;"><i class="fas fa-user"></i> by customer</small>`
+        : '';
+
       return `
         <tr onclick="showDetail('${o.id}')">
           <td class="order-id-cell">#${o.id.slice(-6)}</td>
@@ -319,6 +325,7 @@
           </td>
           <td>
             <span class="status-badge status-${status}">${status}</span>
+            ${cancelledByTag}
           </td>
           <td>
             <button class="btn-view" onclick="event.stopPropagation(); showDetail('${o.id}')">
@@ -345,6 +352,15 @@
     document.getElementById('h-modal-title').textContent =
       `#${order.id.slice(-6)} — ${order.customerName || 'Customer'}`;
 
+    // Show who cancelled the order (customer vs admin), only when relevant.
+    const cancelledByRow = (status === 'cancelled' && order.cancelledBy)
+      ? `<p><strong>Cancelled By:</strong>
+           <span style="font-weight:700; color:${order.cancelledBy === 'customer' ? '#c0392b' : '#555'};">
+             ${order.cancelledBy === 'customer' ? 'Customer' : 'Admin'}
+           </span>
+         </p>`
+      : '';
+
     document.getElementById('h-modal-body').innerHTML = `
       <p><strong>Customer:</strong> ${order.customerName || 'N/A'}</p>
       <p><strong>Phone:</strong> ${order.phone || 'N/A'}</p>
@@ -357,6 +373,7 @@
       <p><strong>Order Status:</strong>
         <span class="status-badge status-${status}">${status}</span>
       </p>
+      ${cancelledByRow}
       ${order.completedAt
         ? `<p><strong>${status === 'completed' ? 'Completed' : 'Updated'} At:</strong>
             ${new Date(order.completedAt).toLocaleString('en-PH')}</p>`

@@ -248,6 +248,19 @@
 
   const progressSteps = ['preparing', 'baking', 'packing', 'delivery'];
 
+  // ── NEW: format a 24hr "HH:MM" time string into a friendly 12hr label ──
+  function formatTime12(timeStr) {
+    if (!timeStr || typeof timeStr !== 'string' || !timeStr.includes(':')) return '';
+    const [hStr, mStr] = timeStr.split(':');
+    let h = parseInt(hStr, 10);
+    const m = mStr || '00';
+    if (isNaN(h)) return '';
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12;
+    if (h === 0) h = 12;
+    return `${h}:${m} ${ampm}`;
+  }
+
   // ── GENERIC CONFIRM MODAL HELPER ──
   function showConfirm({ icon, title, body, okLabel = 'Confirm', okColor = '#2ecc71' }) {
     return new Promise(resolve => {
@@ -322,6 +335,7 @@
       customer_name:      customerName,
       order_id:           orderId.slice(-6),
       order_date:         order.date           || '—',
+      order_time:         formatTime12(order.time) || '—',
       fulfillment_method: order.method         || '—',
       address:            order.address        || 'Store Pickup',
       payment_method:     order.paymentMethod  || '—',
@@ -493,6 +507,7 @@
       customer_name:       customerName,
       order_id:            orderId.slice(-6),
       order_date:          order.date          || '—',
+      order_time:          formatTime12(order.time) || '—',
       fulfillment_method:  order.method        || '—',
       address:             order.address       || 'Store Pickup',
       payment_method:      order.paymentMethod || '—',
@@ -526,6 +541,7 @@
       customer_name:      customerName,
       order_id:           orderId.slice(-6),
       order_date:         order.date          || '—',
+      order_time:         formatTime12(order.time) || '—',
       fulfillment_method: order.method        || '—',
       address:            order.address       || 'Store Pickup',
       payment_method:     order.paymentMethod || '—',
@@ -695,11 +711,20 @@
              </div>`
           : '');
 
+    // ── NEW: Delivery/Pickup time badge shown next to the date ──
+    const timeBadge = order.time
+      ? `<span style="margin-left:8px; display:inline-flex; align-items:center; gap:4px;
+           background:#e8f4fd; color:#2980b9; border:1.5px solid #aad4f5; border-radius:20px;
+           padding:2px 10px; font-size:0.78rem; font-weight:700;">
+           <i class="fas fa-clock"></i> ${formatTime12(order.time)}
+         </span>`
+      : '';
+
     html += `
       <div class="info-row"><i class="fas fa-user"></i> <strong>${order.customerName || '—'}</strong></div>
       <div class="info-row"><i class="fas fa-phone"></i> ${order.phone || '—'}</div>
       ${fbLink}
-      <div class="info-row"><i class="fas fa-calendar"></i> ${order.date || '—'}</div>
+      <div class="info-row"><i class="fas fa-calendar"></i> ${order.date || '—'} ${timeBadge}</div>
       <div class="info-row">
         <i class="${fulfillmentIcon}" style="color:${fulfillmentColor};"></i>
         <span>Fulfillment: ${fulfillmentBadge}</span>
@@ -935,6 +960,14 @@
          </div>`
       : '';
 
+    // ── NEW: date + time preview line on the card ──
+    const dateTimePreview = order.date
+      ? `<div style="margin-top:6px; font-size:0.78rem; color:#888; display:flex; align-items:center; gap:5px;">
+           <i class="fas fa-calendar"></i> ${order.date}
+           ${order.time ? `<span style="margin-left:2px;">· <i class="fas fa-clock" style="margin-right:2px;"></i>${formatTime12(order.time)}</span>` : ''}
+         </div>`
+      : '';
+
     return `
       <div class="order-card"
            onclick="openOrderModal('${id}', ${JSON.stringify(order).replace(/'/g,"\\x27").replace(/"/g,'&quot;')})">
@@ -950,6 +983,7 @@
         </div>
 
         <div class="order-type-badges">${badgesHTML}</div>
+        ${dateTimePreview}
 
         <div class="order-summary">
           <strong>₱${parseFloat(order.totalAmount || 0).toLocaleString('en-PH')}</strong>

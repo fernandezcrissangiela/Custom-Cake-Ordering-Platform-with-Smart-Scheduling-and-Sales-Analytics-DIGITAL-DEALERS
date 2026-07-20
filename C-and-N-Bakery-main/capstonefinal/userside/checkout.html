@@ -100,6 +100,14 @@
                     </label>
                     <input type="date" id="order-date" required>
                 </div>
+
+                <!-- NEW: Delivery / Pickup Time -->
+                <div class="form-group">
+                    <label id="time-label">
+                        Delivery / Pickup Time <span style="color:var(--danger);">*</span>
+                    </label>
+                    <input type="time" id="order-time" required>
+                </div>
             </div>
 
             <!-- Payment Method -->
@@ -277,11 +285,12 @@
         const phone      = document.getElementById('cust-phone').value.trim();
         const fb         = document.getElementById('cust-fb').value.trim();
         const date       = document.getElementById('order-date').value;
+        const time       = document.getElementById('order-time').value;
         const address    = document.getElementById('cust-address').value.trim();
         const btn        = document.getElementById('btn-place-order');
         const isDelivery = fulfillmentMethod === 'delivery';
 
-        btn.disabled = !(name && phone.length >= 10 && date && 
+        btn.disabled = !(name && phone.length >= 10 && date && time &&
                         (!isDelivery || address.length >= 10));
     }
 
@@ -369,14 +378,17 @@
 
             const addrSection = document.getElementById('address-section');
             const dateLabel   = document.getElementById('date-label');
+            const timeLabel   = document.getElementById('time-label');
 
             if (fulfillmentMethod === 'pickup') {
                 addrSection.classList.add('hidden');
                 dateLabel.innerHTML = 'Pickup Date <span style="color:var(--danger);">*</span>';
+                timeLabel.innerHTML = 'Pickup Time <span style="color:var(--danger);">*</span>';
                 document.getElementById('cust-address').removeAttribute('required');
             } else {
                 addrSection.classList.remove('hidden');
                 dateLabel.innerHTML = 'Delivery Date <span style="color:var(--danger);">*</span>';
+                timeLabel.innerHTML = 'Delivery Time <span style="color:var(--danger);">*</span>';
                 document.getElementById('cust-address').setAttribute('required', '');
             }
             updateButtonState();
@@ -397,7 +409,7 @@
     });
 
     // Input listeners (Facebook is now optional)
-    ['cust-name','cust-phone','cust-fb','order-date','cust-address'].forEach(id => {
+    ['cust-name','cust-phone','cust-fb','order-date','order-time','cust-address'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('input', updateButtonState);
     });
@@ -417,6 +429,7 @@
         const phone   = document.getElementById('cust-phone').value.trim();
         const fb      = document.getElementById('cust-fb').value.trim();     
         const date    = document.getElementById('order-date').value;
+        const time    = document.getElementById('order-time').value;
         const address = document.getElementById('cust-address').value.trim();
         const remarks = document.getElementById('cust-remarks').value.trim();
         const btn     = document.getElementById('btn-place-order');
@@ -429,8 +442,8 @@
             return;
         }
 
-        // Updated validation: fb is now optional
-        if (!name || phone.length < 10 || !date ||
+        // Updated validation: fb is now optional, time is now required
+        if (!name || phone.length < 10 || !date || !time ||
             (fulfillmentMethod === 'delivery' && address.length < 10)) {
             alert("Please complete all required fields correctly.");
             return;
@@ -474,6 +487,7 @@
             facebookLink:  fb || null,                    // Save as null if empty
             remarks:       remarks || null,                // customer remarks/notes, visible to admin
             date,
+            time,                                          // NEW: delivery/pickup time (HH:MM, 24hr)
             address:       fulfillmentMethod === 'pickup' ? "Store Pickup" : address,
             method:        fulfillmentMethod,
             paymentMethod: selectedPayment,

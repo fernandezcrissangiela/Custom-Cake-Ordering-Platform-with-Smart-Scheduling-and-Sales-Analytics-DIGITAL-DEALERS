@@ -208,6 +208,28 @@
       font-size: 0.88rem;
       color: var(--brown);
     }
+    .today-order-datetime {
+      font-size: 0.7rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+    .today-order-daytag {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 1px 8px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      background: #F8F1EA;
+      color: var(--primary);
+    }
+    .today-order-daytag.is-today {
+      background: #dbeafe;
+      color: #1e40af;
+    }
 
     /* status pill reuse */
     .s-pill {
@@ -625,10 +647,10 @@
     <div id="dp-alerts-list"></div>
   </div>
 
-  <!-- ── Today's Orders ── -->
+  <!-- ── Upcoming Orders (Today + next 3 days) ── -->
   <div class="today-section">
     <div class="dash-section-title">
-      <i class="fas fa-clock"></i> Today's Orders
+      <i class="fas fa-clock"></i> Upcoming Orders <span style="font-weight:500;color:var(--muted);font-size:0.8rem;">(next 3 days)</span>
       <span id="today-count-badge" style="background:#F8F1EA;color:var(--primary);border-radius:20px;padding:1px 10px;font-size:0.72rem;font-weight:700;margin-left:4px;"></span>
     </div>
     <div id="today-orders-list">
@@ -690,6 +712,9 @@
   // always agree on "today's capacity".
   const DEFAULT_MAX_ORDERS_PER_DAY = 5;
 
+  // How many days ahead (including today) the "Upcoming Orders" panel shows.
+  const UPCOMING_WINDOW_DAYS = 3;
+
   /* ── helpers ── */
   async function hashPassword(password) {
     const data = new TextEncoder().encode(password);
@@ -726,6 +751,19 @@
     return diff >= 0 && diff <= 3;
   }
 
+  // ── NEW: format a 24hr "HH:MM" time string into a friendly 12hr label ──
+  function formatTime12(timeStr) {
+    if (!timeStr || typeof timeStr !== 'string' || !timeStr.includes(':')) return '';
+    const [hStr, mStr] = timeStr.split(':');
+    let h = parseInt(hStr, 10);
+    const m = mStr || '00';
+    if (isNaN(h)) return '';
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12;
+    if (h === 0) h = 12;
+    return `${h}:${m} ${ampm}`;
+  }
+
   /* ── greeting date ── */
   const now = new Date();
   document.getElementById('greeting-date').textContent =
@@ -758,37 +796,66 @@
     if (!latestOrderEntries) return; // wait until orders have loaded at least once
 
     const today     = todayStr();
-    const todayOrds = latestOrderEntries.filter(([, o]) => o.date === today && (o.status || '').toLowerCase() !== 'cancelled');
     const maxToday  = getMaxOrdersForDate(today);
-    const used       = todayOrds.length;
 
-    /* ── Schedule card ── */
+    /* ── Today only — used for the Schedule card + Today's Capacity bar ── */
+    const todayOrdsForCapacity = latestOrderEntries.filter(([, o]) =>
+      o.date === today && (o.status || '').toLowerCase() !== 'cancelled');
+    const used = todayOrdsForCapacity.length;
+
+    /* ── Today + next N days — used for the "Upcoming Orders" panel ── */
+    const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
+    const cutoffDate    = new Date(startOfToday);
+    cutoffDate.setDate(cutoffDate.getDate() + UPCOMING_WINDOW_DAYS);
+
+    const upcomingOrds = latestOrderEntries.filter(([, o]) => {
+      if (!o.date) return false;
+      if ((o.status || '').toLowerCase() === 'cancelled') return false;
+      const d = new Date(o.date + 'T00:00:00');
+      return d >= startOfToday && d <= cutoffDate;
+    }).sort(([, a], [, b]) => {
+      // Soonest date first; same-date orders sorted by time (earliest first)
+      const dateCompare = new Date(a.date) - new Date(b.date);
+      if (dateCompare !== 0) return dateCompare;
+      return (a.time || '').localeCompare(b.time || '');
+    });
+
+    /* ── Schedule card (today's slots only) ── */
     document.getElementById('card-schedule-count').textContent = `${used} / ${maxToday}`;
     const remaining  = Math.max(0, maxToday - used);
     const schedClass = used >= maxToday ? 'badge-danger' : (used === maxToday - 1 ? 'badge-warn' : 'badge-up');
     document.getElementById('card-schedule-sub').innerHTML =
       `<span class="${schedClass}"><i class="fas fa-calendar-day"></i> ${remaining} slot${remaining!==1?'s':''} left today</span>`;
 
-    /* ── Today's orders list ── */
+    /* ── Upcoming orders list (today + next 3 days) ── */
     const todayEl = document.getElementById('today-orders-list');
-    document.getElementById('today-count-badge').textContent = used;
-    if (used === 0) {
+    document.getElementById('today-count-badge').textContent = upcomingOrds.length;
+    if (upcomingOrds.length === 0) {
       todayEl.innerHTML = `
         <div class="today-empty">
           <i class="fas fa-calendar-check"></i>
-          <p>No orders scheduled for today.</p>
+          <p>No orders scheduled for the next ${UPCOMING_WINDOW_DAYS} days.</p>
         </div>`;
     } else {
       const statusIcons = {
         pending:'pause-circle', confirmed:'check-circle', 'downpayment-received':'hand-holding-usd',
         preparing:'utensils', baking:'fire-burner', packing:'box', delivery:'truck', completed:'check-double'
       };
-      todayEl.innerHTML = todayOrds.map(([id, o]) => {
+      todayEl.innerHTML = upcomingOrds.map(([id, o]) => {
         const st      = (o.status || 'pending').toLowerCase();
         const items   = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
         const summary = items.slice(0,2).map(i=>`${i.quantity||1}× ${i.name}`).join(', ')
                       + (items.length > 2 ? ` +${items.length-2} more` : '');
         const icon    = statusIcons[st] || 'box';
+
+        // day-relative label (Today / Tomorrow / in X days)
+        const orderDate = new Date(o.date + 'T00:00:00');
+        const diffDays  = Math.round((orderDate - startOfToday) / 86400000);
+        const isToday   = diffDays === 0;
+        const dayLabel  = isToday ? 'Today' : diffDays === 1 ? 'Tomorrow' : `In ${diffDays} days`;
+
+        const timeLabel = o.time ? formatTime12(o.time) : '';
+
         return `
           <a href="orders.html" class="today-order-row" style="text-decoration:none;">
             <div class="today-order-avatar"><i class="fas fa-${icon}"></i></div>
@@ -798,13 +865,18 @@
             </div>
             <div class="today-order-right">
               <div class="today-order-amount">₱${parseFloat(o.totalAmount||0).toLocaleString('en-PH')}</div>
+              <div class="today-order-datetime">
+                <span class="today-order-daytag ${isToday ? 'is-today' : ''}">${dayLabel}</span>
+                <i class="fas fa-calendar" style="margin-left:2px;"></i> ${o.date}
+                ${timeLabel ? `<i class="fas fa-clock" style="margin-left:4px;"></i> ${timeLabel}` : ''}
+              </div>
               ${statusPill(st)}
             </div>
           </a>`;
       }).join('');
     }
 
-    /* ── Capacity bar ── */
+    /* ── Capacity bar (today only) ── */
     const pct = Math.min(100, Math.round((used / maxToday) * 100));
     const bar = document.getElementById('capacity-bar-fill');
     bar.style.width = pct + '%';
@@ -875,7 +947,7 @@
             <div class="dp-alert-icon"><i class="fas fa-exclamation"></i></div>
             <div class="dp-alert-info">
               <div class="dp-alert-name">${o.customerName || 'Customer'} — ₱${parseFloat(o.totalAmount||0).toLocaleString('en-PH')}</div>
-              <div class="dp-alert-meta">Custom cake · Pickup/Delivery: ${o.date || '—'} · Payment: ${(o.paymentStatus||'unpaid').toUpperCase()}</div>
+              <div class="dp-alert-meta">Custom cake · Pickup/Delivery: ${o.date || '—'}${o.time ? ' · ' + formatTime12(o.time) : ''} · Payment: ${(o.paymentStatus||'unpaid').toUpperCase()}</div>
             </div>
             <a href="schedule.html" class="dp-alert-days ${diff <= 1 ? 'urgent' : ''}" style="text-decoration:none;">${label}</a>
           </div>`;

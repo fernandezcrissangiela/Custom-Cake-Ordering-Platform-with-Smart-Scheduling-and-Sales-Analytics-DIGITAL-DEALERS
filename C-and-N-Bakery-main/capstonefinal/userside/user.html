@@ -219,7 +219,7 @@
       justify-content: flex-end !important;
     }
 
-    .view-btn, .track-btn, .review-btn {
+    .view-btn, .track-btn, .review-btn, .cancel-btn {
       padding: 8px 14px !important;
       font-size: 0.72rem !important;
       border-radius: 50px !important;
@@ -462,6 +462,18 @@
     }
 
     /* ─────────────────────────────────────────
+       TRACKER CANCEL WRAP
+       ───────────────────────────────────────── */
+    .tracker-cancel-wrap {
+      margin-top: 16px !important;
+    }
+    .tracker-cancel-wrap .cancel-btn {
+      width: 100% !important;
+      justify-content: center !important;
+      padding: 10px 20px !important;
+    }
+
+    /* ─────────────────────────────────────────
        NO ACTIVE ORDERS EMPTY STATE
        ───────────────────────────────────────── */
     #no-active-orders-msg {
@@ -545,6 +557,39 @@
     .review-btn--done:hover {
       transform: none;
       box-shadow: none;
+    }
+
+    /* ── Cancel Order button (same shape as review/track buttons, red theme) ── */
+    .cancel-btn {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      color: white;
+      border: none;
+      padding: 7px 13px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+      transition: all 0.22s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+      box-shadow: 0 3px 10px rgba(231, 76, 60, 0.25);
+      line-height: 1;
+    }
+    .cancel-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(231, 76, 60, 0.35);
+    }
+    .cancel-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .tracker-cancel-wrap {
+      text-align: center;
+      margin-top: 18px;
     }
 
     /* ── Review Modal ── */
@@ -848,6 +893,12 @@
           </div>
         </div>
 
+        <!-- Cancel Order (hidden automatically once the order is out for delivery) -->
+        <div class="tracker-cancel-wrap" id="tracker-cancel-wrap">
+          <button class="cancel-btn" onclick="promptCancelOrder(activeOrderId)">
+            <i class="fas fa-ban"></i> Cancel Order
+          </button>
+        </div>
 
       </div>
     </div>
@@ -971,6 +1022,19 @@
       <button class="confirm-btn-no" onclick="closeConfirmModal()">Not Yet</button>
       <button class="confirm-btn-yes" id="confirm-yes-btn" onclick="confirmOrderReceived()">
         <i class="fas fa-check"></i> Yes, Received!
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Cancel Order Confirmation Modal -->
+<div id="cancel-order-modal" class="confirm-modal">
+  <div class="confirm-modal-box">
+    <p>Are you sure you want to cancel this order? This action cannot be undone.</p>
+    <div class="confirm-modal-btns">
+      <button class="confirm-btn-no" onclick="closeCancelModal()">No, Keep Order</button>
+      <button class="confirm-btn-yes" id="cancel-yes-btn" style="background:linear-gradient(135deg,#e74c3c,#c0392b);" onclick="confirmCancelOrder()">
+        <i class="fas fa-ban"></i> Yes, Cancel Order
       </button>
     </div>
   </div>
@@ -1192,7 +1256,7 @@
             const totalAmt   = data.totalAmount ? '₱' + data.totalAmount : '';
             card.style.cursor = 'pointer';
             card.addEventListener('click', (e) => {
-              if (!e.target.closest('.ao-received-btn') && !e.target.closest('.track-btn')) {
+              if (!e.target.closest('.ao-received-btn') && !e.target.closest('.track-btn') && !e.target.closest('.cancel-btn')) {
                 viewOrderDetails(id);
               }
             });
@@ -1210,7 +1274,10 @@
                   <span class="badge badge-${data.status}">${data.status}</span>
                   <span class="badge badge-pay-${payStatus}">${payLabel}</span>
                 </div>
-                ${data.status !== 'pending' ? `<div class="ao-card-actions"><button class="track-btn" onclick="event.stopPropagation(); trackThisOrder('${id}')"><i class="fas fa-location-dot"></i> Track</button></div>` : ''}
+                <div class="ao-card-actions">
+                  ${data.status !== 'pending' ? `<button class="track-btn" onclick="event.stopPropagation(); trackThisOrder('${id}')"><i class="fas fa-location-dot"></i> Track</button>` : ''}
+                  ${data.status !== 'delivery' ? `<button class="cancel-btn" onclick="event.stopPropagation(); promptCancelOrder('${id}')"><i class="fas fa-ban"></i> Cancel</button>` : ''}
+                </div>
               </div>
               ${data.status === 'delivery' ? `
               <div class="ao-received-bar">
@@ -1295,6 +1362,13 @@
   }
 
   function updateActiveTracker(id, order) {
+    // If this order was cancelled (by the customer or the admin), treat the
+    // tracker as empty instead of trying to render a stepper for it.
+    if (order.status === 'cancelled') {
+      showEmptyState();
+      return;
+    }
+
     activeOrderId = id;
     document.getElementById('no-active-order').classList.add('hidden');
     document.getElementById('status-pending').classList.add('hidden');
@@ -1308,6 +1382,12 @@
     const payLabels = { paid: 'PAID', partial: 'DOWNPAYMENT', cod: 'COD', unpaid: 'UNPAID' };
     payBadge.textContent = `⬤ ${payLabels[payStatus]}`;
     payBadge.className = `badge badge-pay-${payStatus}`;
+
+    // Hide the Cancel Order button once the order is out for delivery or completed.
+    const cancelWrap = document.getElementById('tracker-cancel-wrap');
+    if (cancelWrap) {
+      cancelWrap.style.display = (order.status === 'delivery' || order.status === 'completed') ? 'none' : 'block';
+    }
 
     if (order.status === 'pending') {
       document.getElementById('status-pending').classList.remove('hidden');
@@ -1413,6 +1493,11 @@
           <button class="modal-btn-primary modal-btn-green"
             onclick="setActiveOrderAndPrompt('${id}'); closeModal();">
             <i class="fas fa-box-check"></i> Order Received
+          </button>` : ''}
+        ${isActive && order.status !== 'delivery' ? `
+          <button class="modal-btn-primary" style="background:linear-gradient(135deg,#e74c3c,#c0392b);"
+            onclick="promptCancelOrder('${id}'); closeModal();">
+            <i class="fas fa-ban"></i> Cancel Order
           </button>` : ''}
       </div>`;
 
@@ -1537,6 +1622,58 @@
       console.error(e);
       btn.disabled = false;
       btn.innerHTML = '<i class="fas fa-check"></i> Yes, Received!';
+    }
+  };
+
+  // ── Cancel Order ──
+  let cancelOrderId = null;
+
+  window.promptCancelOrder = (id) => {
+    if (!id) return;
+    cancelOrderId = id;
+    document.getElementById('cancel-order-modal').style.display = 'flex';
+  };
+
+  window.closeCancelModal = () => {
+    document.getElementById('cancel-order-modal').style.display = 'none';
+    cancelOrderId = null;
+  };
+
+  window.confirmCancelOrder = async () => {
+    if (!cancelOrderId) return;
+    const idToCancel = cancelOrderId;
+    const btn = document.getElementById('cancel-yes-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelling...';
+
+    try {
+      await update(ref(db, `orders/${idToCancel}`), {
+        status: 'cancelled',
+        cancelledAt: new Date().toISOString(),
+        cancelledBy: 'customer'
+      });
+
+      // Keep the "latest" pointer for this user in sync so the tracker
+      // (and the admin dashboard, which reads the same orders node)
+      // reflect the cancellation right away.
+      if (currentUser) {
+        await update(ref(db, `users/${currentUser.uid}/latest`), {
+          status: 'cancelled',
+          orderId: idToCancel
+        });
+      }
+
+      if (idToCancel === activeOrderId) {
+        showEmptyState();
+      }
+
+      closeCancelModal();
+    } catch (e) {
+      console.error(e);
+      alert('Failed to cancel the order. Please try again.');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-ban"></i> Yes, Cancel Order';
     }
   };
 
