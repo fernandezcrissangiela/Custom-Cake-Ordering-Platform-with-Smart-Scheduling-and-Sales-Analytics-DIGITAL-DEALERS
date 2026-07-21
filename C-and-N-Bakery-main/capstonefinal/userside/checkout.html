@@ -26,6 +26,39 @@
             color: #922b21;
             margin-top: 4px;
         }
+
+        /* NEW: inline "fully booked" warning shown right under the date field */
+        #order-date.date-fully-booked {
+            border-color: #c0392b !important;
+            background-color: #fdecea;
+        }
+        #date-availability-msg {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            margin-top: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #c0392b;
+        }
+        #date-availability-msg.visible {
+            display: flex;
+        }
+
+        /* NEW: inline "fulfillment unavailable for this date" warning,
+           shown in the Fulfillment Method section right under the date field */
+        #fulfillment-availability-msg {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            margin-top: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #c0392b;
+        }
+        #fulfillment-availability-msg.visible {
+            display: flex;
+        }
     </style>
 </head>
 <body>
@@ -99,6 +132,14 @@
                         Delivery / Pickup Date <span style="color:var(--danger);">*</span>
                     </label>
                     <input type="date" id="order-date" required>
+                    <div id="date-availability-msg">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span id="date-availability-text">This date is fully booked Please choose another date.</span>
+                    </div>
+                    <div id="fulfillment-availability-msg">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span id="fulfillment-availability-text"></span>
+                    </div>
                 </div>
 
                 <!-- NEW: Delivery / Pickup Time -->
@@ -147,7 +188,7 @@
                     </label>
                     <div id="bank-details" class="qr-placeholder">
                         BPI Account: <strong>1234-5678-90</strong><br>
-                        Account Name: <strong>C&amp;N Bakery Corp.</strong>
+                        Account Name: <strong>C&amp;N Bakery </strong>
                     </div>
                 </div>
             </div>
@@ -197,8 +238,8 @@
         appId: "1:620414447517:web:d42c5d50a91ff41e5ac974"
     };
 
-    //max orders in the schedule
-    const MAX_ORDERS_PER_DAY = 3;
+    //max orders in the schedule (fallback used when a date has no custom limit set in admin Schedule)
+    const DEFAULT_MAX_ORDERS_PER_DAY = 5;
 
     const app  = initializeApp(firebaseConfig);
     const db   = getDatabase(app);
@@ -210,21 +251,36 @@
     let selectedPayment  = 'cod';
     let hasCustomCake    = false;
     let allOrders        = {};
+    let fullyBookedDates = new Set(); // NEW: dates that have hit MAX_ORDERS_PER_DAY
 
     // ── Fulfillment availability settings ────────────────────────────────
-    // NOTE: There is no admin UI that writes to a global "settings/fulfillment"
-    // node — the admin Schedule page only sets per-day overrides. So availability
-    // is driven purely by that per-day data below (defaults to available).
-
     // Per-day overrides written by the admin Schedule page:
     // dayFulfillment/{date} => { delivery: true/false, pickup: true/false }
     let dayFulfillmentSettings = {};
+
+    // Per-day order-limit overrides written by the admin Schedule page:
+    // dayLimits/{date} => number
+    let dayLimits = {};
 
     // listen to the same 'dayFulfillment' node the admin Schedule page writes to
     onValue(ref(db, 'dayFulfillment'), (snapshot) => {
         dayFulfillmentSettings = snapshot.val() || {};
         applyFulfillmentAvailability();
     });
+
+    // listen to the same 'dayLimits' node the admin Schedule page writes to
+    onValue(ref(db, 'dayLimits'), (snapshot) => {
+        dayLimits = snapshot.val() || {};
+        updateAvailableDates();
+    });
+
+    // Effective max orders for a given date string, falling back to the default.
+    function getMaxOrders(dateStr) {
+        const custom = dayLimits[dateStr];
+        return (custom !== undefined && custom !== null && custom > 0)
+            ? custom
+            : DEFAULT_MAX_ORDERS_PER_DAY;
+    }
 
     // Returns availability for the currently selected date.
     // No date selected yet => always available (nothing to restrict against).
@@ -255,6 +311,28 @@
                 if (fallbackBtn) fallbackBtn.click();
             }
         }
+
+        // NEW: show/hide the inline warning (instead of a popup alert) when
+        // a date is selected and the currently active method is unavailable
+        // for it (e.g. both delivery and pickup are disabled for that date).
+        showFulfillmentAvailabilityMessage(dateStr, effective);
+    }
+
+    // NEW: shows/hides the inline "fulfillment unavailable for this date"
+    // warning right under the date field, in the Fulfillment Method section,
+    function showFulfillmentAvailabilityMessage(dateStr, effective) {
+        const msgBox  = document.getElementById('fulfillment-availability-msg');
+        const msgText = document.getElementById('fulfillment-availability-text');
+        if (!msgBox || !msgText) return false;
+
+        const isUnavailable = !!dateStr && effective[fulfillmentMethod] === false;
+
+        if (isUnavailable) {
+            const label = fulfillmentMethod === 'delivery' ? 'Delivery' : 'Store Pickup';
+            msgText.textContent = `${label} is unavailable for the selected date. Please choose another date or fulfillment option.`;
+        }
+        msgBox.classList.toggle('visible', isUnavailable);
+        return isUnavailable;
     }
     // ── End fulfillment settings logic ────────────────────────────────────
 
@@ -290,8 +368,10 @@
         const btn        = document.getElementById('btn-place-order');
         const isDelivery = fulfillmentMethod === 'delivery';
 
+        const isFullyBooked = fullyBookedDates.has(date);
+
         btn.disabled = !(name && phone.length >= 10 && date && time &&
-                        (!isDelivery || address.length >= 10));
+                        (!isDelivery || address.length >= 10)) || isFullyBooked;
     }
 
     function updateAvailableDates() {
@@ -305,19 +385,40 @@
             }
         });
 
-        const disabledDates = new Set(
-            Object.keys(dateCounts).filter(d => dateCounts[d] >= MAX_ORDERS_PER_DAY)
+        fullyBookedDates = new Set(
+            Object.keys(dateCounts).filter(d => dateCounts[d] >= getMaxOrders(d))
         );
 
-        dateInput.addEventListener('input', function(e) {
-            if (disabledDates.has(e.target.value)) {
-                e.target.setCustomValidity(`This date is fully booked (max ${MAX_ORDERS_PER_DAY} orders per day). Please choose another date.`);
-            } else {
-                e.target.setCustomValidity("");
-            }
-        });
+        dateInput.title = `Some dates may be unavailable`;
 
-        dateInput.title = `Some dates may be unavailable (max ${MAX_ORDERS_PER_DAY} orders per day)`;
+        // Re-check whatever date is currently selected in case new orders
+        // came in (via the realtime listener) and pushed it over the limit.
+        checkDateAvailability();
+    }
+
+    // NEW: shows/hides the inline "fully booked" warning under the date field
+    // instead of relying on a browser alert() popup.
+    function checkDateAvailability() {
+        const dateInput = document.getElementById('order-date');
+        const msgBox    = document.getElementById('date-availability-msg');
+        if (!dateInput || !msgBox) return false;
+
+        const isFullyBooked = fullyBookedDates.has(dateInput.value);
+
+        msgBox.classList.toggle('visible', isFullyBooked);
+        dateInput.classList.toggle('date-fully-booked', isFullyBooked);
+
+        if (isFullyBooked) {
+            const msg = `This date is fully booked. Please choose another date.`;
+            dateInput.setCustomValidity(msg);
+            const msgText = document.getElementById('date-availability-text');
+            if (msgText) msgText.textContent = msg;
+        } else {
+            dateInput.setCustomValidity("");
+        }
+
+        updateButtonState();
+        return isFullyBooked;
     }
 
     function initCheckout() {
@@ -391,6 +492,10 @@
                 timeLabel.innerHTML = 'Delivery Time <span style="color:var(--danger);">*</span>';
                 document.getElementById('cust-address').setAttribute('required', '');
             }
+            showFulfillmentAvailabilityMessage(
+                document.getElementById('order-date')?.value || '',
+                getEffectiveFulfillment(document.getElementById('order-date')?.value || '')
+            );
             updateButtonState();
         });
     });
@@ -420,6 +525,8 @@
     if (orderDateInput) {
         orderDateInput.addEventListener('input', applyFulfillmentAvailability);
         orderDateInput.addEventListener('change', applyFulfillmentAvailability);
+        orderDateInput.addEventListener('input', checkDateAvailability);
+        orderDateInput.addEventListener('change', checkDateAvailability);
     }
 
     async function placeOrder() {
@@ -435,10 +542,13 @@
         const btn     = document.getElementById('btn-place-order');
 
         // guard against submitting with a fulfillment method that's unavailable
-        // for the specifically selected date (per-day OR global setting)
+        // for the specifically selected date (per-day OR global setting).
+        // Shown inline under the date field, in the Fulfillment Method
+        // section, rather than as a popup alert.
         const dateFulfillment = getEffectiveFulfillment(date);
         if (dateFulfillment[fulfillmentMethod] === false) {
-            alert(`${fulfillmentMethod === 'delivery' ? 'Delivery' : 'Store Pickup'} is unavailable for the selected date. Please choose another date or fulfillment option.`);
+            showFulfillmentAvailabilityMessage(date, dateFulfillment);
+            document.getElementById('order-date').scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
         }
 
@@ -449,9 +559,14 @@
             return;
         }
 
+        // Final safety check (covers race conditions, e.g. another customer
+        // booked the last slot for this date moments ago). Shown inline
+        // under the date field rather than as a popup alert.
         const ordersOnDate = Object.values(allOrders).filter(o => o.date === date).length;
-        if (ordersOnDate >= MAX_ORDERS_PER_DAY) {
-            alert(`Sorry, this date is fully booked (max ${MAX_ORDERS_PER_DAY} orders per day). Please choose another date.`);
+        if (ordersOnDate >= getMaxOrders(date)) {
+            fullyBookedDates.add(date);
+            checkDateAvailability();
+            document.getElementById('order-date').scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
         }
 
