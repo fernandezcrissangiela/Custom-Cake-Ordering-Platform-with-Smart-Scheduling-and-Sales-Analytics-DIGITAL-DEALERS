@@ -515,14 +515,26 @@
             const checkedOutItems = JSON.parse(localStorage.getItem('checkoutItems') || '[]');
             let fullCart = JSON.parse(localStorage.getItem('cart') || '[]');
             checkedOutItems.forEach(ordered => {
-                const idx = fullCart.findIndex(c =>
-                    c.name === ordered.name &&
-                    JSON.stringify(c.customDetails) === JSON.stringify(ordered.customDetails)
-                );
+                // Prefer matching by cartId — 
+                // Fall back to the old name+customDetails match only for
+                // legacy items that predate the cartId fix.
+                const idx = ordered.cartId
+                    ? fullCart.findIndex(c => c.cartId === ordered.cartId)
+                    : fullCart.findIndex(c =>
+                        c.name === ordered.name &&
+                        JSON.stringify(c.customDetails) === JSON.stringify(ordered.customDetails)
+                      );
                 if (idx > -1) fullCart.splice(idx, 1);
             });
             localStorage.setItem('cart', JSON.stringify(fullCart));
             localStorage.removeItem('checkoutItems');
+
+
+            try {
+                await set(ref(db, `carts/${currentUser.uid}`), fullCart.length > 0 ? fullCart : null);
+            } catch (syncErr) {
+                console.error("Failed to sync cart to Firebase after order:", syncErr);
+            }
 
             window.location.href = "user.html";
 

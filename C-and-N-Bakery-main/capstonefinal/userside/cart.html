@@ -175,6 +175,26 @@
 
         function getCart() { return JSON.parse(localStorage.getItem('cart') || '[]'); }
 
+        function generateCartId() {
+            return 'c_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 9);
+        }
+
+        // Ensures every item in the cart has a stable unique cartId. We rely on
+        // this ID (not name+JSON matching) to remove a specific item after
+        // checkout, because JSON.stringify comparisons can silently break if an
+        // object's key order changes — which happens after a round-trip through
+        // Firebase (its SDK does not guarantee key order is preserved).
+        function ensureCartIds(cart) {
+            let changed = false;
+            cart.forEach(item => {
+                if (!item.cartId) {
+                    item.cartId = generateCartId();
+                    changed = true;
+                }
+            });
+            return changed;
+        }
+
         // saveCart always writes localStorage + header, and calls Firebase sync if available
         function saveCart(cart) {
             localStorage.setItem('cart', JSON.stringify(cart));
@@ -317,6 +337,7 @@
             const itemsToBuy = selectedIndices.map(index => {
                 const item = cart[index];
                 return {
+                    cartId:          item.cartId,
                     name:            item.name,
                     price:           item.price,
                     quantity:        item.quantity,
@@ -355,6 +376,15 @@
                 window.location.href = 'checkout.html';
             }
         };
+
+        // One-time migration: give any pre-existing cart items (added before
+        // this fix) a cartId so checkout removal works for them too.
+        (function migrateCartIds() {
+            const cart = getCart();
+            if (ensureCartIds(cart)) {
+                localStorage.setItem('cart', JSON.stringify(cart));
+            }
+        })();
 
         renderCart();
         updateHeaderCount();
@@ -397,11 +427,13 @@
 
             if (localCart.length === 0 && cloudCart.length > 0) {
                 // Fresh page load with nothing local — restore from cloud
+                ensureCartIds(cloudCart);
                 localStorage.setItem('cart', JSON.stringify(cloudCart));
                 renderCart();
                 updateHeaderCount();
             } else if (localCart.length > 0 && cloudCart.length === 0) {
                 // Local exists but cloud is empty — push to cloud
+                ensureCartIds(localCart);
                 saveCartToFirebase(user, localCart);
             } else if (localCart.length > 0 && cloudCart.length > 0) {
                 // Both exist — add any cloud-only items that aren't in local
@@ -409,12 +441,14 @@
                 const merged = [...localCart];
                 cloudCart.forEach(cloudItem => {
                     const exists = merged.find(l =>
-                        l.name === cloudItem.name &&
-                        JSON.stringify(l.customDetails) === JSON.stringify(cloudItem.customDetails)
+                        l.cartId ? l.cartId === cloudItem.cartId :
+                        (l.name === cloudItem.name &&
+                         JSON.stringify(l.customDetails) === JSON.stringify(cloudItem.customDetails))
                     );
                     if (!exists) merged.push(cloudItem);
                 });
-                if (merged.length !== localCart.length) {
+                const idsChanged = ensureCartIds(merged);
+                if (merged.length !== localCart.length || idsChanged) {
                     localStorage.setItem('cart', JSON.stringify(merged));
                     saveCartToFirebase(user, merged);
                     renderCart();
