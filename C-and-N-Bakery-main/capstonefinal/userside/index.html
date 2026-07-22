@@ -203,6 +203,7 @@
 
 
   <script type="module">
+// firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
     import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
@@ -222,8 +223,7 @@
     const app  = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getDatabase(app);
-
-
+//function (!NOT) (||OR)
     function updateCartCount(uid) {
       const cartCount = document.getElementById('cart-count');
       if (!cartCount) return;
@@ -233,7 +233,6 @@
       cartCount.innerText     = total;
       cartCount.style.display = total > 0 ? 'flex' : 'none';
     }
-
 
     window.handleSignup = async function(e) {
       e.preventDefault();
@@ -256,6 +255,7 @@
         loginEmailInput.value = email.value;
         loginEmailInput.focus();
         name.value = ''; email.value = ''; password.value = '';
+
       } catch (error) {
         const code = error.code || '';
         let friendlyMsg = 'Signup failed. Please try again.';
@@ -338,7 +338,7 @@
       updateCartCount(uid || null);
 
 
-      // ── Load Featured Cakes from Firebase ──
+//Load Featured Cakes from Firebase
       const grid = document.getElementById('featured-cakes-grid');
       if (grid) {
         onValue(ref(db, 'featured-cakes'), (snapshot) => {
@@ -366,7 +366,7 @@
         });
       }
 
-      // ── Load Reviews from Firebase (infinite auto-scroll marquee) ──
+//Load Reviews from Firebase (infinite auto-scroll marquee)
       const marqueeOuter = document.getElementById('reviews-marquee-outer');
       if (marqueeOuter) {
         onValue(ref(db, 'reviews'), (snapshot) => {
@@ -400,11 +400,11 @@
             return card;
           }
 
-          // Build track with cards duplicated for seamless loop
+// Build track with cards duplicated for seamless loop
           const track = document.createElement('div');
           track.className = 'reviews-marquee-track';
 
-          // Original set
+// Original set
           reviews.forEach(r => track.appendChild(buildCard(r)));
           // Duplicate set (makes the infinite loop seamless)
           reviews.forEach(r => track.appendChild(buildCard(r)));
