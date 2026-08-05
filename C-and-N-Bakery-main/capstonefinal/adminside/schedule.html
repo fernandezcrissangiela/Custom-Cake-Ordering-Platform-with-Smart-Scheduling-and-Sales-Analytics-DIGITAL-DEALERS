@@ -204,7 +204,6 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
-  import { sendDownpaymentEmail } from "./order-email.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCWUJfDwLR5erpExZUoBWW7YJ-aDpT_zy0",
@@ -218,36 +217,6 @@
 
   const app = initializeApp(firebaseConfig);
   const db  = getDatabase(app);
-
-  // ── Downpayment reminder helpers ──────────────────────────────────────────
-
-  /** Returns true if any item in the order is a custom cake. */
-  function hasCustomItem(order) {
-    const items = Array.isArray(order.items) ? order.items : Object.values(order.items || {});
-    return items.some(i => {
-      const cat  = (i.category || '').toLowerCase().trim();
-      const name = (i.name     || '').toLowerCase().trim();
-      return cat.includes('custom') || name.includes('custom');
-    });
-  }
-
-  /**
-   * Returns true if this order needs a downpayment reminder:
-   *  - Has at least one custom cake item
-   *  - Downpayment not yet received (paymentStatus is not 'partial' or 'paid')
-   *  - Pickup/delivery date is within the next 3 days (inclusive)
-   */
-  function needsDownpaymentReminder(order) {
-    if (!hasCustomItem(order)) return false;
-
-    const ps = (order.paymentStatus || '').toLowerCase();
-    if (ps === 'partial' || ps === 'paid') return false;
-
-    const today     = new Date(); today.setHours(0, 0, 0, 0);
-    const orderDate = new Date((order.date || '') + 'T00:00:00');
-    const diffDays  = Math.ceil((orderDate - today) / (1000 * 60 * 60 * 24));
-    return diffDays >= 0 && diffDays <= 3;
-  }
 
   let currentViewDate = new Date();
   let allOrders       = {};
@@ -414,12 +383,6 @@
       } else if (!isPast && orderCount > 0) {
         subHtml = `<span class="capacity-label ${capacityClass}">${orderCount}/${maxForDay}</span>`;
         if (isFull) subHtml += `<span class="full-text">FULL</span>`;
-      }
-
-      // ⚠ Downpayment reminder badge — show if any active order on this day needs a reminder
-      const hasUnpaidCustom = !isPast && activeOrders.some(needsDownpaymentReminder);
-      if (hasUnpaidCustom) {
-        subHtml += `<span class="capacity-label warn" title="Custom order — downpayment not yet received">⚠ DP</span>`;
       }
 
       // ✎ Custom-limit badge — show if this day has an admin-set order cap
@@ -641,56 +604,7 @@
       `;
     }
 
-    // ── Downpayment reminder button ──────────────────────────────────────────
-    // Appended separately so it works regardless of order status
-    if (needsDownpaymentReminder(order)) {
-      const reminderBtn = document.createElement('button');
-      reminderBtn.id        = 'btn-notify-dp';
-      reminderBtn.className = 'btn-complete';
-      reminderBtn.style.cssText = 'background:#d97706; margin-left:8px;';
-      reminderBtn.innerHTML = '<i class="fas fa-bell"></i> Notify Customer (Downpayment)';
-      reminderBtn.onclick   = () => sendDownpaymentReminder(orderId);
-      footer.appendChild(reminderBtn);
-    }
-
     document.getElementById('order-detail-modal').classList.add('open');
-  };
-
-  // ── Send downpayment reminder email ──────────────────────────────────────
-  window.sendDownpaymentReminder = (orderId) => {
-    const order = allOrders[orderId];
-    if (!order) return;
-
-    const email = order.email || order.customerEmail || '';
-    if (!email) {
-      alert('No email address found for this customer. Please check the order.');
-      return;
-    }
-
-    if (!confirm(`Send a downpayment reminder email to ${order.customerName || 'this customer'} (${email})?`)) return;
-
-    const btn = document.getElementById('btn-notify-dp');
-    if (btn) {
-      btn.disabled   = true;
-      btn.innerHTML  = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-    }
-
-    sendDownpaymentEmail(order, orderId, email)
-      .then(() => {
-        if (btn) {
-          btn.innerHTML = '<i class="fas fa-check"></i> Email Sent!';
-          btn.style.background = '#1A6632';
-        }
-        // Optional: record that a reminder was sent so you don't double-send
-        update(ref(db, `orders/${orderId}`), { reminderSentAt: new Date().toISOString() });
-      })
-      .catch(err => {
-        alert('Failed to send email: ' + err.message);
-        if (btn) {
-          btn.disabled  = false;
-          btn.innerHTML = '<i class="fas fa-bell"></i> Notify Customer (Downpayment)';
-        }
-      });
   };
 
   // ── Mark order as Completed (moves to history) ──
