@@ -212,7 +212,7 @@
     }
 
     // Shared template — delegates to getButtonLabel() for flexibility
-    render() { // OOP - Polymorphism (calls overridden getButtonLabel)
+    render() { // OOP - Polymorphism (same command but different behavior)   
       const p = this.product;
       const priceLabel = this.hasSizes()
         ? `From ₱${Number(Math.min(...p.sizes.map(s => s.price))).toFixed(2)}`
@@ -575,7 +575,7 @@
       };
     }
 
-    // ── Wire up clicking the product photo to view it full-size
+    // Wire up clicking the product photo to view it full-size
     #bindImageLightbox() { // OOP - Encapsulation (private method)
       const modalImg = document.getElementById('modalImg');
       const lightbox = document.getElementById('imageLightbox');

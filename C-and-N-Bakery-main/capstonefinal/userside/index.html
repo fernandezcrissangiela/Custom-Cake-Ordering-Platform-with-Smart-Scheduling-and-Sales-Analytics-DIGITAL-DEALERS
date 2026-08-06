@@ -366,7 +366,7 @@
         });
       }
 
-//Load Reviews from Firebase (infinite auto-scroll marquee)
+//Load Reviews from Firebase
       const marqueeOuter = document.getElementById('reviews-marquee-outer');
       if (marqueeOuter) {
         onValue(ref(db, 'reviews'), (snapshot) => {
