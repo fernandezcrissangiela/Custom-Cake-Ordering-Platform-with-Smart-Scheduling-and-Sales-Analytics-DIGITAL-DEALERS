@@ -647,7 +647,7 @@
     <div id="dp-alerts-list"></div>
   </div>
 
-  <!-- ── Upcoming Orders (Today + next 3 days) ── -->
+  <!-- ── Upcoming Orders (Today + next N days) ── -->
   <div class="today-section">
     <div class="dash-section-title">
       <i class="fas fa-clock"></i> Upcoming Orders <span style="font-weight:500;color:var(--muted);font-size:0.8rem;"></span>
@@ -713,7 +713,7 @@
   const DEFAULT_MAX_ORDERS_PER_DAY = 5;
 
   // How many days ahead (including today) the "Upcoming Orders" panel shows.
-  const UPCOMING_WINDOW_DAYS = 3;
+  const UPCOMING_WINDOW_DAYS = 5;
 
   /* ── helpers ── */
   async function hashPassword(password) {
@@ -827,7 +827,7 @@
     document.getElementById('card-schedule-sub').innerHTML =
       `<span class="${schedClass}"><i class="fas fa-calendar-day"></i> ${remaining} slot${remaining!==1?'s':''} left today</span>`;
 
-    /* ── Upcoming orders list (today + next 3 days) ── */
+    /* ── Upcoming orders list (today + next N days) ── */
     const todayEl = document.getElementById('today-orders-list');
     document.getElementById('today-count-badge').textContent = upcomingOrds.length;
     if (upcomingOrds.length === 0) {
