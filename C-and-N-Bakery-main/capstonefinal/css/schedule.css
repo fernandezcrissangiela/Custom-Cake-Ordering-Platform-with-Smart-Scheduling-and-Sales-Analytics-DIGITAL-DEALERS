@@ -121,7 +121,7 @@
 .cal-day.today {
   background: linear-gradient(135deg, #FFF3E8, #FFE8D0);
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(130,90,60,0.15);
+  box-shadow: 0 0 0 3px rgba(220, 165, 123, 0.15);
 }
 .cal-day.today span { color: var(--primary-dark); }
 
@@ -130,7 +130,7 @@
   border-color: var(--primary-dark);
   box-shadow: 0 4px 14px rgba(92,63,42,0.30);
 }
-.cal-day.selected span  { color: #3F2A1F; }
+.cal-day.selected span  { color: #000000; }
 .cal-day.selected .dot-container { opacity: 0.85; }
 
 .cal-day.past {
@@ -140,9 +140,13 @@
 .cal-day.past:hover { opacity: 1; }
 
 .cal-day.full {
-  background: #bf0000;
-  border-color: #5a0000;
+  background: #c0392b;
+  border-color: #922b21;
 }
+/* Direct child only — the day number. Do NOT match nested badge spans
+   inside .dot-container, or it overrides their colored text with white. */
+.cal-day.full > span { color: #ffffff; }
+
 .cal-day.almost-full {
   background: #ffdf77;
   border-color: #4f3f00;
@@ -152,7 +156,10 @@
   border-color: #3F2A1F;
 }
 
-/* ── Dot / Capacity Label ── */
+/* ── Dot / Capacity Label ──
+   Every badge sits on a solid white chip with a colored border and bold
+   colored text, so it stays readable regardless of the cell's own
+   background color (red "full", amber "almost-full", tan "has-booking", etc). */
 .dot-container {
   display: flex;
   flex-direction: column;
@@ -163,23 +170,29 @@
 }
 
 .capacity-label {
-  font-size: 0.60rem;
-  font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 4px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 5px;
   white-space: nowrap;
-  line-height: 1.3;
+  line-height: 1.35;
+  background: #ffffff;
+  border: 1.5px solid transparent;
 }
-.capacity-label.ok   { background: #e8f8f0; color: #1a6632; }
-.capacity-label.warn { background: #fff8e0; color: #8A6400; }
-.capacity-label.full { background: #fdecea; color: #922b21; }
+.capacity-label.ok   { color: #1a6632; border-color: #a8e0bc; }
+.capacity-label.warn { color: #8a6400; border-color: #f0c94a; }
+.capacity-label.full { color: #922b21; border-color: #f5a8a0; }
 
 .full-text {
-  font-size: 0.55rem;
+  font-size: 0.56rem;
   font-weight: 800;
-  color: #c0392b;
+  color: #ffffff;
+  background: #7a1e15;
+  padding: 1px 6px;
+  border-radius: 5px;
   text-transform: uppercase;
   letter-spacing: 0.3px;
+  border: 1px solid #5c1610;
 }
 
 /* ── Daily Panel ── */
@@ -416,7 +429,7 @@
   .calendar-grid { gap: 3px; }
   .cal-day { min-height: 42px; padding: 4px 2px 2px; border-radius: 8px; }
   .cal-day span { font-size: 0.78rem; }
-  .capacity-label { font-size: 0.54rem; padding: 1px 3px; }
+  .capacity-label { font-size: 0.56rem; padding: 1px 4px; }
   .full-text { display: none; }
 
   .cal-legend { gap: 8px; font-size: 0.70rem; }

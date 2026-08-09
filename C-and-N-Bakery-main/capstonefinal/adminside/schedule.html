@@ -387,7 +387,7 @@
 
       // ✎ Custom-limit badge — show if this day has an admin-set order cap
       if (!isPast && dayLimits[dStr] != null) {
-        subHtml += `<span class="capacity-label" style="background:#eef2ff;color:#4338ca;" title="Custom order limit: ${dayLimits[dStr]}">✎ ${dayLimits[dStr]}</span>`;
+        subHtml += `<span class="capacity-label" style="background:#ffffff;color:#4338ca;border:1px solid #c7d2fe;" title="Custom order limit: ${dayLimits[dStr]}">✎ ${dayLimits[dStr]}</span>`;
       }
 
       // 🚫 Fulfillment badge — show if this day has a restricted delivery/pickup option
@@ -397,7 +397,7 @@
           const label = (!dayFul.delivery && !dayFul.pickup)
             ? 'No delivery/pickup'
             : (!dayFul.delivery ? 'No delivery' : 'No pickup');
-          subHtml += `<span class="capacity-label" style="background:#fdecea;color:#922b21;" title="${label}"><i class="fas fa-ban"></i></span>`;
+          subHtml += `<span class="capacity-label" style="background:#ffffff;color:#922b21;border:1px solid #f5a8a0;" title="${label}"><i class="fas fa-ban"></i></span>`;
         }
       }
 
@@ -408,18 +408,16 @@
         <div class="dot-container">${subHtml}</div>
       `;
 
-      // Past days AND available future days are clickable
-      // Only non-past full days are blocked
+      // Every day is clickable — full days just get an informational title,
+      // they no longer block viewing who's booked in.
       if (isFull && !isPast) {
-        div.style.cursor = 'not-allowed';
-        div.title = `Max capacity reached (${maxForDay} orders)`;
-      } else {
-        div.onclick = () => {
-          selectedDate = dStr;
-          renderCalendar();
-          viewDay(dStr);
-        };
+        div.title = `Max capacity reached (${maxForDay} orders) — click to view bookings`;
       }
+      div.onclick = () => {
+        selectedDate = dStr;
+        renderCalendar();
+        viewDay(dStr);
+      };
 
       grid.appendChild(div);
     }
