@@ -86,6 +86,18 @@
     </button>
   </div>
 
+  <!-- ══ SEARCH BAR (NEW) ══ -->
+  <div class="order-search-wrap" style="margin:14px auto 6px; max-width:460px;">
+    <div style="position:relative; max-width:460px;">
+      <i class="fas fa-search" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#aaa; font-size:0.85rem;"></i>
+      <input type="text" id="order-search" placeholder="Search by customer name, phone, or order ID..."
+             style="width:100%; padding:11px 14px 11px 38px; border-radius:10px; border:1.5px solid #ddd;
+                    font-size:0.9rem; font-family:inherit; box-sizing:border-box; outline:none; transition:border-color .15s;">
+      <i id="order-search-clear" class="fas fa-times-circle"
+         style="display:none; position:absolute; right:14px; top:50%; transform:translateY(-50%); color:#bbb; cursor:pointer; font-size:0.9rem;"></i>
+    </div>
+  </div>
+
   <!-- ══ PANEL: New Orders ══ -->
   <div id="panel-new-orders" class="orders-panel active">
     <div class="page-heading">
@@ -1008,17 +1020,43 @@
       </div>`;
   }
 
-  // ── LIVE LISTENER ──
-  onValue(ref(db, 'orders'), (snapshot) => {
-    const orders  = snapshot.val() || {};
+  // ── SEARCH + LIVE LISTENER (NEW) ──
+  let latestOrders = {};
+
+  function matchesSearch(id, order, term) {
+    if (!term) return true;
+    if (typeof order !== 'object') return false;
+    const name    = (order.customerName || '').toLowerCase();
+    const phone   = (order.phone || '').toLowerCase();
+    const shortId = id.slice(-6).toLowerCase();
+    const fullId  = id.toLowerCase();
+    const items   = (order.items || []).map(i => (i.name || '').toLowerCase()).join(' ');
+    return name.includes(term) || phone.includes(term) || shortId.includes(term) ||
+           fullId.includes(term) || items.includes(term);
+  }
+
+  function renderOrderLists(searchTerm = '') {
+    const orders  = latestOrders;
     const pending = document.getElementById('pending-list');
     const active  = document.getElementById('active-list');
     pending.innerHTML = '';
     active.innerHTML  = '';
 
-    const entries = Object.entries(orders).reverse();
+    const term = searchTerm.trim().toLowerCase();
+
+    const clearBtn = document.getElementById('order-search-clear');
+    if (clearBtn) clearBtn.style.display = term ? 'block' : 'none';
+
+    let entries = Object.entries(orders).reverse();
+    if (term) {
+      entries = entries.filter(([id, order]) => matchesSearch(id, order, term));
+    }
+
     if (entries.length === 0) {
-      pending.innerHTML = '<p class="no-orders">No orders yet.</p>';
+      const emptyMsg = term ? 'No orders match your search.' : 'No orders yet.';
+      pending.innerHTML = `<p class="no-orders">${emptyMsg}</p>`;
+      document.getElementById('badge-pending').textContent = 0;
+      document.getElementById('badge-active').textContent  = 0;
       return;
     }
 
@@ -1032,12 +1070,35 @@
       else if (!['cancelled', 'completed'].includes(st)) { active.innerHTML += card; hasActive = true; activeCount++; }
     });
 
-    if (!hasPending) pending.innerHTML = '<p class="no-orders">No new orders.</p>';
-    if (!hasActive)  active.innerHTML  = '<p class="no-orders">No active orders.</p>';
+    if (!hasPending) pending.innerHTML = `<p class="no-orders">${term ? 'No new orders match your search.' : 'No new orders.'}</p>`;
+    if (!hasActive)  active.innerHTML  = `<p class="no-orders">${term ? 'No active orders match your search.' : 'No active orders.'}</p>`;
 
-    // Update badge counts
     document.getElementById('badge-pending').textContent = pendingCount;
     document.getElementById('badge-active').textContent  = activeCount;
+  }
+
+  // ── LIVE LISTENER ──
+  onValue(ref(db, 'orders'), (snapshot) => {
+    latestOrders = snapshot.val() || {};
+    const searchInput = document.getElementById('order-search');
+    renderOrderLists(searchInput ? searchInput.value : '');
+  });
+
+  // ── SEARCH INPUT WIRING ──
+  const searchInputEl = document.getElementById('order-search');
+  searchInputEl.addEventListener('input', (e) => {
+    renderOrderLists(e.target.value);
+  });
+  searchInputEl.addEventListener('focus', () => {
+    searchInputEl.style.borderColor = '#e67e22';
+  });
+  searchInputEl.addEventListener('blur', () => {
+    searchInputEl.style.borderColor = '#ddd';
+  });
+  document.getElementById('order-search-clear').addEventListener('click', () => {
+    searchInputEl.value = '';
+    renderOrderLists('');
+    searchInputEl.focus();
   });
 </script>
 
