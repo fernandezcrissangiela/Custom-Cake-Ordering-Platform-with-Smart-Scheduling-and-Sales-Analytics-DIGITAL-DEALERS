@@ -529,7 +529,7 @@ nav a.active::after {
     }
 
     nav::before {
-        content: "Menu";
+        
         display: block;
         font-size: 0.68rem;
         font-weight: 700;
