@@ -323,7 +323,7 @@
   </style>
 </head>
 <body>
-<!-- ========== MOBILE DRAWER ========== -->
+<!--  MOBILE DRAWER  -->
 <div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()"></div>
 <div class="mobile-drawer" id="mobile-drawer">
   <div class="drawer-inner">
@@ -348,7 +348,7 @@
   }
 </script>
 
-<!-- ========== LOGIN OVERLAY ========== -->
+<!--  LOGIN OVERLAY  -->
 <div id="login-overlay">
   <div class="login-box">
     <h2><i class="fas fa-lock"></i>C&N Bakery </h2>
@@ -460,7 +460,7 @@
     </div>
   </div>
 
-  <!-- ── Top Selling Products — tabbed by category ── -->
+  <!-- Top Selling Products — tabbed by category -->
   <div class="section-heading">
     <h2><i class="fas fa-trophy"></i> Top Selling Products</h2>
   </div>
@@ -473,7 +473,7 @@
     </div>
   </div>
 
-  <!-- ── Revenue Breakdown by Category ── -->
+  <!-- Revenue Breakdown by Category -->
   <div class="breakdown-card">
     <div class="section-heading" style="margin-bottom:14px;">
       <h2><i class="fas fa-table"></i> Revenue by Category</h2>
@@ -495,7 +495,7 @@
     </table>
   </div>
 
-  <!-- ── Recent Sales Feed ── -->
+  <!--  Recent Sales Feed -->
   <div class="recent-sales-card">
     <div class="section-heading" style="margin-bottom:14px;">
       <h2><i class="fas fa-clock"></i> Recent Sales</h2>
@@ -508,7 +508,7 @@
 
 </div><!-- /container -->
 
-<!-- ========== LOGIN GUARD ========== -->
+<!--  LOGIN GUARD -->
 <script>
   function handleLogout() {
   sessionStorage.removeItem('adminLoggedIn');
@@ -562,7 +562,7 @@
   }
 </script>
 
-<!-- ========== FIREBASE + CHARTS ========== -->
+<!-- FIREBASE + CHARTS  -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
@@ -590,7 +590,7 @@
     return CAT_ICONS[cat] || 'fas fa-box';
   }
 
-  // ── Date filter helpers ──
+  // Date filter helpers
   function getDateRange() {
     const period = document.getElementById('period-select').value;
     const now = new Date();
@@ -621,7 +621,7 @@
     return d >= from && d <= to;
   }
 
-  // ── Period label map ──
+  // Period label map
   const PERIOD_LABELS = {
     thisMonth: 'This Month',
     lastMonth: 'Last Month',
@@ -630,7 +630,7 @@
     custom:    'Custom Range'
   };
 
-  // ── Main rebuild ──
+  //Main rebuild
   function rebuildDashboard() {
     const { from, to } = getDateRange();
     const period = document.getElementById('period-select').value;
@@ -709,7 +709,7 @@
     renderCategorySplit(cats);
   }
 
-  // ── Tabbed top-sellers ──
+  //Tabbed top-sellers
   function renderTabs(rankings, completedOrders) {
     // Build per-product revenue map from completed orders
     const productRevenue = {};
@@ -775,7 +775,7 @@
       p.classList.toggle('active', p.id === `pane-${cat}`));
   };
 
-  // ── Revenue Breakdown Table ──
+  //Revenue Breakdown Table
   function renderBreakdown(cats, totalRev) {
     const tbody = document.getElementById('breakdown-tbody');
     const entries = Object.entries(cats).sort(([,a],[,b]) => b.rev - a.rev);
@@ -802,7 +802,7 @@
     }).join('');
   }
 
-  // ── Recent Sales ──
+  //Recent Sales
   function renderRecentSales(orders) {
     const el = document.getElementById('recent-sales-list');
     const recent = [...orders]

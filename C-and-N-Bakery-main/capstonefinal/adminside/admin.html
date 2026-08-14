@@ -411,7 +411,7 @@
 </head>
 <body>
 
-<!-- ========== MOBILE DRAWER ========== -->
+<!--  MOBILE DRAWER  -->
 <div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()"></div>
 <div class="mobile-drawer" id="mobile-drawer">
   <div class="drawer-inner">
@@ -435,7 +435,7 @@
   }
 </script>
 
-<!-- ========== HEADER ========== -->
+<!--  HEADER -->
 <header>
   <a href="admin.html" class="logo-text">C&N <span>Bakery</span></a>
   <button class="btn-hamburger" id="hamburger-btn" onclick="toggleDrawer()" aria-label="Open menu">
@@ -447,7 +447,7 @@
   </div>
 </header>
 
-<!-- ========== ACCOUNT SETTINGS MODAL ========== -->
+<!-- ACCOUNT SETTINGS MODAL -->
 <div class="modal-overlay" id="settings-overlay" onclick="closeSettings(event)">
   <div class="settings-modal">
     <div class="modal-header">
@@ -505,7 +505,7 @@
   </div>
 </div>
 
-<!-- ========== FORGOT PASSWORD MODAL ========== -->
+<!--  FORGOT PASSWORD MODAL -->
 <div class="modal-overlay" id="forgot-overlay" onclick="closeForgotPassword(event)">
   <div class="settings-modal">
     <div class="modal-header">
@@ -564,7 +564,7 @@
   </div>
 </div>
 
-<!-- ========== MAIN CONTAINER ========== -->
+<!--  MAIN CONTAINER -->
 <div class="container">
   <div class="nav-tabs">
     <a href="admin.html"      class="nav-link active"><i class="fas fa-home"></i> Home</a>
@@ -693,7 +693,7 @@
 </div><!-- /container -->
 
 
-<!-- ========== FIREBASE SCRIPTS ========== -->
+<!--  FIREBASE SCRIPTS  -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
@@ -1007,7 +1007,7 @@
   });
 
   /* ══════════════════════════════════════
-     ACCOUNT SETTINGS LOGIC (unchanged)
+     ACCOUNT SETTINGS LOGIC
   ══════════════════════════════════════ */
   window.openSettings = function() {
     document.getElementById('settings-overlay').classList.add('open');

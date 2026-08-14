@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="../css/history.css">
 </head>
 <body>
-<!-- ========== MOBILE DRAWER ========== -->
+<!--  MOBILE DRAWER  -->
 <div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()"></div>
 <div class="mobile-drawer" id="mobile-drawer">
   <div class="drawer-inner">
@@ -36,7 +36,7 @@
   }
 </script>
 
-<!-- ========== LOGIN OVERLAY ========== -->
+<!--  LOGIN OVERLAY -->
 <div id="login-overlay">
   <div class="login-box">
     <h2><i class="fas fa-lock"></i> Admin Portal</h2>
@@ -49,7 +49,7 @@
   </div>
 </div>
 
-<!-- ========== HEADER ========== -->
+<!--  HEADER -->
 <header>
   <a href="admin.html" class="logo-text">C&N <span>Bakery</span></a>
   <button class="btn-hamburger" id="hamburger-btn" onclick="toggleDrawer()" aria-label="Open menu">
@@ -154,7 +154,7 @@
 
 </div><!-- /container -->
 
-<!-- ========== ORDER DETAIL MODAL ========== -->
+<!--  ORDER DETAIL MODAL  -->
 <div class="h-modal" id="history-modal">
   <div class="h-modal-content">
     <div class="h-modal-header">
@@ -168,7 +168,7 @@
   </div>
 </div>
 
-<!-- ========== LOGIN GUARD ========== -->
+<!--  LOGIN GUARD  -->
 <script>
   
   function handleLogout() {
@@ -208,7 +208,7 @@
   });
 </script>
 
-<!-- ========== FIREBASE + HISTORY LOGIC ========== -->
+<!--  FIREBASE + HISTORY LOGIC  -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";

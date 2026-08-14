@@ -12,7 +12,7 @@
   <script>emailjs.init("gVHFL_mLh8WReKnbm");</script>
 </head>
 <body>
-<!-- ========== MOBILE DRAWER ========== -->
+<!-- MOBILE DRAWER  -->
 <div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()"></div>
 <div class="mobile-drawer" id="mobile-drawer">
   <div class="drawer-inner">
@@ -37,7 +37,7 @@
   }
 </script>
 
-<!-- ========== LOGIN OVERLAY ========== -->
+<!-- LOGIN OVERLAY-->
 <div id="login-overlay">
   <div class="login-box">
     <h2><i class="fas fa-lock"></i> Admin Portal</h2>
@@ -50,7 +50,7 @@
   </div>
 </div>
 
-<!-- ========== HEADER ========== -->
+<!-- HEADER -->
 <header>
   <a href="admin.html" class="logo-text">C&N <span>Bakery</span></a>
   <button class="btn-hamburger" id="hamburger-btn" onclick="toggleDrawer()" aria-label="Open menu">
@@ -117,7 +117,7 @@
         <span id="day-limit-status" style="font-size:0.8rem; color:var(--muted); width:100%;"></span>
       </div>
 
-      <!-- ========== Per-day Fulfillment Settings (moved inside Daily Schedule) ========== -->
+      <!--  Per-day Fulfillment Settings (moved inside Daily Schedule)  -->
       <div id="day-fulfillment-control" style="display:none; margin-bottom:14px; padding:10px 14px; background:#fff8ee; border:1px solid #f0dfc4; border-radius:10px; flex-wrap:wrap; gap:10px;">
         <span style="font-weight:600; color:var(--brown); width:100%; display:block; margin-bottom:4px;">
           <i class="fas fa-toggle-on"></i> Fulfillment options for this day:
@@ -139,7 +139,7 @@
           </div>
         </div>
       </div>
-      <!-- ========== END Per-day Fulfillment Settings ========== -->
+      <!--END Per-day Fulfillment Settings  -->
 
       <div id="day-orders-list">
         <p>Select a date to view bookings.</p>
@@ -149,7 +149,7 @@
   </div>
 </div>
 
-<!-- ========== ORDER DETAIL MODAL ========== -->
+<!-- ORDER DETAIL MODAL  -->
 <div id="order-detail-modal">
   <div class="od-modal-content">
     <div class="od-modal-header">
@@ -161,7 +161,7 @@
   </div>
 </div>
 
-<!-- ========== LOGIN GUARD ========== -->
+<!--  LOGIN GUARD -->
 <script>
   
   function handleLogout() {
@@ -200,7 +200,7 @@
   });
 </script>
 
-<!-- ========== FIREBASE + CALENDAR LOGIC ========== -->
+<!--  FIREBASE + CALENDAR LOGIC  -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
@@ -223,7 +223,7 @@
   let selectedDate    = null;
   let dayLimits       = {};   // { "2026-07-15": 3, ... } — custom per-day order caps
 
-  // ── Per-day fulfillment availability settings ───────────────────────────────
+  // Per-day fulfillment availability settings
   // { "2026-07-15": { delivery: false, pickup: true }, ... }
   let dayFulfillment  = {};
 
@@ -253,7 +253,7 @@
       : DEFAULT_MAX_ORDERS_PER_DAY;
   }
 
-  /** Effective fulfillment availability for a given date string, defaulting to available. */
+  /* Effective fulfillment availability for a given date string, defaulting to available. */
   function getDayFulfillment(dateStr) {
     const d = dayFulfillment[dateStr];
     return {
@@ -274,7 +274,7 @@
     if (selectedDate) viewDay(selectedDate);
   });
 
-  // ── Listen for per-day fulfillment settings changes ─────────────────────────
+  // Listen for per-day fulfillment settings changes
   onValue(ref(db, 'dayFulfillment'), (snapshot) => {
     dayFulfillment = snapshot.val() || {};
     if (selectedDate) renderDayFulfillment(selectedDate);
@@ -312,7 +312,7 @@
         .catch(err => alert('Failed to update pickup setting: ' + err.message));
     };
   }
-  // ── End per-day fulfillment settings logic ──────────────────────────────────
+  // End per-day fulfillment settings logic
 
   window.changeMonth = (off) => {
     currentViewDate.setMonth(currentViewDate.getMonth() + off);
@@ -385,12 +385,12 @@
         if (isFull) subHtml += `<span class="full-text">FULL</span>`;
       }
 
-      // ✎ Custom-limit badge — show if this day has an admin-set order cap
+      // Custom-limit badge — show if this day has an admin-set order cap
       if (!isPast && dayLimits[dStr] != null) {
         subHtml += `<span class="capacity-label" style="background:#ffffff;color:#4338ca;border:1px solid #c7d2fe;" title="Custom order limit: ${dayLimits[dStr]}">✎ ${dayLimits[dStr]}</span>`;
       }
 
-      // 🚫 Fulfillment badge — show if this day has a restricted delivery/pickup option
+      //  Fulfillment badge — show if this day has a restricted delivery/pickup option
       if (!isPast) {
         const dayFul = getDayFulfillment(dStr);
         if (!dayFul.delivery || !dayFul.pickup) {
@@ -431,7 +431,7 @@
     const isPast   = cellDate < today;
     const maxForDay = getMaxOrders(date);
 
-    // ── Show/hide + populate the per-day limit control ──
+    // Show/hide + populate the per-day limit control
     const limitControl = document.getElementById('day-limit-control');
     const limitInput    = document.getElementById('day-limit-input');
     const limitStatus   = document.getElementById('day-limit-status');
@@ -446,7 +446,7 @@
         : `Using the default limit of ${DEFAULT_MAX_ORDERS_PER_DAY} for ${formatDateLabel(date)}.`;
     }
 
-    // ── Show/hide + populate the per-day fulfillment control ──
+    // Show/hide + populate the per-day fulfillment control
     const fulfillmentControl = document.getElementById('day-fulfillment-control');
     if (isPast) {
       fulfillmentControl.style.display = 'none';
@@ -516,7 +516,7 @@
     });
   };
 
-  // ── Save / reset the per-day order limit ──────────────────────────────────
+  // Save / reset the per-day order limit
   document.getElementById('day-limit-save').onclick = () => {
     if (!selectedDate) return;
     const val = parseInt(document.getElementById('day-limit-input').value, 10);
@@ -535,7 +535,7 @@
       .catch(err => alert('Failed to reset limit: ' + err.message));
   };
 
-  // ── Order Detail Modal ──
+  // Order Detail Modal
   window.openOrderModal = (orderId) => {
     const order = allOrders[orderId];
     if (!order) return;
@@ -605,7 +605,7 @@
     document.getElementById('order-detail-modal').classList.add('open');
   };
 
-  // ── Mark order as Completed (moves to history) ──
+  //Mark order as Completed (moves to history)
   window.markCompleted = (orderId) => {
     if (!confirm('Mark this order as completed? It will appear in History.')) return;
 
