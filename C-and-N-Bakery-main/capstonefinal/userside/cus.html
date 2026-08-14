@@ -407,7 +407,7 @@
     </div>
   </div>
 
-  <!-- ─── Footer ─── -->
+  <!-- Footer -->
   <footer>
     <div class="container footer-grid">
       <div class="footer-about">
@@ -439,7 +439,7 @@
   </footer>
 
   <script>
-    // ─── Cart Count Badge Logic ───
+    // Cart Count Badge Logic
     function updateCartCount() {
       const cart = JSON.parse(localStorage.getItem('cart') || '[]');
       const countEl = document.getElementById('cart-count');
@@ -455,12 +455,12 @@
       }
     }
 
-    // ─── Price & Options Logic ───
+    // Price & Options Logic
     let cachedSizes = [];
     let cachedFlavors = [];
     let cachedFrostings = [];
 
-    // ─── Frosting price depends on how many tiers the cake has ───
+    //Frosting price depends on how many tiers the cake has
     // Each frosting <option> carries its full option data (including tierPrices)
     // in a data attribute; we resolve the right price whenever the tier count changes.
     function getSelectedTierCount() {
@@ -515,7 +515,7 @@
       return total;
     }
 
-    // ─── Render "Tier N Size" + "Tier N Flavor" + "Tier N Frosting" dropdowns for each layer, based on the selected Layers option's tier count ───
+    //Render "Tier N Size" + "Tier N Flavor" + "Tier N Frosting" dropdowns for each layer, based on the selected Layers option's tier count
     function renderTierSizeSelectors() {
       const container = document.getElementById('tier-sizes-container');
       const layersOpt  = document.getElementById('layers')?.selectedOptions[0];

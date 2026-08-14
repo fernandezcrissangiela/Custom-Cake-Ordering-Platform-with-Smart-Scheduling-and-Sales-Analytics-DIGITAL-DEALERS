@@ -148,13 +148,10 @@
   const app  = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db   = getDatabase(app);
-
-  // ============================================================
   // OOP: ENCAPSULATION
   // CartManager encapsulates all cart localStorage read/write and
   // the cart-count badge update. Private field #key hides the
   // storage key; no external code accesses localStorage directly.
-  // ============================================================
   class CartManager { // OOP - Encapsulation
     #key = 'cart';
 
@@ -194,13 +191,10 @@
       this.saveCart(cart);
     }
   }
-
-  // ============================================================
   // OOP: ABSTRACTION
   // ProductCard is an abstract base for a menu card.
   // It defines the shared interface: render() and getButtonLabel().
   // Concrete subclasses decide how they render differently.
-  // ============================================================
   class ProductCard { // OOP - Abstraction (base class)
     constructor(product) {
       this.product = product;
@@ -237,46 +231,34 @@
       return 'Add to Cart';
     }
   }
-
-  // ============================================================
   // OOP: INHERITANCE + POLYMORPHISM
   // CakeCard inherits ProductCard and overrides getButtonLabel()
   // to show a cake-specific label.
-  // ============================================================
   class CakeCard extends ProductCard { // OOP - Inheritance
     getButtonLabel() { // OOP - Polymorphism (overrides base)
       return ' Add to Cart';
     }
   }
-
-  // ============================================================
   // OOP: INHERITANCE + POLYMORPHISM
   // PastryCard inherits ProductCard and overrides getButtonLabel()
   // to show a pastry-specific label.
-  // ============================================================
   class PastryCard extends ProductCard { // OOP - Inheritance
     getButtonLabel() { // OOP - Polymorphism (overrides base)
       return ' Add to Cart';
     }
   }
-
-  // ============================================================
   // OOP: ABSTRACTION — Factory function
   // createProductCard() hides which subclass to use. Callers only
   // pass a product and category; this function decides the type.
-  // ============================================================
   function createProductCard(product, categoryKey) { // OOP - Abstraction (factory)
     if (categoryKey === 'cakes') return new CakeCard(product);   // OOP - Inheritance
     if (categoryKey === 'pastries') return new PastryCard(product); // OOP - Inheritance
     return new ProductCard(product); // base for unknown categories
   }
-
-  // ============================================================
   // OOP: ENCAPSULATION
   // ProductModal encapsulates all modal open/close state and
   // the currently selected product. No external code reads
   // #currentProduct directly.
-  // ============================================================
   class ProductModal { // OOP - Encapsulation
     #currentProduct = null;
     #selectedSize = null; // { label, price } when the product has sizes
@@ -347,14 +329,11 @@
       };
     }
   }
-
-  // ============================================================
   // OOP: ENCAPSULATION
   // MenuApp encapsulates the entire page state: loaded products,
   // active category, price filter, and references to helper
   // objects. It coordinates CartManager, ProductModal, and
   // Firebase — callers just call init().
-  // ============================================================
   class MenuApp { // OOP - Encapsulation
     #cartManager;
     #modal;
@@ -394,7 +373,7 @@
       this.#cartManager.updateCount();
     }
 
-    // ── Add to cart (delegates to CartManager)
+    // Add to cart (delegates to CartManager)
     addToCart(product) { // OOP - Abstraction (caller doesn't manage cart details)
       if (!auth.currentUser) {
         alert("Please sign in to add items to your cart.");
@@ -434,7 +413,7 @@
       }, 2000);
     }
 
-    // ── Rendering
+    //Rendering
     #showSkeletons(count = 8) { // OOP - Encapsulation (private method)
       this.#grid.innerHTML = '';
       for (let i = 0; i < count; i++) {
@@ -532,7 +511,7 @@
       }
     }
 
-    // ── Wire up price filter buttons
+    //Wire up price filter buttons
     #bindPriceFilters() { // OOP - Encapsulation (private method)
       document.querySelectorAll('.price-filter-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -544,7 +523,7 @@
       });
     }
 
-    // ── Wire up grid click delegation for Add to Cart buttons
+    //Wire up grid click delegation for Add to Cart buttons
     #bindGridClicks() { // OOP - Encapsulation (private method)
       this.#grid.addEventListener('click', e => {
         const activeCat = document.querySelector('.category-btn.active')?.dataset.category;
@@ -566,7 +545,7 @@
       });
     }
 
-    // ── Wire up the modal "Add to Cart" button
+    //Wire up the modal "Add to Cart" button
     #bindModalCart() { // OOP - Encapsulation (private method)
       document.getElementById('modalAddToCart').onclick = () => {
         const product = this.#modal.getCurrentProduct(); // OOP - Encapsulation
@@ -593,7 +572,7 @@
       });
     }
 
-    // ── Public initializer — single entry point
+    //Public initializer — single entry point
     async init() { // OOP - Abstraction (hides all setup complexity behind one call)
       this.#bindPriceFilters();
       this.#bindGridClicks();
@@ -602,10 +581,7 @@
       await this.#loadCategories();
     }
   }
-
-  // ============================================================
   // INSTANTIATE & boot
-  // ============================================================
   const menuApp = new MenuApp(); // OOP - Encapsulation
   window.menuApp = menuApp; // expose for inline onclick in HTML
 

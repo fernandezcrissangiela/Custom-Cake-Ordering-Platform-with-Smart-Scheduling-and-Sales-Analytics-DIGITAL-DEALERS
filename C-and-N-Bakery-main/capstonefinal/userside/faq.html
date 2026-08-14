@@ -26,12 +26,10 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    // ============================================================
     // OOP: ENCAPSULATION
     // CartManager encapsulates all cart-related state and logic
     // behind a clean interface. External code never touches
     // localStorage directly — only CartManager does.
-    // ============================================================
     class CartManager { // OOP - Encapsulation
       #storageKey = 'cart'; // private field — hides internal detail
 
@@ -59,12 +57,10 @@
       }
     }
 
-    // ============================================================
     // OOP: ABSTRACTION
     // AuthHandler abstracts away Firebase signup/login/logout
     // complexity. Callers just call .signup(), .login(), .logout()
     // without knowing any Firebase internals.
-    // ============================================================
     class AuthHandler { // OOP - Abstraction
       #auth;
       #db;
@@ -104,11 +100,9 @@
       }
     }
 
-    // ============================================================
     // OOP: ABSTRACTION
     // UIController abstracts all DOM manipulation for the navbar
     // and modal. Other classes don't touch the DOM directly.
-    // ============================================================
     class UIController { // OOP - Abstraction
       showLoggedIn(name) {
         document.getElementById('signup-trigger')?.classList.add('hidden');
@@ -148,17 +142,13 @@
       }
     }
 
-    // ============================================================
     // INSTANTIATE — wire everything together
-    // ============================================================
     const cartManager = new CartManager();  // OOP - Encapsulation
     const uiController = new UIController(); // OOP - Abstraction
     const authHandler = new AuthHandler(auth, db, cartManager); // OOP - Abstraction
 
-    // ============================================================
     // GLOBAL EVENT HANDLERS (called from HTML onsubmit/onclick)
     // These are thin wrappers that delegate to the OOP classes.
-    // ============================================================
     window.handleSignup = async function(e) {
       e.preventDefault();
       const { name, email, password } = e.target;
@@ -189,9 +179,7 @@
     window.openModal  = () => uiController.openModal();  // OOP - Abstraction
     window.closeModal = () => uiController.closeModal(); // OOP - Abstraction
 
-    // ============================================================
     // AUTH STATE LISTENER — reacts to Firebase auth changes
-    // ============================================================
     authHandler.onStateChanged(async (user) => { // OOP - Abstraction
       if (user) {
         localStorage.setItem('currentUserId', user.uid);
@@ -377,12 +365,10 @@
   </div>
 
   <script>
-    // ============================================================
     // OOP: ENCAPSULATION
     // FAQAccordion encapsulates accordion state (which item is open)
     // and the carousel dot-indicator logic in one cohesive object.
     // Nothing outside this class touches .active classes directly.
-    // ============================================================
     class FAQAccordion { // OOP - Encapsulation
       #items;
 
@@ -445,20 +431,14 @@
         });
       }
     }
-
-    // ============================================================
     // INSTANTIATE
-    // ============================================================
     const accordion   = new FAQAccordion('.faq-item');         // OOP - Encapsulation
     const carouselDots = new CarouselDots('.faq-container', '#faq-dots', '.faq-item'); // OOP - Encapsulation
 
     document.addEventListener('DOMContentLoaded', () => carouselDots.init());
     window.addEventListener('resize', () => carouselDots.init());
-
-    // ============================================================
     // Modal and auth-check helpers (thin wrappers; logic lives in
     // the module-scoped OOP classes above via window.* exposure)
-    // ============================================================
     const modal = document.getElementById('auth-modal');
 
     // openModal / closeModal / handleLogout are already set by the

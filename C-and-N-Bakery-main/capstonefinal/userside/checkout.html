@@ -63,7 +63,7 @@
 </head>
 <body>
 
-<!-- ── Header ── -->
+<!-- Header-->
 <header>
     <div class="container" style="display:flex; justify-content:space-between; align-items:center;">
         <a href="index.html" class="logo-text">C&N <span>Bakery</span></a>
@@ -76,7 +76,7 @@
 <div class="container">
     <div class="checkout-grid">
 
-        <!-- ══ LEFT — Info Side ══ -->
+        <!--LEFT — Info Side-->
         <div class="info-side">
 
             <!-- Custom Cake Alert -->
@@ -195,7 +195,7 @@
 
         </div><!-- /info-side -->
 
-        <!-- ══ RIGHT — Summary Side ══ -->
+        <!--RIGHT — Summary Side-->
         <div class="summary-side">
             <div class="section-card">
                 <h2><i class="fas fa-receipt"></i> Order Summary</h2>
@@ -253,7 +253,7 @@
     let allOrders        = {};
     let fullyBookedDates = new Set(); // NEW: dates that have hit MAX_ORDERS_PER_DAY
 
-    // ── Fulfillment availability settings ────────────────────────────────
+    //Fulfillment availability settings
     // Per-day overrides written by the admin Schedule page:
     // dayFulfillment/{date} => { delivery: true/false, pickup: true/false }
     let dayFulfillmentSettings = {};
@@ -312,13 +312,13 @@
             }
         }
 
-        // NEW: show/hide the inline warning (instead of a popup alert) when
+        //show/hide the inline warning (instead of a popup alert) when
         // a date is selected and the currently active method is unavailable
         // for it (e.g. both delivery and pickup are disabled for that date).
         showFulfillmentAvailabilityMessage(dateStr, effective);
     }
 
-    // NEW: shows/hides the inline "fulfillment unavailable for this date"
+    //shows/hides the inline "fulfillment unavailable for this date"
     // warning right under the date field, in the Fulfillment Method section,
     function showFulfillmentAvailabilityMessage(dateStr, effective) {
         const msgBox  = document.getElementById('fulfillment-availability-msg');
@@ -334,7 +334,7 @@
         msgBox.classList.toggle('visible', isUnavailable);
         return isUnavailable;
     }
-    // ── End fulfillment settings logic ────────────────────────────────────
+    //End fulfillment settings logic
 
     onValue(ref(db, 'orders'), (snapshot) => {
         allOrders = snapshot.val() || {};
@@ -396,7 +396,7 @@
         checkDateAvailability();
     }
 
-    // NEW: shows/hides the inline "fully booked" warning under the date field
+    // shows/hides the inline "fully booked" warning under the date field
     // instead of relying on a browser alert() popup.
     function checkDateAvailability() {
         const dateInput = document.getElementById('order-date');
@@ -519,7 +519,7 @@
         if (el) el.addEventListener('input', updateButtonState);
     });
 
-    // NEW: re-check delivery/pickup availability whenever the chosen date changes,
+    // re-check delivery/pickup availability whenever the chosen date changes,
     // since fulfillment can be restricted per-day from the admin Schedule page.
     const orderDateInput = document.getElementById('order-date');
     if (orderDateInput) {
@@ -630,7 +630,7 @@
             const checkedOutItems = JSON.parse(localStorage.getItem('checkoutItems') || '[]');
             let fullCart = JSON.parse(localStorage.getItem('cart') || '[]');
             checkedOutItems.forEach(ordered => {
-                // Prefer matching by cartId — 
+                // Prefer matching by cartId
                 // Fall back to the old name+customDetails match only for
                 // legacy items that predate the cartId fix.
                 const idx = ordered.cartId
