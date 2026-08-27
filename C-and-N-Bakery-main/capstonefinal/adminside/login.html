@@ -130,6 +130,7 @@
       padding: 56px 52px;
       box-shadow: -20px 0 60px rgba(63, 42, 31, 0.12);
       animation: slideInRight 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+      overflow-y: auto;
     }
 
     @keyframes slideInRight {
@@ -347,6 +348,20 @@
   <p class="login-sub">Enter your admin credentials to continue.</p>
 
   <div class="form-field">
+    <label for="admin-email"><i class="fas fa-envelope" style="margin-right:6px;"></i>Email</label>
+    <div class="input-wrapper">
+      <i class="fas fa-user"></i>
+      <input
+        type="email"
+        id="admin-email"
+        placeholder="Enter your admin email"
+        autocomplete="username"
+        onkeydown="if(event.key==='Enter') document.getElementById('admin-pass').focus()"
+      >
+    </div>
+  </div>
+
+  <div class="form-field">
     <label for="admin-pass"><i class="fas fa-lock" style="margin-right:6px;"></i>Password</label>
     <div class="input-wrapper">
       <i class="fas fa-key"></i>
@@ -393,87 +408,46 @@
         <div class="fp-icon-wrap"><i class="fas fa-unlock-alt"></i></div>
         <div>
           <h2 class="fp-title" id="fp-title">Reset Password</h2>
-          <p class="fp-sub" id="fp-sub">Answer your security question to continue</p>
+          <p class="fp-sub" id="fp-sub">Enter your admin email to receive a reset link</p>
         </div>
       </div>
       <button class="fp-close" onclick="closeForgotModal()"><i class="fas fa-times"></i></button>
     </div>
 
-    <!-- STEP: No security question set -->
-    <div id="fp-step-noq" style="display:none">
-      <div class="fp-body">
-        <div class="fp-info-banner warn">
-          <i class="fas fa-exclamation-triangle"></i>
-          <div>
-            <strong>No Security Question Set</strong>
-            <p>A security question hasn't been configured yet. Please contact whoever set up this admin account, or log in and set one via Account Settings.</p>
-          </div>
-        </div>
-      </div>
-      <div class="fp-footer">
-        <button class="fp-btn-cancel" onclick="closeForgotModal()">Close</button>
-      </div>
-    </div>
-
-    <!-- STEP: Answer security question -->
-    <div id="fp-step-answer" style="display:none">
+    <!-- STEP: Enter email -->
+    <div id="fp-step-email" style="display:none">
       <div class="fp-body">
         <div class="fp-field">
-          <label><i class="fas fa-question-circle"></i> Security Question</label>
-          <div class="fp-question-display" id="fp-display-question"></div>
-        </div>
-        <div class="fp-field">
-          <label><i class="fas fa-comment-dots"></i> Your Answer</label>
+          <label><i class="fas fa-envelope"></i> Admin Email</label>
           <div class="fp-input-wrap">
-            <input type="password" id="fp-answer" placeholder="Enter your answer" onkeydown="if(event.key==='Enter') fpVerifyAnswer()" />
-            <span class="fp-eye" onclick="fpToggleEye('fp-answer','fp-eye1')"><i class="fas fa-eye" id="fp-eye1"></i></span>
+            <input type="email" id="fp-email" placeholder="Enter your admin email" onkeydown="if(event.key==='Enter') fpSendReset()" />
           </div>
-          <p class="fp-error" id="fp-err-answer"></p>
+          <p class="fp-error" id="fp-err-email"></p>
         </div>
       </div>
       <div class="fp-footer">
         <button class="fp-btn-cancel" onclick="closeForgotModal()">Cancel</button>
-        <button class="fp-btn-primary" id="fp-verify-btn" onclick="fpVerifyAnswer()">
-          <span class="fp-btn-text"><i class="fas fa-arrow-right"></i> Verify Answer</span>
+        <button class="fp-btn-primary" id="fp-send-btn" onclick="fpSendReset()">
+          <span class="fp-btn-text"><i class="fas fa-paper-plane"></i> Send Reset Link</span>
           <span class="fp-spinner"></span>
         </button>
       </div>
     </div>
 
-    <!-- STEP: Set new password -->
+    <!-- STEP: Reset email sent -->
     <div id="fp-step-reset" style="display:none">
       <div class="fp-body">
         <div class="fp-info-banner success">
           <i class="fas fa-check-circle"></i>
-          <div><strong>Identity Verified!</strong><p>You can now set a new password.</p></div>
+          <div><strong>Email Sent!</strong><p>Follow the link in your inbox to set a new password.</p></div>
         </div>
-        <div class="fp-field">
-          <label><i class="fas fa-key"></i> New Password</label>
-          <div class="fp-input-wrap">
-            <input type="password" id="fp-new-pass" placeholder="Enter new password" oninput="fpCheckStrength()" />
-            <span class="fp-eye" onclick="fpToggleEye('fp-new-pass','fp-eye2')"><i class="fas fa-eye" id="fp-eye2"></i></span>
-          </div>
-          <div class="fp-strength-wrap"><div class="fp-strength-bar" id="fp-strength-bar"></div></div>
-          <p class="fp-strength-label" id="fp-strength-label"></p>
-          <p class="fp-error" id="fp-err-new"></p>
-        </div>
-        <div class="fp-field">
-          <label><i class="fas fa-check-double"></i> Confirm New Password</label>
-          <div class="fp-input-wrap">
-            <input type="password" id="fp-confirm-pass" placeholder="Re-enter new password" onkeydown="if(event.key==='Enter') fpResetPassword()" />
-            <span class="fp-eye" onclick="fpToggleEye('fp-confirm-pass','fp-eye3')"><i class="fas fa-eye" id="fp-eye3"></i></span>
-          </div>
-          <p class="fp-error" id="fp-err-confirm"></p>
-        </div>
-        <div class="fp-success-banner" id="fp-success-banner">
-          <i class="fas fa-check-circle"></i> Password reset! Redirecting to login…
+        <div class="fp-success-banner show" id="fp-success-banner">
+          <i class="fas fa-paper-plane"></i> Reset link sent — check your inbox.
         </div>
       </div>
       <div class="fp-footer">
-        <button class="fp-btn-cancel" onclick="closeForgotModal()">Cancel</button>
-        <button class="fp-btn-primary" id="fp-reset-btn" onclick="fpResetPassword()">
-          <span class="fp-btn-text"><i class="fas fa-save"></i> Reset Password</span>
-          <span class="fp-spinner"></span>
+        <button class="fp-btn-primary" id="fp-reset-btn" onclick="closeForgotModal()">
+          <span class="fp-btn-text"><i class="fas fa-check"></i> Done</span>
         </button>
       </div>
     </div>
@@ -576,7 +550,7 @@
   .fp-field label i { margin-right: 6px; opacity: 0.7; }
   .fp-input-wrap { position: relative; }
   .fp-input-wrap input {
-    width: 100%; padding: 12px 42px 12px 16px;
+    width: 100%; padding: 12px 16px;
     border: 1.5px solid #E8D5C4; border-radius: 10px;
     font-family: 'Poppins', sans-serif; font-size: 0.92rem;
     color: #3F2A1F; background: #F8F1EA; outline: none; transition: all 0.3s;
@@ -585,22 +559,7 @@
     border-color: #825A3C; background: #fff;
     box-shadow: 0 0 0 4px rgba(130,90,60,0.10);
   }
-  .fp-eye {
-    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-    cursor: pointer; color: #9A7B6A; font-size: 0.88rem; transition: color 0.2s;
-  }
-  .fp-eye:hover { color: #825A3C; }
   .fp-error { color: #c0392b; font-size: 0.78rem; margin-top: 5px; min-height: 16px; font-weight: 500; }
-  .fp-question-display {
-    background: #F8F1EA; border: 1.5px solid #E8D5C4;
-    border-radius: 10px; padding: 12px 16px;
-    font-size: 0.9rem; color: #704233; font-weight: 600;
-  }
-
-  /* Strength bar */
-  .fp-strength-wrap { height: 4px; background: #E8D5C4; border-radius: 4px; margin-top: 8px; overflow: hidden; }
-  .fp-strength-bar  { height: 100%; border-radius: 4px; width: 0; transition: width 0.4s, background 0.4s; }
-  .fp-strength-label { font-size: 0.75rem; margin-top: 4px; font-weight: 500; min-height: 14px; }
 
   /* Info banners */
   .fp-info-banner {
@@ -653,7 +612,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-  import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCWUJfDwLR5erpExZUoBWW7YJ-aDpT_zy0",
@@ -662,45 +621,36 @@
     projectId: "candn-bakery"
   };
 
-  const app = initializeApp(firebaseConfig);
-  const db  = getDatabase(app);
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
 
-  async function hashPassword(password) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  }
-
-  // Auto-migrate plain text password
-  async function migratePasswordIfNeeded() {
-    try {
-      const snapshot = await get(ref(db, 'password'));
-      if (snapshot.exists()) {
-        const val = snapshot.val();
-        if (val.length !== 64) {
-          await set(ref(db, 'password'), await hashPassword(val));
-        }
-      }
-    } catch (err) { console.error('Migration error:', err); }
-  }
-  migratePasswordIfNeeded();
-
-  if (sessionStorage.getItem('adminLoggedIn') === 'true') {
-    window.location.replace('admin.html');
-  }
+  // Any account that can successfully authenticate against this Firebase
+  // project counts as admin — create/manage admin accounts from the
+  // Firebase Console → Authentication tab.
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      sessionStorage.setItem('adminLoggedIn', 'true');
+      window.location.replace('admin.html');
+    }
+  });
 
   let failedAttempts = 0;
 
   window.attemptLogin = async function() {
+    const emailInput = document.getElementById('admin-email');
     const input  = document.getElementById('admin-pass');
     const errMsg = document.getElementById('error-msg');
     const btn    = document.getElementById('login-btn');
 
+    emailInput.classList.remove('error');
     input.classList.remove('error');
     errMsg.classList.remove('visible');
 
+    if (!emailInput.value) {
+      emailInput.classList.add('error');
+      emailInput.focus();
+      return;
+    }
     if (!input.value) {
       input.classList.add('error');
       input.focus();
@@ -710,31 +660,30 @@
     btn.classList.add('loading');
 
     try {
-      const snapshot = await get(ref(db, 'password'));
-      const storedHash = snapshot.exists() ? snapshot.val() : await hashPassword('digitaldealers');
-      const inputHash  = await hashPassword(input.value);
-
-      if (inputHash === storedHash) {
-        sessionStorage.setItem('adminLoggedIn', 'true');
-        window.location.replace('admin.html');
-      } else {
-        btn.classList.remove('loading');
-        input.classList.add('error');
-        errMsg.classList.add('visible');
-        input.value = '';
-        input.focus();
-        failedAttempts++;
-        // Show "Forgot Password?" after first failed attempt
-        if (failedAttempts >= 1) {
-          document.getElementById('forgot-hint').classList.add('visible');
-        }
-      }
+      await signInWithEmailAndPassword(auth, emailInput.value.trim(), input.value);
+      // onAuthStateChanged above handles the redirect once sign-in succeeds.
     } catch (err) {
-      console.error('Firebase error:', err);
       btn.classList.remove('loading');
       input.classList.add('error');
-      errMsg.textContent = '⚠️ Connection error. Please try again.';
+      input.value = '';
+      input.focus();
+      failedAttempts++;
+
+      if (err.code === 'auth/network-request-failed') {
+        errMsg.textContent = '⚠️ Connection error. Please try again.';
+      } else if (err.code === 'auth/invalid-email') {
+        errMsg.textContent = '❌ Please enter a valid email address.';
+      } else if (err.code === 'auth/too-many-requests') {
+        errMsg.textContent = '⚠️ Too many attempts. Please wait and try again.';
+      } else {
+        errMsg.textContent = '❌ Incorrect email or password.';
+      }
       errMsg.classList.add('visible');
+
+      // Show "Forgot Password?" after first failed attempt
+      if (failedAttempts >= 1) {
+        document.getElementById('forgot-hint').classList.add('visible');
+      }
     }
   }
 
@@ -751,31 +700,20 @@
   }
 
   // ── Forgot Password Modal ─────────────────────────────────────
+  // Straightforward now: enter your email, Firebase Auth sends the
+  // real reset link. No custom security-question data to protect.
 
-  window.openForgotModal = async function() {
+  window.openForgotModal = function() {
     document.getElementById('fp-overlay').classList.add('open');
-    // Reset all steps
-    ['fp-step-noq','fp-step-answer','fp-step-reset'].forEach(id => document.getElementById(id).style.display = 'none');
+    document.getElementById('fp-step-email').style.display = 'block';
+    document.getElementById('fp-step-reset').style.display = 'none';
     document.getElementById('fp-title').textContent = 'Reset Password';
-    document.getElementById('fp-sub').textContent   = 'Answer your security question to continue';
+    document.getElementById('fp-sub').textContent   = 'Enter your admin email to receive a reset link';
 
-    try {
-      const snap = await get(ref(db, 'securityQuestion'));
-      if (!snap.exists()) {
-        document.getElementById('fp-title').textContent = 'No Recovery Set Up';
-        document.getElementById('fp-sub').textContent   = 'Security question not configured';
-        document.getElementById('fp-step-noq').style.display = 'block';
-      } else {
-        document.getElementById('fp-display-question').textContent = snap.val().question;
-        document.getElementById('fp-answer').value = '';
-        document.getElementById('fp-err-answer').textContent = '';
-        document.getElementById('fp-step-answer').style.display = 'block';
-        setTimeout(() => document.getElementById('fp-answer').focus(), 100);
-      }
-    } catch(err) {
-      document.getElementById('fp-title').textContent = 'Connection Error';
-      document.getElementById('fp-step-noq').style.display = 'block';
-    }
+    const prefill = document.getElementById('admin-email').value.trim();
+    document.getElementById('fp-email').value = prefill;
+    document.getElementById('fp-err-email').textContent = '';
+    setTimeout(() => document.getElementById('fp-email').focus(), 100);
   }
 
   window.closeForgotModal = function(e) {
@@ -783,101 +721,37 @@
     document.getElementById('fp-overlay').classList.remove('open');
   }
 
-  window.fpToggleEye = function(inputId, iconId) {
-    const inp = document.getElementById(inputId);
-    const ico = document.getElementById(iconId);
-    inp.type === 'password'
-      ? (inp.type = 'text',     ico.classList.replace('fa-eye','fa-eye-slash'))
-      : (inp.type = 'password', ico.classList.replace('fa-eye-slash','fa-eye'));
-  }
+  window.fpSendReset = async function() {
+    const email = document.getElementById('fp-email').value.trim();
+    document.getElementById('fp-err-email').textContent = '';
+    if (!email) {
+      document.getElementById('fp-err-email').textContent = 'Please enter your email.';
+      return;
+    }
 
-  window.fpVerifyAnswer = async function() {
-    const answer = document.getElementById('fp-answer').value.trim();
-    document.getElementById('fp-err-answer').textContent = '';
-    if (!answer) { document.getElementById('fp-err-answer').textContent = 'Please enter your answer.'; return; }
-
-    const btn = document.getElementById('fp-verify-btn');
+    const btn = document.getElementById('fp-send-btn');
     btn.classList.add('loading');
     try {
-      const snap       = await get(ref(db, 'securityQuestion'));
-      const inputHash  = await hashPassword(answer.toLowerCase());
-      if (inputHash !== snap.val().answerHash) {
-        btn.classList.remove('loading');
-        document.getElementById('fp-err-answer').textContent = 'Incorrect answer. Please try again.';
-        return;
-      }
+      await sendPasswordResetEmail(auth, email);
       btn.classList.remove('loading');
-      document.getElementById('fp-step-answer').style.display = 'none';
+      document.getElementById('fp-step-email').style.display = 'none';
       document.getElementById('fp-step-reset').style.display  = 'block';
-      document.getElementById('fp-title').textContent = 'Set New Password';
-      document.getElementById('fp-sub').textContent   = 'Create a new password for your account';
-      document.getElementById('fp-new-pass').value = '';
-      document.getElementById('fp-confirm-pass').value = '';
-      document.getElementById('fp-success-banner').classList.remove('show');
-      document.getElementById('fp-strength-bar').style.width = '0';
-      document.getElementById('fp-strength-label').textContent = '';
-      setTimeout(() => document.getElementById('fp-new-pass').focus(), 100);
-    } catch(err) {
+      document.getElementById('fp-title').textContent = 'Check Your Email';
+      document.getElementById('fp-sub').textContent   = `We sent a reset link to ${email}`;
+    } catch (err) {
       btn.classList.remove('loading');
-      document.getElementById('fp-err-answer').textContent = '⚠️ Verification failed. Check connection.';
-    }
-  }
-
-  window.fpCheckStrength = function() {
-    const val = document.getElementById('fp-new-pass').value;
-    const bar = document.getElementById('fp-strength-bar');
-    const lbl = document.getElementById('fp-strength-label');
-    let score = 0;
-    if (val.length >= 8) score++;
-    if (/[A-Z]/.test(val)) score++;
-    if (/[0-9]/.test(val)) score++;
-    if (/[^A-Za-z0-9]/.test(val)) score++;
-    const levels = [
-      { pct:'0%', color:'', text:'' },
-      { pct:'25%', color:'#e74c3c', text:'Weak' },
-      { pct:'50%', color:'#f39c12', text:'Fair' },
-      { pct:'75%', color:'#2ecc71', text:'Good' },
-      { pct:'100%',color:'#27ae60', text:'Strong' },
-    ];
-    const lvl = val.length === 0 ? levels[0] : levels[score] || levels[1];
-    bar.style.width = lvl.pct; bar.style.background = lvl.color;
-    lbl.textContent = lvl.text; lbl.style.color = lvl.color;
-  }
-
-  window.fpResetPassword = async function() {
-    const newP = document.getElementById('fp-new-pass').value;
-    const conf = document.getElementById('fp-confirm-pass').value;
-    document.getElementById('fp-err-new').textContent = '';
-    document.getElementById('fp-err-confirm').textContent = '';
-    let valid = true;
-    if (!newP || newP.length < 6) {
-      document.getElementById('fp-err-new').textContent = newP ? 'Minimum 6 characters.' : 'Please enter a new password.';
-      valid = false;
-    }
-    if (!conf)       { document.getElementById('fp-err-confirm').textContent = 'Please confirm your password.'; valid = false; }
-    else if (conf !== newP) { document.getElementById('fp-err-confirm').textContent = 'Passwords do not match.'; valid = false; }
-    if (!valid) return;
-
-    const btn = document.getElementById('fp-reset-btn');
-    btn.classList.add('loading');
-    try {
-      await set(ref(db, 'password'), await hashPassword(newP));
-      btn.classList.remove('loading');
-      document.getElementById('fp-success-banner').classList.add('show');
-      btn.disabled = true;
-      setTimeout(() => {
-        document.getElementById('fp-overlay').classList.remove('open');
-        btn.disabled = false;
-        // Clear login field and reset failed counter
-        document.getElementById('admin-pass').value = '';
-        document.getElementById('error-msg').classList.remove('visible');
-        document.getElementById('admin-pass').classList.remove('error');
-        failedAttempts = 0;
-        document.getElementById('forgot-hint').classList.remove('visible');
-      }, 2200);
-    } catch(err) {
-      btn.classList.remove('loading');
-      document.getElementById('fp-err-confirm').textContent = '⚠️ Failed to reset. Check connection.';
+      if (err.code === 'auth/invalid-email') {
+        document.getElementById('fp-err-email').textContent = 'Please enter a valid email address.';
+      } else if (err.code === 'auth/user-not-found') {
+        // Don't reveal whether an account exists for this email —
+        // show the same success state either way.
+        document.getElementById('fp-step-email').style.display = 'none';
+        document.getElementById('fp-step-reset').style.display  = 'block';
+        document.getElementById('fp-title').textContent = 'Check Your Email';
+        document.getElementById('fp-sub').textContent   = `If an account exists for ${email}, a reset link was sent.`;
+      } else {
+        document.getElementById('fp-err-email').textContent = '⚠️ Could not send reset email. Try again later.';
+      }
     }
   }
 </script>

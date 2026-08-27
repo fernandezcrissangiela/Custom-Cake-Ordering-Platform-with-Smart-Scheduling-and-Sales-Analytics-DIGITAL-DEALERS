@@ -196,8 +196,9 @@
 
 <!-- ── LOGIN GUARD ── -->
 <script>
-  function handleLogout() {
+  async function handleLogout() {
   sessionStorage.removeItem('adminLoggedIn');
+  await signOut(auth);
   window.location.replace('login.html');
 }
 
@@ -247,6 +248,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getDatabase, ref, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCWUJfDwLR5erpExZUoBWW7YJ-aDpT_zy0",
@@ -257,6 +259,9 @@
 
   const app = initializeApp(firebaseConfig);
   const db  = getDatabase(app);
+  const auth = getAuth(app);
+  window.auth = auth;
+  window.signOut = signOut;
 
   const progressSteps = ['preparing', 'baking', 'packing', 'delivery'];
 

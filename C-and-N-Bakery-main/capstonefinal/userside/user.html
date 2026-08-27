@@ -409,7 +409,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut, EmailAuthProvider, reauthenticateWithCredential, updateEmail, updatePassword } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getDatabase, ref, onValue, get, update, push } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getDatabase, ref, onValue, get, update, push, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCWUJfDwLR5erpExZUoBWW7YJ-aDpT_zy0",
@@ -457,7 +457,8 @@
         }
       });
 
-      onValue(ref(db, 'orders'), (snapshot) => {
+      const myOrdersQuery = query(ref(db, 'orders'), orderByChild('userId'), equalTo(currentUser.uid));
+      onValue(myOrdersQuery, (snapshot) => {
         const allOrders = snapshot.val();
         const activeBody = document.getElementById('active-orders-list');
         const historyContainer = document.getElementById('history-list');

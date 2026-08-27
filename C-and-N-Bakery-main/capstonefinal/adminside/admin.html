@@ -494,72 +494,11 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-forgot" onclick="openForgotPassword()"><i class="fas fa-question-circle"></i> Forgot Password?</button>
-      <div style="flex:1"></div>
       <button class="btn-cancel" onclick="closeSettings()">Cancel</button>
       <button class="btn-save" id="save-btn" onclick="savePassword()">
         <span class="save-text"><i class="fas fa-save"></i> Save Changes</span>
         <span class="save-spinner"></span>
       </button>
-    </div>
-  </div>
-</div>
-
-<!--  FORGOT PASSWORD MODAL -->
-<div class="modal-overlay" id="forgot-overlay" onclick="closeForgotPassword(event)">
-  <div class="settings-modal">
-    <div class="modal-header">
-      <div class="modal-title-group">
-        <i class="fas fa-unlock-alt modal-icon"></i>
-        <div>
-          <h2 class="modal-title" id="forgot-title">Manage Security Question</h2>
-          <p class="modal-sub" id="forgot-sub">Set or update your recovery question</p>
-        </div>
-      </div>
-      <button class="modal-close" onclick="closeForgotPassword()"><i class="fas fa-times"></i></button>
-    </div>
-    <div id="forgot-step-setup" style="display:none">
-      <div class="modal-body">
-        <div class="forgot-info-banner" id="forgot-setup-banner">
-          <i class="fas fa-shield-alt"></i>
-          <div>
-            <strong>Set a Security Question</strong>
-            <p>This lets you reset your password from the login page if you ever forget it.</p>
-          </div>
-        </div>
-        <div class="settings-field">
-          <label><i class="fas fa-question"></i> Security Question</label>
-          <div class="settings-input-wrap">
-            <select id="setup-question" style="width:100%;padding:12px 16px;border:1.5px solid #E8D5C4;border-radius:10px;font-family:'Poppins',sans-serif;font-size:0.88rem;color:#3F2A1F;background:#F8F1EA;outline:none;transition:all 0.3s;">
-              <option value="">— Choose a question —</option>
-              <option>What is the name of your first pet?</option>
-              <option>What is your mother's maiden name?</option>
-              <option>What city were you born in?</option>
-              <option>What was the name of your first school?</option>
-              <option>What is your favorite childhood food?</option>
-            </select>
-          </div>
-          <p class="field-error" id="err-setup-q"></p>
-        </div>
-        <div class="settings-field">
-          <label><i class="fas fa-comment-dots"></i> Your Answer</label>
-          <div class="settings-input-wrap">
-            <input type="password" id="setup-answer" placeholder="Enter your answer (case-insensitive)" />
-            <span class="eye-toggle" onclick="toggleEye('setup-answer','eye-setup')"><i class="fas fa-eye" id="eye-setup"></i></span>
-          </div>
-          <p class="field-error" id="err-setup-a"></p>
-        </div>
-        <div class="success-banner" id="setup-success-banner">
-          <i class="fas fa-check-circle"></i> Security question saved!
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-cancel" onclick="closeForgotPassword()">Cancel</button>
-        <button class="btn-save" id="setup-save-btn" onclick="saveSecurityQuestion()">
-          <span class="save-text"><i class="fas fa-shield-alt"></i> Save Question</span>
-          <span class="save-spinner"></span>
-        </button>
-      </div>
     </div>
   </div>
 </div>
@@ -697,6 +636,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+  import { getAuth, signOut, reauthenticateWithCredential, EmailAuthProvider, updatePassword } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCWUJfDwLR5erpExZUoBWW7YJ-aDpT_zy0",
@@ -707,6 +647,9 @@
 
   const app = initializeApp(firebaseConfig);
   const db  = getDatabase(app);
+  const auth = getAuth(app);
+  window.auth = auth;
+  window.signOut = signOut;
 
   // Must match schedule.html's DEFAULT_MAX_ORDERS_PER_DAY so the two pages
   // always agree on "today's capacity".
@@ -714,18 +657,6 @@
 
   // How many days ahead (including today) the "Upcoming Orders" panel shows.
   const UPCOMING_WINDOW_DAYS = 5;
-
-  /* ── helpers ── */
-  async function hashPassword(password) {
-    const data = new TextEncoder().encode(password);
-    const buf  = await crypto.subtle.digest('SHA-256', data);
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
-  }
-
-  async function getStoredHash() {
-    const snap = await get(ref(db, 'password'));
-    return snap.exists() ? snap.val() : await hashPassword('digitaldealers');
-  }
 
   function todayStr() {
     const n = new Date();
@@ -1008,6 +939,9 @@
 
   /* ══════════════════════════════════════
      ACCOUNT SETTINGS LOGIC
+     Change Password now goes through real Firebase Auth
+     (reauthenticate with current password, then updatePassword),
+     matching how login.html actually authenticates admins.
   ══════════════════════════════════════ */
   window.openSettings = function() {
     document.getElementById('settings-overlay').classList.add('open');
@@ -1054,61 +988,6 @@
     lbl.textContent = lvl.text; lbl.style.color = lvl.color;
   };
 
-  window.openForgotPassword = async function() {
-    document.getElementById('settings-overlay').classList.remove('open');
-    document.getElementById('forgot-overlay').classList.add('open');
-    document.getElementById('forgot-step-setup').style.display = 'none';
-    document.getElementById('setup-question').value = '';
-    document.getElementById('setup-answer').value = '';
-    ['err-setup-q','err-setup-a'].forEach(id => document.getElementById(id).textContent = '');
-    document.getElementById('setup-success-banner').classList.remove('show');
-    try {
-      const snap = await get(ref(db, 'securityQuestion'));
-      if (snap.exists()) {
-        document.getElementById('forgot-title').textContent = 'Update Security Question';
-        document.getElementById('forgot-sub').textContent   = 'Change your recovery question or answer';
-        document.getElementById('forgot-setup-banner').innerHTML =
-          `<i class="fas fa-pencil-alt"></i><div><strong>Update Security Question</strong><p>Your current question: <em>${snap.val().question}</em></p></div>`;
-        const sel = document.getElementById('setup-question');
-        for (let opt of sel.options) { if (opt.value === snap.val().question) { sel.value = snap.val().question; break; } }
-      } else {
-        document.getElementById('forgot-title').textContent = 'Set Security Question';
-        document.getElementById('forgot-sub').textContent   = 'Add a recovery question for your account';
-        document.getElementById('forgot-setup-banner').innerHTML =
-          `<i class="fas fa-shield-alt"></i><div><strong>Set a Security Question</strong><p>This lets you reset your password from the login page if you ever forget it.</p></div>`;
-      }
-    } catch(e) {}
-    document.getElementById('forgot-step-setup').style.display = 'block';
-  };
-
-  window.closeForgotPassword = function(e) {
-    if (e && e.target !== document.getElementById('forgot-overlay')) return;
-    document.getElementById('forgot-overlay').classList.remove('open');
-  };
-
-  window.saveSecurityQuestion = async function() {
-    const q = document.getElementById('setup-question').value.trim();
-    const a = document.getElementById('setup-answer').value.trim();
-    let valid = true;
-    document.getElementById('err-setup-q').textContent = '';
-    document.getElementById('err-setup-a').textContent = '';
-    if (!q) { document.getElementById('err-setup-q').textContent = 'Please select a question.'; valid = false; }
-    if (!a) { document.getElementById('err-setup-a').textContent = 'Please enter an answer.';   valid = false; }
-    if (!valid) return;
-    const btn = document.getElementById('setup-save-btn');
-    btn.classList.add('loading');
-    try {
-      const answerHash = await hashPassword(a.toLowerCase());
-      await set(ref(db, 'securityQuestion'), { question: q, answerHash });
-      btn.classList.remove('loading');
-      document.getElementById('setup-success-banner').classList.add('show');
-      setTimeout(() => document.getElementById('forgot-overlay').classList.remove('open'), 1800);
-    } catch(err) {
-      btn.classList.remove('loading');
-      document.getElementById('err-setup-a').textContent = '⚠️ Failed to save. Check connection.';
-    }
-  };
-
   window.savePassword = async function() {
     let valid = true;
     const curr = document.getElementById('curr-pass').value;
@@ -1122,26 +1001,28 @@
     else if (newP.length < 6) { document.getElementById('new-pass').classList.add('field-err'); document.getElementById('err-new').textContent = 'Password must be at least 6 characters.'; valid = false; }
     if (!conf) { document.getElementById('confirm-pass').classList.add('field-err'); document.getElementById('err-confirm').textContent = 'Please confirm your new password.'; valid = false; }
     else if (conf !== newP) { document.getElementById('confirm-pass').classList.add('field-err'); document.getElementById('err-confirm').textContent = 'Passwords do not match.'; valid = false; }
+    if (curr && newP && curr === newP) {
+      document.getElementById('new-pass').classList.add('field-err');
+      document.getElementById('err-new').textContent = 'New password must differ from current.';
+      valid = false;
+    }
     if (!valid) return;
+
+    const user = auth.currentUser;
+    if (!user || !user.email) {
+      document.getElementById('err-curr').textContent = 'Your session has expired. Please log in again.';
+      return;
+    }
+
     const btn = document.getElementById('save-btn');
     btn.classList.add('loading');
     try {
-      const storedHash = await getStoredHash();
-      const currHash   = await hashPassword(curr);
-      const newHash    = await hashPassword(newP);
-      if (currHash !== storedHash) {
-        btn.classList.remove('loading');
-        document.getElementById('curr-pass').classList.add('field-err');
-        document.getElementById('err-curr').textContent = 'Current password is incorrect.';
-        return;
-      }
-      if (newHash === storedHash) {
-        btn.classList.remove('loading');
-        document.getElementById('new-pass').classList.add('field-err');
-        document.getElementById('err-new').textContent = 'New password must differ from current.';
-        return;
-      }
-      await set(ref(db, 'password'), newHash);
+      // Firebase requires a recent login before letting you change the
+      // password, so re-prove identity with the current password first.
+      const credential = EmailAuthProvider.credential(user.email, curr);
+      await reauthenticateWithCredential(user, credential);
+      await updatePassword(user, newP);
+
       btn.classList.remove('loading');
       document.getElementById('success-banner').classList.add('show');
       ['curr-pass','new-pass','confirm-pass'].forEach(id => document.getElementById(id).value = '');
@@ -1149,17 +1030,28 @@
       document.getElementById('strength-label').textContent = '';
     } catch (err) {
       btn.classList.remove('loading');
-      document.getElementById('err-confirm').textContent = '⚠️ Failed to save. Check your connection.';
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
+        document.getElementById('curr-pass').classList.add('field-err');
+        document.getElementById('err-curr').textContent = 'Current password is incorrect.';
+      } else if (err.code === 'auth/weak-password') {
+        document.getElementById('new-pass').classList.add('field-err');
+        document.getElementById('err-new').textContent = 'New password is too weak — use at least 6 characters.';
+      } else if (err.code === 'auth/too-many-requests') {
+        document.getElementById('err-confirm').textContent = '⚠️ Too many attempts. Please wait and try again.';
+      } else {
+        document.getElementById('err-confirm').textContent = '⚠️ Failed to update password. Check your connection.';
+      }
     }
   };
 </script>
 
 <!-- ========== LOGOUT + DRAWER ========== -->
 <script>
-  function handleLogout() {
-    sessionStorage.removeItem('adminLoggedIn');
-    window.location.replace('login.html');
-  }
+  async function handleLogout() {
+  sessionStorage.removeItem('adminLoggedIn');
+  await signOut(auth);
+  window.location.replace('login.html');
+}
   function toggleDrawer() {
     const drawer   = document.getElementById('mobile-drawer');
     const backdrop = document.getElementById('drawer-backdrop');
@@ -1180,67 +1072,6 @@
   }
   window.addEventListener('resize', () => { if (window.innerWidth > 768) closeDrawer(); });
 </script>
-
-<style>
-.btn-forgot {
-  background: none; border: none; color: var(--primary);
-  font-family: 'Poppins', sans-serif; font-size: 0.8rem; font-weight: 600;
-  cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
-  padding: 4px 0; text-decoration: underline; text-underline-offset: 3px;
-  opacity: 0.85; transition: opacity 0.2s;
-}
-.btn-forgot:hover { opacity: 1; }
-.forgot-info-banner {
-  display: flex; align-items: flex-start; gap: 14px;
-  background: #FFF8F0; border: 1.5px solid #E8C89A;
-  border-radius: 12px; padding: 14px 16px; margin-bottom: 20px;
-  color: #7A4F20; font-size: 0.84rem;
-}
-.forgot-info-banner i { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
-.forgot-info-banner strong { display: block; margin-bottom: 3px; font-size: 0.88rem; }
-.forgot-info-banner p { margin: 0; opacity: 0.85; }
-
-/* ── Mobile modal footer fix ── */
-@media (max-width: 600px) {
-  .modal-footer {
-    flex-direction: column;
-    gap: 10px;
-    padding: 14px 20px 20px;
-  }
-  .modal-footer .btn-forgot {
-    order: 2;
-    align-self: center;
-    font-size: 0.78rem;
-    padding: 6px 0;
-    opacity: 0.75;
-  }
-  .modal-footer > div[style] {
-    display: none;
-  }
-  .modal-footer .btn-cancel,
-  .modal-footer .btn-save {
-    order: 1;
-    width: 100%;
-    justify-content: center;
-    padding: 13px 16px;
-    font-size: 0.92rem;
-    border-radius: 12px;
-  }
-  /* Put Cancel + Save side by side, Forgot below */
-  .modal-footer {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-areas:
-      "cancel save"
-      "forgot forgot";
-    gap: 10px;
-  }
-  .modal-footer .btn-cancel { grid-area: cancel; }
-  .modal-footer .btn-save   { grid-area: save; min-width: unset; }
-  .modal-footer .btn-forgot { grid-area: forgot; justify-self: center; }
-  .modal-footer > div[style] { display: none !important; }
-}
-</style>
 
 </body>
 </html>
