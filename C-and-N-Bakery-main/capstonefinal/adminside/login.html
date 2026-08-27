@@ -613,6 +613,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCWUJfDwLR5erpExZUoBWW7YJ-aDpT_zy0",
@@ -623,16 +624,41 @@
 
   const app  = initializeApp(firebaseConfig);
   const auth = getAuth(app);
+  const db = getDatabase(app);
 
   // Any account that can successfully authenticate against this Firebase
   // project counts as admin — create/manage admin accounts from the
   // Firebase Console → Authentication tab.
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      sessionStorage.setItem('adminLoggedIn', 'true');
-      window.location.replace('admin.html');
+  onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    sessionStorage.removeItem('adminLoggedIn');
+    return;
+  }
+
+  try {
+    const adminSnap = await get(ref(db, `admins/${user.uid}`));
+
+    if (!adminSnap.exists()) {
+      await auth.signOut();
+      sessionStorage.removeItem('adminLoggedIn');
+
+      const errMsg = document.getElementById('error-msg');
+      errMsg.textContent = '❌ This account does not have admin access.';
+      errMsg.classList.add('visible');
+      return;
     }
-  });
+
+    sessionStorage.setItem('adminLoggedIn', 'true');
+    window.location.replace('admin.html');
+
+  } catch (error) {
+    console.error('Admin verification failed:', error);
+
+    const errMsg = document.getElementById('error-msg');
+    errMsg.textContent = '⚠️ Unable to verify admin access. Please try again.';
+    errMsg.classList.add('visible');
+  }
+});
 
   let failedAttempts = 0;
 

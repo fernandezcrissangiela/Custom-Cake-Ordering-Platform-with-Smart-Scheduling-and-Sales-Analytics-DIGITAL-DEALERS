@@ -248,7 +248,8 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getDatabase, ref, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
-  import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+ import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
 
   const firebaseConfig = {
     apiKey: "AIzaSyCWUJfDwLR5erpExZUoBWW7YJ-aDpT_zy0",
@@ -1083,11 +1084,18 @@
   }
 
   // ── LIVE LISTENER ──
+  onAuthStateChanged(auth, (user) => {
+  if (!user) return; // not signed in yet / logged out — wait or redirect
   onValue(ref(db, 'orders'), (snapshot) => {
     latestOrders = snapshot.val() || {};
     const searchInput = document.getElementById('order-search');
     renderOrderLists(searchInput ? searchInput.value : '');
+  }, (error) => {
+    console.error('Orders listener error:', error);
+    document.getElementById('pending-list').innerHTML = `<p class="no-orders">⚠️ Failed to load orders: ${error.message}</p>`;
+    document.getElementById('active-list').innerHTML = `<p class="no-orders">⚠️ Failed to load orders: ${error.message}</p>`;
   });
+});
 
   // ── SEARCH INPUT WIRING ──
   const searchInputEl = document.getElementById('order-search');
