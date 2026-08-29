@@ -135,7 +135,7 @@
           </div>
         </div>
 
-        <!-- Cancel Order (hidden automatically once the order is out for delivery) -->
+        <!-- Cancel Order (hidden automatically once the order is no longer pending) -->
         <div class="tracker-cancel-wrap" id="tracker-cancel-wrap">
           <button class="cancel-btn" onclick="promptCancelOrder(activeOrderId)">
             <i class="fas fa-ban"></i> Cancel Order
@@ -426,8 +426,13 @@
   let activeOrderId = null;
   let currentUser = null;
 
-  // Order can only be cancelled before it enters the "preparing" stage.
-  const CANCELABLE_STATUSES = ['pending', 'confirmed', 'downpayment-received'];
+  // ── Order can only be cancelled by the customer while it is still
+  //    PENDING (i.e. before the admin has approved/confirmed it).
+  //    Once the admin moves it to any other status (confirmed,
+  //    downpayment-received, preparing, baking, packing, delivery),
+  //    the order is considered approved and the customer can no longer
+  //    cancel it themselves. ──
+  const CANCELABLE_STATUSES = ['pending'];
 
   onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -627,7 +632,8 @@
     payBadge.textContent = `⬤ ${payLabels[payStatus]}`;
     payBadge.className = `badge badge-pay-${payStatus}`;
 
-    // Hide the Cancel Order button once the order has started being prepared.
+    // Hide the Cancel Order button once the order has been approved
+    // (i.e. is no longer pending).
     const cancelWrap = document.getElementById('tracker-cancel-wrap');
     if (cancelWrap) {
       cancelWrap.style.display = CANCELABLE_STATUSES.includes(order.status) ? 'block' : 'none';
@@ -913,6 +919,17 @@
 
   window.confirmCancelOrder = async () => {
     if (!cancelOrderId) return;
+
+    // Defense-in-depth: re-check the order's live status before cancelling,
+    // in case it was approved by the admin in the meantime (e.g. the customer
+    // had the modal open while the admin confirmed the order).
+    const snap = await get(ref(db, `orders/${cancelOrderId}`));
+    if (!snap.exists() || !CANCELABLE_STATUSES.includes((snap.val().status || '').toLowerCase())) {
+      alert('Sorry, this order has already been approved and can no longer be cancelled.');
+      closeCancelModal();
+      return;
+    }
+
     const idToCancel = cancelOrderId;
     const btn = document.getElementById('cancel-yes-btn');
     btn.disabled = true;
