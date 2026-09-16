@@ -794,7 +794,6 @@
         const cd       = item.customDetails || {};
         const layers   = item.layers   || cd.layers   || '';
         const flavor   = item.flavor   || cd.flavor   || '';
-        const frosting = item.frosting || cd.frosting || '';
         const design   = item.design   || cd.design   || '';
         const message  = item.message  || cd.message  || '';
         const notes    = item.notes    || cd.notes    || '';
@@ -803,7 +802,6 @@
 
         const detailRows = [
           { label: '🍰 Number of Layers', value: layers },
-          { label: '🍦 Frosting Kind',    value: frosting },
           { label: '🎨 Design Style',      value: design },
           { label: '💬 Special Message',   value: message },
           { label: '📝 Notes',             value: notes },

@@ -356,15 +356,10 @@
 
         <div class="selection-group">
           <label>Number of Layers</label>
-          <select id="layers" onchange="renderTierSizeSelectors(); refreshFrostingOptions(); updatePrice()"></select>
+          <select id="layers" onchange="renderTierSizeSelectors(); updatePrice()"></select>
         </div>
 
         <div id="tier-sizes-container"></div>
-
-        <div class="selection-group">
-          <label>Frosting Kind</label>
-          <select id="frosting" onchange="updatePrice()"></select>
-        </div>
 
         <div class="selection-group">
           <label>Design Style</label>
@@ -458,50 +453,9 @@
     // Price & Options Logic
     let cachedSizes = [];
     let cachedFlavors = [];
-    let cachedFrostings = [];
-
-    //Frosting price depends on how many tiers the cake has
-    // Each frosting <option> carries its full option data (including tierPrices)
-    // in a data attribute; we resolve the right price whenever the tier count changes.
-    function getSelectedTierCount() {
-      const layersOpt = document.getElementById('layers')?.selectedOptions[0];
-      return parseInt(layersOpt?.dataset.tiers || 1);
-    }
-
-    function getFrostingPriceForTierCount(opt, tierCount) {
-      const tierPrices = opt?.tierPrices || {};
-      const keys = Object.keys(tierPrices).map(Number).filter(n => !isNaN(n)).sort((a, b) => a - b);
-
-      if (keys.length === 0) return Number(opt?.price) || 0; // legacy flat-price fallback
-      if (tierPrices[tierCount] !== undefined) return Number(tierPrices[tierCount]) || 0;
-
-      // No exact match for this tier count — fall back to the closest lower tier price,
-      // or the closest higher one if nothing lower is defined.
-      const lower  = keys.filter(k => k < tierCount).pop();
-      if (lower !== undefined) return Number(tierPrices[lower]) || 0;
-      const higher = keys.find(k => k > tierCount);
-      return higher !== undefined ? Number(tierPrices[higher]) || 0 : 0;
-    }
-
-    function refreshFrostingOptions() {
-      const select = document.getElementById('frosting');
-      if (!select) return;
-      const tierCount = getSelectedTierCount();
-
-      Array.from(select.options).forEach(option => {
-        if (!option.dataset.frostingData) return; // skip placeholder
-        const opt   = JSON.parse(option.dataset.frostingData);
-        const price = getFrostingPriceForTierCount(opt, tierCount);
-        option.dataset.price = price;
-        option.textContent = price > 0 ? `${opt.name} (+₱${price})` : opt.name;
-      });
-    }
 
     function updatePrice() {
-      refreshFrostingOptions();
-
       const design   = document.getElementById('design')?.selectedOptions[0];
-      const frosting = document.getElementById('frosting')?.selectedOptions[0];
 
       let tiersTotal = 0;
       document.querySelectorAll('.tier-size-select, .tier-flavor-select').forEach(sel => {
@@ -509,13 +463,13 @@
         tiersTotal += parseInt(opt?.dataset.price || 0);
       });
 
-      const total = tiersTotal + (parseInt(design?.dataset.price || 0)) + (parseInt(frosting?.dataset.price || 0));
+      const total = tiersTotal + (parseInt(design?.dataset.price || 0));
 
       document.getElementById('total-price').innerText = "₱" + total.toLocaleString('en-PH');
       return total;
     }
 
-    //Render "Tier N Size" + "Tier N Flavor" + "Tier N Frosting" dropdowns for each layer, based on the selected Layers option's tier count
+    //Render "Tier N Size" + "Tier N Flavor" dropdowns for each layer, based on the selected Layers option's tier count
     function renderTierSizeSelectors() {
       const container = document.getElementById('tier-sizes-container');
       const layersOpt  = document.getElementById('layers')?.selectedOptions[0];
@@ -575,14 +529,12 @@
     }
 
     function renderCustomizationOptions(data) {
-      // Cache enabled sizes, flavors, and frostings for use when building per-tier dropdowns
+      // Cache enabled sizes and flavors for use when building per-tier dropdowns
       cachedSizes     = Object.values(data?.sizes     || {}).filter(opt => opt.enabled === true);
       cachedFlavors   = Object.values(data?.flavors   || {}).filter(opt => opt.enabled === true);
-      cachedFrostings = Object.values(data?.frostings || {}).filter(opt => opt.enabled === true);
 
       const mappings = [
         { key: 'layers',    selectId: 'layers',    placeholder: '-- Select Number of Layers --' },
-        { key: 'frostings', selectId: 'frosting',   placeholder: '-- Select Frosting Kind --' },
         { key: 'designs',   selectId: 'design',    placeholder: '-- Select Design Style --' }
       ];
 
@@ -603,15 +555,8 @@
           const option = document.createElement('option');
           option.value = opt.name || '';
 
-          if (key === 'frostings') {
-            // Frosting price depends on tier count — store the full option
-            // data and resolve the price later via refreshFrostingOptions().
-            option.dataset.frostingData = JSON.stringify(opt);
-            option.textContent = opt.name;
-          } else {
-            option.textContent = opt.price > 0 ? `${opt.name} (+₱${opt.price})` : opt.name;
-            option.dataset.price = Number(opt.price) || 0;
-          }
+          option.textContent = opt.price > 0 ? `${opt.name} (+₱${opt.price})` : opt.name;
+          option.dataset.price = Number(opt.price) || 0;
 
           if (key === 'layers') option.dataset.tiers = Number(opt.tiers) || 1;
           select.appendChild(option);
@@ -619,7 +564,6 @@
       }
 
       renderTierSizeSelectors();
-      refreshFrostingOptions();
       updatePrice();
     }
 
@@ -660,7 +604,6 @@
 
     function showSummary() {
       const layers   = document.getElementById('layers')?.value   || '—';
-      const frosting = document.getElementById('frosting')?.value || '—';
       const design   = document.getElementById('design')?.value   || '—';
       const message  = document.getElementById('message')?.value.trim() || '—';
       const total    = document.getElementById('total-price')?.innerText || '₱0';
@@ -673,7 +616,6 @@
       document.getElementById('summary-details').innerHTML = `
         <li><span>Layers:</span> <strong>${layers}</strong></li>
         ${tierListHtml}
-        <li><span>Frosting Kind:</span> <strong>${frosting}</strong></li>
         <li><span>Design:</span> <strong>${design}</strong></li>
         <li><span>Special Message:</span> <strong>${message}</strong></li>
       `;
@@ -697,7 +639,6 @@
         category: "Customize Cake",
         layers:    document.getElementById('layers')?.value   || '',
         tiers:     getTierDetails(),
-        frosting:  document.getElementById('frosting')?.value || '',
         design:    document.getElementById('design')?.value   || '',
         message:   message,
         notes:   "",
