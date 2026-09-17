@@ -1182,3 +1182,70 @@ nav a.active::after {
     color: #777;
     font-size: 1rem;
 }
+
+/* ==================== SIGN-IN REQUIRED MODAL ==================== */
+.modal-content.auth-gate {
+    max-width: 400px;
+    padding: 40px 32px 28px;
+    text-align: center;
+}
+
+.auth-gate-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--secondary);
+    color: var(--primary);
+    font-size: 1.5rem;
+}
+
+.modal-content.auth-gate h2 {
+    font-size: 1.35rem;
+    color: var(--text);
+    margin-bottom: 8px;
+}
+
+.modal-content.auth-gate p {
+    color: var(--text-light);
+    font-size: 0.92rem;
+    line-height: 1.55;
+    margin-bottom: 26px;
+}
+
+.auth-gate-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.auth-gate-actions .btn-primary,
+.auth-gate-actions .btn-outline {
+    width: 100%;
+    padding: 13px 20px;
+    font-size: 0.95rem;
+}
+
+.auth-gate-dismiss {
+    margin-top: 16px;
+    background: none;
+    border: none;
+    color: var(--text-light);
+    font-size: 0.85rem;
+    text-decoration: underline;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.auth-gate-dismiss:hover {
+    color: var(--primary);
+}
+
+@media (max-width: 768px) {
+    .modal-content.auth-gate {
+        padding: 34px 22px 24px;
+    }
+}

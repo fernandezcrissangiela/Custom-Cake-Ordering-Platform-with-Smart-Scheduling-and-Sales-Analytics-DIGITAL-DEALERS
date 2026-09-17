@@ -248,6 +248,22 @@
     const app  = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getDatabase(app);
+
+    /* ── Auth-gate return handling ──────────────────────────────────────
+       menu.html (and other pages) redirect here as index.html#login or
+       #signup when a signed-out visitor tries to do something that needs
+       an account, after stashing where they came from in sessionStorage
+       (and, if relevant, the cake they were adding — menu.html reads
+       that part back itself, this page only needs the return path).    */
+    const AUTH_RETURN_KEY = 'cn_auth_return';
+
+    function returnAfterAuth() {
+      const dest = sessionStorage.getItem(AUTH_RETURN_KEY);
+      if (!dest) return;                 // opened the modal on their own — stay put
+      sessionStorage.removeItem(AUTH_RETURN_KEY);
+      window.location.href = dest;
+    }
+
 //function (!NOT) (||OR)
     function updateCartCount(uid) {
       const cartCount = document.getElementById('cart-count');
@@ -395,6 +411,7 @@
         const snap = await get(ref(db, "users/" + uid));
         if (snap.exists()) nameTag.innerText = "Hi, " + snap.val().name;
         updateCartCount(uid);
+        returnAfterAuth();
       } else {
         localStorage.removeItem('currentUserId');
         signupBtn.classList.remove('hidden');
@@ -704,8 +721,30 @@
 
   <script>
     const modal = document.getElementById('auth-modal');
-    function openModal()  { modal.classList.add('active'); document.getElementById('nav-toggle').checked = false; }
+
+    // openModal(tab) — tab is 'signup' (default) or 'login'. Called by the
+    // header's Sign Up button, checkAuth(), and the #login/#signup hash
+    // handler below, so every entry point can land on the right form.
+    function openModal(tab) {
+      modal.classList.add('active');
+      document.getElementById('nav-toggle').checked = false;
+      if (tab === 'login' || tab === 'signup') {
+        const tabBtn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+        if (tabBtn) tabBtn.click();
+      }
+    }
     function closeModal() { modal.classList.remove('active'); }
+
+    // Arriving as index.html#login or #signup (sent here by menu.html's
+    // sign-in gate) opens the modal straight to that tab.
+    function handleAuthHash() {
+      const mode = window.location.hash.slice(1).toLowerCase();
+      if (mode === 'login' || mode === 'signup') {
+        openModal(mode);
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+    }
+    handleAuthHash();
 
 
     window.checkAuth = function(event) {

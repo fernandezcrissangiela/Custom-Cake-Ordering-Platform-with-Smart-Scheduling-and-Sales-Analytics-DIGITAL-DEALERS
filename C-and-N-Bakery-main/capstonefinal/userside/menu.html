@@ -116,6 +116,21 @@
     <div class="product-grid" id="product-grid"></div>
   </div>
 
+  <!-- Sign-In Required Modal — replaces the raw browser alert() -->
+  <div id="authGateModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="authGateTitle">
+    <div class="modal-content auth-gate">
+      <span class="modal-close" id="authGateClose" aria-label="Close">&times;</span>
+      <div class="auth-gate-icon"><i class="fas fa-cake-candles"></i></div>
+      <h2 id="authGateTitle">Sign in to continue</h2>
+      <p id="authGateMsg">You need an account before you can add items to your cart.</p>
+      <div class="auth-gate-actions">
+        <button class="btn-primary" id="authGateLogin">Log In</button>
+        <button class="btn-outline" id="authGateSignup">Create Account</button>
+      </div>
+      <button class="auth-gate-dismiss" id="authGateCancel">Keep browsing</button>
+    </div>
+  </div>
+
   <!-- Product Detail Modal -->
   <div id="productModal" class="modal">
     <div class="modal-content">
@@ -367,8 +382,13 @@
     //    never touches Firebase auth directly)
     checkAuth(e) { // OOP - Abstraction (hides auth check logic)
       const isLoggedIn = !document.getElementById('logout-trigger').classList.contains('hidden');
-      if (!isLoggedIn) { alert("Please sign in to continue."); window.location.href = 'index.html'; return; }
       const target = e.currentTarget;
+      if (!isLoggedIn) {
+        openAuthGate(target.classList.contains('fa-user')
+          ? "Sign in to view your profile and order history."
+          : "Sign in to view your cart.");
+        return;
+      }
       if (target.classList.contains('fa-shopping-cart')) window.location.href = 'cart.html';
       else if (target.classList.contains('fa-user')) window.location.href = 'user.html';
     }
@@ -392,8 +412,8 @@
     // Add to cart (delegates to CartManager)
     addToCart(product) { // OOP - Abstraction (caller doesn't manage cart details)
       if (!auth.currentUser) {
-        alert("Please sign in to add items to your cart.");
-        window.location.href = 'index.html';
+        this.#modal.close();
+        openAuthGate("Sign in to save cakes to your cart and check out.", product);
         return;
       }
       const catObj = this.#allCategories.find(c => c.key === product.category);
@@ -718,6 +738,50 @@
     subTrackEl.scrollLeft += e.deltaY;
   }, { passive: false });
 
+  /* ── AUTH GATE ────────────────────────────────────────────────────────
+     Replaces alert() + instant redirect. Shows a branded modal, and when
+     the visitor chooses Log In / Create Account it hands index.html two
+     things via sessionStorage + a URL hash:
+       • which modal tab to open  (#login or #signup)
+       • where to send them back  (this page, plus the item they wanted)
+     index.html needs the small snippet in auth-redirect-snippet.js.      */
+  const AUTH_RETURN_KEY  = 'cn_auth_return';
+  const AUTH_PENDING_KEY = 'cn_pending_cart_item';
+
+  const authGateEl = document.getElementById('authGateModal');
+  let pendingProduct = null;
+
+  function openAuthGate(message, product = null) {
+    pendingProduct = product;
+    document.getElementById('authGateMsg').textContent = message;
+    authGateEl.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeAuthGate() {
+    authGateEl.classList.remove('active');
+    document.body.style.overflow = '';
+    pendingProduct = null;
+  }
+
+  function goToAuth(mode) {
+    sessionStorage.setItem(AUTH_RETURN_KEY, window.location.pathname + window.location.search);
+    if (pendingProduct) {
+      const { image, ...lean } = pendingProduct;          // never store images
+      sessionStorage.setItem(AUTH_PENDING_KEY, JSON.stringify(lean));
+    }
+    window.location.href = 'index.html#' + mode;
+  }
+
+  document.getElementById('authGateLogin').addEventListener('click',  () => goToAuth('login'));
+  document.getElementById('authGateSignup').addEventListener('click', () => goToAuth('signup'));
+  document.getElementById('authGateClose').addEventListener('click',  closeAuthGate);
+  document.getElementById('authGateCancel').addEventListener('click', closeAuthGate);
+  authGateEl.addEventListener('click', e => { if (e.target === authGateEl) closeAuthGate(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && authGateEl.classList.contains('active')) closeAuthGate();
+  });
+
   // INSTANTIATE & boot
   const menuApp = new MenuApp(); // OOP - Encapsulation
   window.menuApp = menuApp; // expose for inline onclick in HTML
@@ -731,6 +795,13 @@
         const snap = await get(ref(db, "users/" + user.uid));
         menuApp.showLoggedIn(snap.exists() ? snap.val().name : null);
       } catch { menuApp.showLoggedIn(null); }
+
+      // If they were sent to sign in mid "Add to Cart", finish the job.
+      const pending = sessionStorage.getItem(AUTH_PENDING_KEY);
+      if (pending) {
+        sessionStorage.removeItem(AUTH_PENDING_KEY);
+        try { menuApp.addToCart(JSON.parse(pending)); } catch (err) { console.error(err); }
+      }
     } else {
       menuApp.showLoggedOut();
     }
