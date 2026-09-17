@@ -100,7 +100,18 @@
       </span>
     </div>
 
-    <div class="categories subcategories" id="subcategory-buttons" style="display:none;"></div>
+    <!-- Subcategory rail: one scrollable line + arrows that only appear when
+         the pills actually overflow. Keeps the row from wrapping into a
+         lonely second line on desktop. -->
+    <div class="subcategory-rail" id="subcategory-rail" hidden>
+      <button class="rail-nav rail-nav--prev" type="button" aria-label="Scroll subcategories left">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <div class="categories subcategories" id="subcategory-buttons" role="tablist"></div>
+      <button class="rail-nav rail-nav--next" type="button" aria-label="Scroll subcategories right">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
 
     <div class="product-grid" id="product-grid"></div>
   </div>
@@ -554,16 +565,18 @@
     #selectTopLevelCategory(parentKey) { // OOP - Encapsulation (private method)
       const children = this.#allCategories.filter(c => c.parent === parentKey);
       const subContainer = document.getElementById('subcategory-buttons');
+      const subRail = document.getElementById('subcategory-rail');
 
       if (children.length === 0) {
-        subContainer.style.display = 'none';
+        subRail.hidden = true;
         subContainer.innerHTML = '';
         this.#fetchCategory(parentKey);
         return;
       }
 
-      subContainer.style.display = 'flex';
+      subRail.hidden = false;
       subContainer.innerHTML = '';
+      subContainer.scrollLeft = 0;
 
       const allBtn = document.createElement('button');
       allBtn.className = 'category-btn subcategory-btn active';
@@ -583,11 +596,13 @@
         btn.addEventListener('click', () => {
           subContainer.querySelectorAll('.subcategory-btn').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
+          centerPillInRail(btn);
           this.#fetchCategory(child.key);
         });
         subContainer.appendChild(btn);
       });
 
+      refreshSubcategoryRail();
       this.#fetchCombinedCategory(parentKey, children.map(c => c.key));
     }
 
@@ -660,6 +675,49 @@
       await this.#loadCategories();
     }
   }
+  /* ── SUBCATEGORY RAIL CONTROLLER ──────────────────────────────────────
+     Shows the arrows and edge fades only when the pills overflow, so on a
+     wide screen the row just sits centred like a normal filter bar.      */
+  const subRailEl   = document.getElementById('subcategory-rail');
+  const subTrackEl  = document.getElementById('subcategory-buttons');
+  const subPrevBtn  = subRailEl.querySelector('.rail-nav--prev');
+  const subNextBtn  = subRailEl.querySelector('.rail-nav--next');
+
+  function refreshSubcategoryRail() {
+    const overflow   = subTrackEl.scrollWidth - subTrackEl.clientWidth;
+    const scrollable = overflow > 2;
+    const atStart    = subTrackEl.scrollLeft <= 1;
+    const atEnd      = subTrackEl.scrollLeft >= overflow - 1;
+
+    subRailEl.classList.toggle('is-scrollable', scrollable);
+    subPrevBtn.disabled = !scrollable || atStart;
+    subNextBtn.disabled = !scrollable || atEnd;
+    subTrackEl.classList.toggle('fade-left',  scrollable && !atStart);
+    subTrackEl.classList.toggle('fade-right', scrollable && !atEnd);
+  }
+
+  // Scroll a pill to the middle of the visible strip (never moves the page).
+  function centerPillInRail(pill) {
+    const target = pill.offsetLeft - (subTrackEl.clientWidth - pill.offsetWidth) / 2;
+    subTrackEl.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
+  }
+
+  const railStep = () => Math.max(subTrackEl.clientWidth * 0.75, 140);
+  subPrevBtn.addEventListener('click', () => subTrackEl.scrollBy({ left: -railStep(), behavior: 'smooth' }));
+  subNextBtn.addEventListener('click', () => subTrackEl.scrollBy({ left:  railStep(), behavior: 'smooth' }));
+
+  subTrackEl.addEventListener('scroll', refreshSubcategoryRail, { passive: true });
+  window.addEventListener('resize', refreshSubcategoryRail);
+  if (window.ResizeObserver) new ResizeObserver(refreshSubcategoryRail).observe(subTrackEl);
+
+  // Trackpad/mouse wheel scrolls the strip sideways while hovering it.
+  subTrackEl.addEventListener('wheel', e => {
+    if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+    if (subTrackEl.scrollWidth <= subTrackEl.clientWidth) return;
+    e.preventDefault();
+    subTrackEl.scrollLeft += e.deltaY;
+  }, { passive: false });
+
   // INSTANTIATE & boot
   const menuApp = new MenuApp(); // OOP - Encapsulation
   window.menuApp = menuApp; // expose for inline onclick in HTML

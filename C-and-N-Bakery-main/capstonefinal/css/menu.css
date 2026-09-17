@@ -409,23 +409,112 @@ nav a.active::after {
     transform: translateY(-2px);
 }
 
-/* SUBCATEGORY ROW — appears under a top-level tab that has children */
+/* SUBCATEGORY RAIL — appears under a top-level tab that has children.
+   Shrink-to-fit + auto margins means the rail centres itself when the pills
+   fit, and caps at the container width when they don't — so the row never
+   wraps into an orphaned second line. */
+.subcategory-rail {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: fit-content;
+    max-width: 100%;
+    margin: -34px auto 40px;
+    padding: 6px 8px;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(130, 90, 60, 0.14);
+    border-radius: 50px;
+    box-shadow: 0 6px 20px rgba(103, 72, 49, 0.07);
+}
+
+.subcategory-rail[hidden] {
+    display: none;
+}
+
+/* The scrolling track itself */
 .subcategories {
-    margin-top: -30px;
-    margin-bottom: 40px;
-    gap: 10px;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    gap: 8px;
+    margin: 0;
+    padding: 2px;
+    scroll-behavior: smooth;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.subcategories::-webkit-scrollbar {
+    display: none;
+}
+
+/* Soft fade at whichever edge still has hidden pills */
+.subcategories.fade-left {
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 26px);
+    mask-image: linear-gradient(to right, transparent 0, #000 26px);
+}
+
+.subcategories.fade-right {
+    -webkit-mask-image: linear-gradient(to left, transparent 0, #000 26px);
+    mask-image: linear-gradient(to left, transparent 0, #000 26px);
+}
+
+.subcategories.fade-left.fade-right {
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 26px, #000 calc(100% - 26px), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, #000 26px, #000 calc(100% - 26px), transparent 100%);
 }
 
 .subcategory-btn {
+    flex: 0 0 auto;
+    scroll-snap-align: center;
     padding: 8px 20px;
     font-size: 0.85rem;
     border-width: 1.5px;
+    white-space: nowrap;
     opacity: 0.9;
 }
 
 .subcategory-btn.active,
 .subcategory-btn:hover {
     opacity: 1;
+}
+
+.subcategory-btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* Arrow buttons — hidden entirely unless the strip overflows */
+.rail-nav {
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.subcategory-rail.is-scrollable .rail-nav {
+    display: flex;
+}
+
+.rail-nav:hover:not(:disabled) {
+    background: var(--primary-dark);
+}
+
+.rail-nav:disabled {
+    opacity: 0.22;
+    cursor: default;
 }
 
 /* ==================== PRODUCT GRID (Desktop) ==================== */
@@ -653,8 +742,25 @@ nav a.active::after {
         scroll-snap-align: start;
     }
 
+    /* On touch screens the swipe is the control — drop the chrome and let
+       the strip run edge to edge instead of showing arrows. */
+    .subcategory-rail {
+        width: auto;
+        margin: -8px -16px 18px;
+        padding: 0;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+    }
+
     .subcategories {
-        margin-top: -12px;
+        margin: 0;
+        padding: 4px 16px 10px;
+        scroll-padding-inline: 16px;
+    }
+
+    .rail-nav {
+        display: none !important;
     }
 
     .subcategory-btn {
