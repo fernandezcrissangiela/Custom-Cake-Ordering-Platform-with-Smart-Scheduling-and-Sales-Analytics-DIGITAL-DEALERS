@@ -100,6 +100,8 @@
       </span>
     </div>
 
+    <div class="categories subcategories" id="subcategory-buttons" style="display:none;"></div>
+
     <div class="product-grid" id="product-grid"></div>
   </div>
 
@@ -341,6 +343,7 @@
     #modal;
     #productsByCategory = {};
     #allCategories = [];
+    #activeCategoryKey = null;
     #grid;
 
     constructor() {
@@ -465,6 +468,7 @@
     }
 
     async #fetchCategory(categoryKey) { // OOP - Encapsulation (private method)
+      this.#activeCategoryKey = categoryKey;
       this.#showSkeletons();
       try {
         const snap = await get(ref(db, `products/${categoryKey}`));
@@ -477,6 +481,30 @@
       }
     }
 
+    // Combined view for a parent category with subcategories: merges the
+    // parent's own products with every child category's products, tagging
+    // each product with its real (sub)category so cart labels stay correct.
+    async #fetchCombinedCategory(parentKey, childKeys) { // OOP - Encapsulation (private method)
+      this.#activeCategoryKey = parentKey;
+      this.#showSkeletons();
+      try {
+        const keysToFetch = [parentKey, ...childKeys];
+        const snaps = await Promise.all(keysToFetch.map(k => get(ref(db, `products/${k}`))));
+        let combined = [];
+        keysToFetch.forEach((k, i) => {
+          if (snaps[i].exists()) {
+            combined = combined.concat(
+              Object.entries(snaps[i].val()).map(([id, val]) => ({ id, ...val, category: k }))
+            );
+          }
+        });
+        this.#productsByCategory[parentKey] = combined;
+        this.#renderProducts(parentKey);
+      } catch (err) {
+        this.#grid.innerHTML = `<p class="error-msg">Failed to load products: ${err.message}</p>`;
+      }
+    }
+
     async #loadCategories() { // OOP - Encapsulation (private method)
       const btnContainer = document.getElementById('category-buttons');
       try {
@@ -484,7 +512,11 @@
         this.#allCategories = [];
         if (snap.exists()) {
           snap.forEach(child => {
-            this.#allCategories.push({ key: child.key, displayName: child.val().displayName || child.key });
+            this.#allCategories.push({
+              key: child.key,
+              displayName: child.val().displayName || child.key,
+              parent: child.val().parent || null
+            });
           });
         }
 
@@ -493,8 +525,12 @@
           return;
         }
 
+        // Only top-level categories (no parent) show as main tabs; categories
+        // with a parent appear as a subcategory row once their parent is active.
+        const topLevel = this.#allCategories.filter(c => !c.parent);
+
         btnContainer.innerHTML = '';
-        this.#allCategories.forEach((cat, i) => {
+        topLevel.forEach((cat, i) => {
           const btn = document.createElement('button');
           btn.className = 'category-btn' + (i === 0 ? ' active' : '');
           btn.dataset.category = cat.key;
@@ -502,15 +538,57 @@
           btn.addEventListener('click', () => {
             document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            this.#fetchCategory(cat.key);
+            this.#selectTopLevelCategory(cat.key);
           });
           btnContainer.appendChild(btn);
         });
 
-        this.#fetchCategory(this.#allCategories[0].key);
+        this.#selectTopLevelCategory(topLevel[0].key);
       } catch (err) {
         btnContainer.innerHTML = `<span style="color:#c0392b;">Failed to load categories: ${err.message}</span>`;
       }
+    }
+
+    // Called whenever a top-level tab is selected. If it has subcategories,
+    // renders an "All" + per-subcategory pill row beneath the main tabs.
+    #selectTopLevelCategory(parentKey) { // OOP - Encapsulation (private method)
+      const children = this.#allCategories.filter(c => c.parent === parentKey);
+      const subContainer = document.getElementById('subcategory-buttons');
+
+      if (children.length === 0) {
+        subContainer.style.display = 'none';
+        subContainer.innerHTML = '';
+        this.#fetchCategory(parentKey);
+        return;
+      }
+
+      subContainer.style.display = 'flex';
+      subContainer.innerHTML = '';
+
+      const allBtn = document.createElement('button');
+      allBtn.className = 'category-btn subcategory-btn active';
+      allBtn.textContent = 'All';
+      allBtn.addEventListener('click', () => {
+        subContainer.querySelectorAll('.subcategory-btn').forEach(b => b.classList.remove('active'));
+        allBtn.classList.add('active');
+        this.#fetchCombinedCategory(parentKey, children.map(c => c.key));
+      });
+      subContainer.appendChild(allBtn);
+
+      children.forEach(child => {
+        const btn = document.createElement('button');
+        btn.className = 'category-btn subcategory-btn';
+        btn.dataset.category = child.key;
+        btn.textContent = child.displayName;
+        btn.addEventListener('click', () => {
+          subContainer.querySelectorAll('.subcategory-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          this.#fetchCategory(child.key);
+        });
+        subContainer.appendChild(btn);
+      });
+
+      this.#fetchCombinedCategory(parentKey, children.map(c => c.key));
     }
 
     //Wire up price filter buttons
@@ -519,8 +597,7 @@
         btn.addEventListener('click', () => {
           document.querySelectorAll('.price-filter-btn').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
-          const activeCat = document.querySelector('.category-btn.active')?.dataset.category;
-          if (activeCat) this.#renderProducts(activeCat);
+          if (this.#activeCategoryKey) this.#renderProducts(this.#activeCategoryKey);
         });
       });
     }
@@ -528,7 +605,7 @@
     //Wire up grid click delegation for Add to Cart buttons
     #bindGridClicks() { // OOP - Encapsulation (private method)
       this.#grid.addEventListener('click', e => {
-        const activeCat = document.querySelector('.category-btn.active')?.dataset.category;
+        const activeCat = this.#activeCategoryKey;
 
         const chooseBtn = e.target.closest('.btn-choose-size');
         if (chooseBtn) {

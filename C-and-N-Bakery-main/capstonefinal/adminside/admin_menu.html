@@ -294,6 +294,13 @@
             <label>Display Name *</label>
             <input type="text" id="cat-display-name" placeholder="e.g. Cookies" required>
           </div>
+          <div class="form-group">
+            <label>Show Under (optional)</label>
+            <select id="cat-parent">
+              <option value="">-- Top-Level Category --</option>
+            </select>
+            <small style="color:var(--muted);">Choose a parent to nest this as a subcategory, e.g. "2 Tier Cake" under "Cake Collections".</small>
+          </div>
           <button type="submit" class="btn-main btn-full">
             <i class="fas fa-folder-plus"></i> Create Category
           </button>
@@ -605,8 +612,11 @@
     <p style="color:var(--muted); font-size:0.95rem; line-height:1.6; margin-bottom:6px;">
       You are about to delete <strong id="del-cat-name" style="color:var(--brown);"></strong>.
     </p>
-    <p style="color:#c0392b; font-size:0.88rem; font-weight:600; background:#fff0f0; padding:10px 14px; border-radius:10px; margin:14px 0 24px;">
+    <p style="color:#c0392b; font-size:0.88rem; font-weight:600; background:#fff0f0; padding:10px 14px; border-radius:10px; margin:14px 0 8px;">
       This will permanently delete the entire category and <u>all products</u> inside it. This cannot be undone.
+    </p>
+    <p id="del-cat-subnote" style="display:none; color:var(--muted); font-size:0.85rem; margin:0 0 24px;">
+      Its subcategories will become top-level categories instead of being deleted.
     </p>
     <div style="display:flex; gap:12px; justify-content:center;">
       <button onclick="closDeleteCatModal()" style="flex:1; padding:12px; border-radius:12px; border:1.5px solid var(--border); background:var(--white); color:var(--brown); font-family:'Poppins',sans-serif; font-size:0.92rem; font-weight:600; cursor:pointer;">
@@ -631,6 +641,13 @@
       <div class="form-group">
         <label>Display Name *</label>
         <input type="text" id="edit-cat-display-name" required placeholder="e.g. Cookies">
+      </div>
+      <div class="form-group">
+        <label>Show Under (optional)</label>
+        <select id="edit-cat-parent">
+          <option value="">-- Top-Level Category --</option>
+        </select>
+        <small style="color:var(--muted);">Choose a parent to nest this as a subcategory.</small>
       </div>
       <button type="submit" id="edit-cat-submit-btn" class="btn-main" style="width:100%; justify-content:center;">
         <i class="fas fa-save"></i> Save Changes
@@ -849,11 +866,16 @@
       cachedCategories = [];
       if (snap.exists()) {
         snap.forEach(child => {
-          cachedCategories.push({ key: child.key, displayName: child.val().displayName || child.key });
+          cachedCategories.push({
+            key: child.key,
+            displayName: child.val().displayName || child.key,
+            parent: child.val().parent || null
+          });
         });
       }
       renderCategories();
       refreshCategorySelects();
+      refreshParentCategorySelects();
     } catch (err) {
       container.innerHTML = `<p style="color:#c0392b;">Error: ${err.message}</p>`;
     }
@@ -866,20 +888,64 @@
       return;
     }
     container.innerHTML = '';
-    cachedCategories.forEach(cat => {
+
+    function buildRow(cat, isSub) {
       const row = document.createElement('div');
-      row.className = 'category-row';
+      row.className = 'category-row' + (isSub ? ' category-row-sub' : '');
       row.innerHTML = `
-        <span class="category-row-name">${cat.displayName}</span>
+        <span class="category-row-name">${isSub ? '<i class="fas fa-level-up-alt fa-rotate-90" style="opacity:.5; font-size:0.8em; margin-right:2px;"></i> ' : ''}${cat.displayName}</span>
         <div class="option-row-actions">
-          <button class="btn-edit-opt" onclick="openEditCategory('${cat.key}','${cat.displayName.replace(/'/g, "\\'")}')">
+          <button class="btn-edit-opt" onclick="openEditCategory('${cat.key}','${cat.displayName.replace(/'/g, "\\'")}','${cat.parent || ''}')">
             <i class="fas fa-pen"></i> Edit
           </button>
           <button class="btn-delete-opt" onclick="deleteCategory('${cat.key}','${cat.displayName.replace(/'/g, "\\'")}')">
             <i class="fas fa-trash-alt"></i> Delete
           </button>
         </div>`;
-      container.appendChild(row);
+      return row;
+    }
+
+    const topLevel = cachedCategories.filter(c => !c.parent);
+    const orphaned = cachedCategories.filter(c => c.parent && !cachedCategories.some(p => p.key === c.parent));
+
+    topLevel.forEach(cat => {
+      container.appendChild(buildRow(cat, false));
+      cachedCategories
+        .filter(c => c.parent === cat.key)
+        .forEach(child => container.appendChild(buildRow(child, true)));
+    });
+
+    // Categories whose parent no longer exists (e.g. parent was deleted) —
+    // show them as top-level so they don't silently disappear.
+    orphaned.forEach(cat => container.appendChild(buildRow(cat, false)));
+  }
+
+  // Populate the "Parent Category" dropdowns with top-level categories only
+  // (subcategories can't themselves have children — keeps it one level deep).
+  function refreshParentCategorySelects() {
+    const selects = [
+      { el: document.getElementById('cat-parent'),      excludeKey: null },
+      { el: document.getElementById('edit-cat-parent'),  excludeKey: document.getElementById('edit-cat-key')?.value || null }
+    ];
+
+    selects.forEach(({ el, excludeKey }) => {
+      if (!el) return;
+      const currentVal = el.value;
+      el.innerHTML = '<option value="">-- Top-Level Category --</option>';
+
+      cachedCategories
+        .filter(c => !c.parent)          // only top-level categories can be a parent
+        .filter(c => c.key !== excludeKey) // a category can't be its own parent
+        .forEach(cat => {
+          const opt = document.createElement('option');
+          opt.value = cat.key;
+          opt.textContent = cat.displayName;
+          el.appendChild(opt);
+        });
+
+      if ([...el.options].some(o => o.value === currentVal)) {
+        el.value = currentVal;
+      }
     });
   }
 
@@ -890,6 +956,21 @@
       document.getElementById('edit-category'),
       document.getElementById('product-filter-category')
     ];
+
+    // Build an ordered list: each top-level category followed by its children,
+    // so the dropdown reads as a tree instead of a flat alphabetical list.
+    const topLevel = cachedCategories.filter(c => !c.parent);
+    const ordered = [];
+    topLevel.forEach(cat => {
+      ordered.push({ ...cat, indent: false });
+      cachedCategories
+        .filter(c => c.parent === cat.key)
+        .forEach(child => ordered.push({ ...child, indent: true }));
+    });
+    // Orphaned subcategories (parent no longer exists) — show as top-level
+    cachedCategories
+      .filter(c => c.parent && !cachedCategories.some(p => p.key === c.parent))
+      .forEach(cat => ordered.push({ ...cat, indent: false }));
 
     selects.forEach((sel, i) => {
       if (!sel) return;
@@ -902,10 +983,10 @@
         sel.innerHTML = '<option value="" disabled selected>Select a category…</option>';
       }
 
-      cachedCategories.forEach(cat => {
+      ordered.forEach(cat => {
         const opt = document.createElement('option');
         opt.value = cat.key;
-        opt.textContent = cat.displayName;
+        opt.textContent = (cat.indent ? '↳ ' : '') + cat.displayName;
         sel.appendChild(opt);
       });
 
@@ -923,6 +1004,8 @@
     _pendingDeleteKey  = key;
     _pendingDeleteName = displayName;
     document.getElementById('del-cat-name').textContent = `"${displayName}"`;
+    const hasChildren = cachedCategories.some(c => c.parent === key);
+    document.getElementById('del-cat-subnote').style.display = hasChildren ? 'block' : 'none';
     const modal = document.getElementById('delete-category-modal');
     modal.style.display = 'flex';
   };
@@ -934,9 +1017,11 @@
   };
 
   // ── Edit Category ──
-  window.openEditCategory = function(key, displayName) {
+  window.openEditCategory = function(key, displayName, parent) {
     document.getElementById('edit-cat-key').value          = key;
     document.getElementById('edit-cat-display-name').value = displayName;
+    refreshParentCategorySelects(); // rebuild excluding this category itself
+    document.getElementById('edit-cat-parent').value       = parent || '';
     document.getElementById('edit-category-modal').style.display = 'flex';
   };
 
@@ -956,6 +1041,7 @@
 
     const key         = document.getElementById('edit-cat-key').value;
     const displayName = document.getElementById('edit-cat-display-name').value.trim();
+    const parent      = document.getElementById('edit-cat-parent').value || null;
 
     if (!displayName) {
       alert("Please enter a category name.");
@@ -964,8 +1050,25 @@
       return;
     }
 
+    if (parent === key) {
+      alert("A category can't be its own parent.");
+      btn.disabled  = false;
+      btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+      return;
+    }
+
+    // If this category has subcategories of its own, it can't also become
+    // a subcategory (keeps nesting to a single level).
+    const hasChildren = cachedCategories.some(c => c.parent === key);
+    if (hasChildren && parent) {
+      alert("This category already has subcategories under it, so it can't be nested under another category.");
+      btn.disabled  = false;
+      btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+      return;
+    }
+
     try {
-      await update(ref(db, `categories/${key}`), { displayName });
+      await update(ref(db, `categories/${key}`), { displayName, parent });
       closeEditCategoryModal();
       await loadCategories();
       loadProducts();
@@ -989,6 +1092,13 @@
     try {
       await remove(ref(db, `products/${_pendingDeleteKey}`));
       await remove(ref(db, `categories/${_pendingDeleteKey}`));
+
+      // Promote any subcategories of the deleted category back to top-level
+      const children = cachedCategories.filter(c => c.parent === _pendingDeleteKey);
+      for (const child of children) {
+        await update(ref(db, `categories/${child.key}`), { parent: null });
+      }
+
       closDeleteCatModal();
       await loadCategories();
       loadProducts();
@@ -1004,6 +1114,7 @@
     e.preventDefault();
     const btn = e.submitter;
     const displayName = document.getElementById('cat-display-name').value.trim();
+    const parent      = document.getElementById('cat-parent').value || null;
     const key         = generateKey(displayName);
 
     if (!displayName) { alert("Please enter a category name."); return; }
@@ -1015,7 +1126,7 @@
 
     try {
       // Store category metadata
-      await update(ref(db, `categories/${key}`), { displayName, createdAt: Date.now() });
+      await update(ref(db, `categories/${key}`), { displayName, parent, createdAt: Date.now() });
       // Initialize empty products node so it's visible in Firebase
       await update(ref(db, `products/${key}`), { _placeholder: true });
       document.getElementById('add-category-form').reset();

@@ -409,6 +409,25 @@ nav a.active::after {
     transform: translateY(-2px);
 }
 
+/* SUBCATEGORY ROW — appears under a top-level tab that has children */
+.subcategories {
+    margin-top: -30px;
+    margin-bottom: 40px;
+    gap: 10px;
+}
+
+.subcategory-btn {
+    padding: 8px 20px;
+    font-size: 0.85rem;
+    border-width: 1.5px;
+    opacity: 0.9;
+}
+
+.subcategory-btn.active,
+.subcategory-btn:hover {
+    opacity: 1;
+}
+
 /* ==================== PRODUCT GRID (Desktop) ==================== */
 .product-grid {
     display: grid;
@@ -632,6 +651,15 @@ nav a.active::after {
         padding: 8px 18px;
         font-size: 0.82rem;
         scroll-snap-align: start;
+    }
+
+    .subcategories {
+        margin-top: -12px;
+    }
+
+    .subcategory-btn {
+        padding: 6px 14px;
+        font-size: 0.76rem;
     }
 
     /* Menu header */
