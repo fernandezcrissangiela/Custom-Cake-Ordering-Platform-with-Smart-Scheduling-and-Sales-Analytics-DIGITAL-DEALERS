@@ -795,6 +795,7 @@
         const layers   = item.layers   || cd.layers   || '';
         const flavor   = item.flavor   || cd.flavor   || '';
         const design   = item.design   || cd.design   || '';
+        const designList = design ? design.split(',').map(d => d.trim()).filter(Boolean) : [];
         const message  = item.message  || cd.message  || '';
         const notes    = item.notes    || cd.notes    || '';
         const refPhoto = item.referencePhoto || cd.referencePhoto || '';
@@ -802,10 +803,19 @@
 
         const detailRows = [
           { label: '🍰 Number of Layers', value: layers },
-          { label: '🎨 Design Style',      value: design },
           { label: '💬 Special Message',   value: message },
           { label: '📝 Notes',             value: notes },
         ].filter(r => r.value);
+
+        const designHtml = designList.length > 0
+          ? `<div class="detail-row" style="flex-direction:column; align-items:stretch;">
+               <strong style="margin-bottom:6px;">🎨 Design Style</strong>
+               <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                 ${designList.map(d => `
+                   <span style="background:#faf6f2; border:1px solid #eee0d5; border-radius:20px; padding:4px 12px; font-size:0.82rem; color:#5C3A21;">${d}</span>`).join('')}
+               </div>
+             </div>`
+          : '';
 
         const tiersHtml = tiers.length > 0
           ? `<div class="detail-row" style="flex-direction:column; align-items:stretch;">
@@ -832,12 +842,12 @@
              </div>`
           : '';
 
-        const detailHtml = (detailRows.length > 0 || tiersHtml)
+        const detailHtml = (detailRows.length > 0 || tiersHtml || designHtml)
           ? detailRows.map(r =>
               `<div class="detail-row">
                  <strong>${r.label}</strong>
                  <span>${r.value}</span>
-               </div>`).join('') + tiersHtml
+               </div>`).join('') + designHtml + tiersHtml
           : '<p style="font-size:0.82rem;color:#aaa;margin:6px 0 0;">No customization details recorded.</p>';
 
         html += `

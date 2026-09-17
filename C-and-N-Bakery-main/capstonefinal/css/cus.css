@@ -529,7 +529,7 @@ nav a.active::after {
     }
 
     nav::before {
-        
+
         display: block;
         font-size: 0.68rem;
         font-weight: 700;
@@ -586,10 +586,21 @@ nav a.active::after {
         flex-shrink: 0;
     }
 
-    nav ul li a[href="index.html"]::before { content: "\f015"; }
-    nav ul li a[href="menu.html"]::before  { content: "\f1fd"; }
-    nav ul li a[href="cus.html"]::before   { content: "\f1fc"; }
-    nav ul li a[href="faq.html"]::before   { content: "\f059"; }
+    nav ul li a[href="index.html"]::before {
+        content: "\f015";
+    }
+
+    nav ul li a[href="menu.html"]::before {
+        content: "\f1fd";
+    }
+
+    nav ul li a[href="cus.html"]::before {
+        content: "\f1fc";
+    }
+
+    nav ul li a[href="faq.html"]::before {
+        content: "\f059";
+    }
 
     nav ul li a:hover,
     nav ul li a:focus-visible {

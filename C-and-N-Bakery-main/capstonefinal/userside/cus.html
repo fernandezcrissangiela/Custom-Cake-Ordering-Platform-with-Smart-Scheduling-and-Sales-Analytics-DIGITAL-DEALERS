@@ -71,6 +71,86 @@
   </script>
 
   <style>
+    /* ─── Design Style Multi-Select ─── */
+    .hint-text {
+      font-size: 0.78rem;
+      font-weight: 400;
+      color: #9c8b7c;
+      margin-left: 4px;
+    }
+
+    .design-options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .design-empty {
+      color: #9c8b7c;
+      font-size: 0.9rem;
+      margin: 0;
+    }
+
+    /* Scoped to #design-options so it out-specifies ".selection-group label"
+       (which was leaking display/margin/font-size onto these items). */
+    #design-options .design-checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      margin-bottom: 0;
+      border: 1.5px solid #E8DBCB;
+      border-radius: 12px;
+      background: #FBF3EC;
+      cursor: pointer;
+      transition: border-color 0.2s ease, background 0.2s ease;
+      font-size: 0.92rem;
+      font-weight: 500;
+      color: #5C3A21;
+    }
+
+    #design-options .design-checkbox-item:hover {
+      border-color: #C9A987;
+    }
+
+    #design-options .design-checkbox-item:has(.design-checkbox:checked) {
+      border-color: #825A3C;
+      background: #F3E4D4;
+    }
+
+    /* Circular checkbox indicator */
+    .design-checkbox {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      margin: 0;
+      border: 2px solid #C9A987;
+      border-radius: 50%;
+      background: #fff;
+      cursor: pointer;
+      flex-shrink: 0;
+      position: relative;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .design-checkbox:checked {
+      background: #825A3C;
+      border-color: #825A3C;
+    }
+
+    .design-checkbox:checked::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 6px;
+      height: 6px;
+      background: #fff;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
     /* ─── Cart Badge Styles ─── */
     .cart-wrapper {
       position: relative;
@@ -362,8 +442,8 @@
         <div id="tier-sizes-container"></div>
 
         <div class="selection-group">
-          <label>Design Style</label>
-          <select id="design" onchange="updatePrice()"></select>
+          <label>Design Style <span class="hint-text">(select all that apply)</span></label>
+          <div class="design-options" id="design-options"></div>
         </div>
 
         <div class="selection-group">
@@ -453,9 +533,15 @@
     // Price & Options Logic
     let cachedSizes = [];
     let cachedFlavors = [];
+    let cachedDesigns = [];
+
+    function getSelectedDesigns() {
+      return Array.from(document.querySelectorAll('.design-checkbox:checked')).map(cb => cb.value);
+    }
 
     function updatePrice() {
-      const design   = document.getElementById('design')?.selectedOptions[0];
+      const designTotal = Array.from(document.querySelectorAll('.design-checkbox:checked'))
+        .reduce((sum, cb) => sum + (parseInt(cb.dataset.price) || 0), 0);
 
       let tiersTotal = 0;
       document.querySelectorAll('.tier-size-select, .tier-flavor-select').forEach(sel => {
@@ -463,7 +549,7 @@
         tiersTotal += parseInt(opt?.dataset.price || 0);
       });
 
-      const total = tiersTotal + (parseInt(design?.dataset.price || 0));
+      const total = tiersTotal + designTotal;
 
       document.getElementById('total-price').innerText = "₱" + total.toLocaleString('en-PH');
       return total;
@@ -528,14 +614,53 @@
       }
     }
 
+    function renderDesignOptions() {
+      const container = document.getElementById('design-options');
+      if (!container) return;
+
+      // Preserve currently checked designs so a live Firebase update doesn't clear picks
+      const previouslyChecked = getSelectedDesigns();
+
+      container.innerHTML = '';
+
+      if (!cachedDesigns.length) {
+        container.innerHTML = '<p class="design-empty">No design options available right now.</p>';
+        return;
+      }
+
+      cachedDesigns.forEach((opt, i) => {
+        const id = `design-opt-${i}`;
+
+        const wrapper = document.createElement('label');
+        wrapper.className = 'design-checkbox-item';
+        wrapper.setAttribute('for', id);
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'design-checkbox';
+        checkbox.id = id;
+        checkbox.value = opt.name || '';
+        checkbox.dataset.price = Number(opt.price) || 0;
+        checkbox.onchange = updatePrice;
+        if (previouslyChecked.includes(opt.name)) checkbox.checked = true;
+
+        const text = document.createElement('span');
+        text.textContent = opt.price > 0 ? `${opt.name} (+₱${opt.price})` : opt.name;
+
+        wrapper.appendChild(checkbox);
+        wrapper.appendChild(text);
+        container.appendChild(wrapper);
+      });
+    }
+
     function renderCustomizationOptions(data) {
-      // Cache enabled sizes and flavors for use when building per-tier dropdowns
+      // Cache enabled sizes, flavors, and designs for use when building dropdowns/checkboxes
       cachedSizes     = Object.values(data?.sizes     || {}).filter(opt => opt.enabled === true);
       cachedFlavors   = Object.values(data?.flavors   || {}).filter(opt => opt.enabled === true);
+      cachedDesigns   = Object.values(data?.designs   || {}).filter(opt => opt.enabled === true);
 
       const mappings = [
-        { key: 'layers',    selectId: 'layers',    placeholder: '-- Select Number of Layers --' },
-        { key: 'designs',   selectId: 'design',    placeholder: '-- Select Design Style --' }
+        { key: 'layers',    selectId: 'layers',    placeholder: '-- Select Number of Layers --' }
       ];
 
       for (const { key, selectId, placeholder } of mappings) {
@@ -563,6 +688,7 @@
         });
       }
 
+      renderDesignOptions();
       renderTierSizeSelectors();
       updatePrice();
     }
@@ -604,7 +730,8 @@
 
     function showSummary() {
       const layers   = document.getElementById('layers')?.value   || '—';
-      const design   = document.getElementById('design')?.value   || '—';
+      const designs  = getSelectedDesigns();
+      const design   = designs.length ? designs.join(', ') : '—';
       const message  = document.getElementById('message')?.value.trim() || '—';
       const total    = document.getElementById('total-price')?.innerText || '₱0';
       const tiers    = getTierDetails();
@@ -639,7 +766,7 @@
         category: "Customize Cake",
         layers:    document.getElementById('layers')?.value   || '',
         tiers:     getTierDetails(),
-        design:    document.getElementById('design')?.value   || '',
+        design:    getSelectedDesigns().join(', '),
         message:   message,
         notes:   "",
         referencePhoto: refImage || 'https://via.placeholder.com/300?text=No+Reference+Photo',
