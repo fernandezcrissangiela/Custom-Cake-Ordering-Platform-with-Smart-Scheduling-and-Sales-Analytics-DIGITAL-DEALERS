@@ -216,6 +216,11 @@
             <label>Price (₱) *</label>
             <input type="number" id="price" step="0.01" min="0" placeholder="0.00">
           </div>
+          <div class="form-group">
+            <label>Cake Size <span style="color:var(--muted); font-weight:400;">(optional)</span></label>
+            <input type="text" id="size" placeholder="e.g. 8x5 inches, 6in round">
+            <small style="color:var(--muted); display:block; margin-top:4px;">Shown as a highlighted tag on the customer menu.</small>
+          </div>
           <div class="form-group" id="sizes-group" style="display:none;">
             <label>Sizes &amp; Prices *</label>
             <div id="sizes-list"></div>
@@ -518,6 +523,12 @@
           <label>Price (₱) *</label>
           <input type="number" id="edit-price" step="0.01" min="0" placeholder="0.00">
         </div>
+      </div>
+
+      <div class="form-group">
+        <label>Cake Size <span style="color:var(--muted); font-weight:400;">(optional)</span></label>
+        <input type="text" id="edit-size" placeholder="e.g. 8x5 inches, 6in round">
+        <small style="color:var(--muted); display:block; margin-top:4px;">Shown as a highlighted tag on the customer menu.</small>
       </div>
 
       <div class="form-group">
@@ -1221,6 +1232,7 @@
         <div class="img-wrapper">
           <img src="${p.image || 'https://via.placeholder.com/280x185?text=No+Image'}" alt="${p.name}"
                onerror="this.src='https://via.placeholder.com/280x185?text=Image+Error'">
+          ${p.size ? `<span class="size-pill"><i class="fas fa-ruler-combined"></i> ${p.size}</span>` : ''}
           <span class="price-pill">${pricePill}</span>
         </div>
         <div class="product-info">
@@ -1260,6 +1272,7 @@
     document.getElementById('edit-price').value       = product.price || '';
     document.getElementById('edit-category').value    = product.category || 'cakes';
     document.getElementById('edit-description').value = product.description || '';
+    document.getElementById('edit-size').value        = product.size || '';
 
     const editSizesList = document.getElementById('edit-sizes-list');
     editSizesList.innerHTML = '';
@@ -1307,6 +1320,7 @@
     const newCat   = document.getElementById('edit-category').value;
     const name     = document.getElementById('edit-name').value.trim();
     const desc     = document.getElementById('edit-description').value.trim();
+    const size     = document.getElementById('edit-size').value.trim();
     const editHasSizes = document.getElementById('edit-has-sizes').checked;
 
     if (!name) {
@@ -1341,13 +1355,13 @@
         // Category changed: read old data, write to new path, delete old
         const snap = await get(ref(db, `products/${oldCat}/${id}`));
         const existing = snap.val() || {};
-        const newData = { ...existing, name, price, description: desc, category: newCat };
+        const newData = { ...existing, name, price, description: desc, size, category: newCat };
         newData.sizes = sizes; // null clears sizes when switching back to single price
         if (editBase64) newData.image = editBase64;
         await push(ref(db, `products/${newCat}`), newData);
         await remove(ref(db, `products/${oldCat}/${id}`));
       } else {
-        const updates = { name, price, description: desc, sizes };
+        const updates = { name, price, description: desc, size, sizes };
         if (editBase64) updates.image = editBase64;
         await update(ref(db, `products/${oldCat}/${id}`), updates);
       }
@@ -1435,6 +1449,7 @@
       name:        document.getElementById('name').value.trim(),
       image:       productBase64 || '',
       description: document.getElementById('description').value.trim(),
+      size:        document.getElementById('size').value.trim(),
       createdAt:   Date.now()
     };
 

@@ -109,6 +109,30 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
 }
 
+/* Cake size tag — top-left of the image, mirrors the price pill on the
+   opposite corner. Warm gold rather than brown so it reads as a distinct
+   highlight instead of blending into the price/category badges. */
+.size-pill {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: linear-gradient(135deg, #E0A83C, #C4862A);
+  color: #fff;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.2px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+.size-pill i {
+  font-size: 0.7rem;
+}
+
 /* ── Product Info ── */
 .product-info {
   padding: 14px 14px 12px;

@@ -138,6 +138,7 @@
       <img id="modalImg" src="" alt="Product" loading="lazy">
       <div class="modal-body">
         <h2 id="modalTitle"></h2>
+        <span id="modalSizeBadge" class="size-badge modal-size-badge" style="display:none;"></span>
         <div class="modal-price" id="modalPrice"></div>
         <p class="modal-desc" id="modalDesc"></p>
         <div id="modalSizeSelector" class="modal-size-selector" style="display:none;"></div>
@@ -249,6 +250,7 @@
         <div class="cake-img-wrap">
           <img src="${p.image || `https://via.placeholder.com/300x250?text=${encodeURIComponent(p.name)}`}"
                alt="${p.name}" loading="lazy">
+          ${p.size ? `<span class="size-badge"><i class="fas fa-ruler-combined"></i> ${p.size}</span>` : ''}
         </div>
         <h3>${p.name}</h3>
         <p class="card-desc">${p.description || "Freshly baked daily with love and the finest ingredients."}</p>
@@ -308,6 +310,14 @@
       document.getElementById('modalImg').alt   = product.name;
       document.getElementById('modalTitle').textContent = product.name;
       document.getElementById('modalDesc').textContent  = product.description || "Freshly baked daily with love and the finest ingredients.";
+
+      const sizeBadgeEl = document.getElementById('modalSizeBadge');
+      if (product.size) {
+        sizeBadgeEl.innerHTML = `<i class="fas fa-ruler-combined"></i> ${product.size}`;
+        sizeBadgeEl.style.display = 'inline-flex';
+      } else {
+        sizeBadgeEl.style.display = 'none';
+      }
 
       const selectorEl = document.getElementById('modalSizeSelector');
       if (hasSizes) {
