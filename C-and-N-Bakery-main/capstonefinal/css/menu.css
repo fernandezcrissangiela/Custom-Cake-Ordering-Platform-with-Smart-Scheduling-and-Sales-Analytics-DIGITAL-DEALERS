@@ -439,13 +439,23 @@ nav a.active::after {
     box-shadow: var(--shadow);
 }
 
-.cake-item img {
+.cake-img-wrap {
     width: 100%;
     height: 220px;
-    object-fit: cover;
+    background: var(--cream, #FBF3EC);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.cake-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
     display: block;
     transition: transform 0.5s ease;
-    flex-shrink: 0;
 }
 
 .cake-item:hover img {
@@ -495,7 +505,8 @@ nav a.active::after {
         justify-content: center;
         gap: 10px;
         margin-bottom: 40px;
-        overflow: visible; /* no carousel on mobile, just grid */
+        overflow: visible;
+        /* no carousel on mobile, just grid */
     }
 
     /* Carousel controls hidden — we use the grid instead */
@@ -508,9 +519,12 @@ nav a.active::after {
         box-shadow: 0 4px 14px rgba(103, 72, 49, 0.13);
     }
 
-    .cake-item img {
+    .cake-img-wrap {
         height: 130px;
-        object-fit: cover;
+    }
+
+    .cake-item img {
+        object-fit: contain;
     }
 
     .cake-item h3 {
@@ -520,7 +534,8 @@ nav a.active::after {
     }
 
     .card-desc {
-        display: none; /* hide description to keep cards compact */
+        display: none;
+        /* hide description to keep cards compact */
     }
 
     .cake-item .price {
@@ -808,7 +823,7 @@ nav a.active::after {
     }
 
     nav::before {
-        
+
         display: block;
         font-size: 0.68rem;
         font-weight: 700;
@@ -865,10 +880,21 @@ nav a.active::after {
         flex-shrink: 0;
     }
 
-    nav ul li a[href="index.html"]::before { content: "\f015"; }
-    nav ul li a[href="menu.html"]::before  { content: "\f1fd"; }
-    nav ul li a[href="cus.html"]::before   { content: "\f1fc"; }
-    nav ul li a[href="faq.html"]::before   { content: "\f059"; }
+    nav ul li a[href="index.html"]::before {
+        content: "\f015";
+    }
+
+    nav ul li a[href="menu.html"]::before {
+        content: "\f1fd";
+    }
+
+    nav ul li a[href="cus.html"]::before {
+        content: "\f1fc";
+    }
+
+    nav ul li a[href="faq.html"]::before {
+        content: "\f059";
+    }
 
     nav ul li a:hover,
     nav ul li a:focus-visible {
@@ -996,8 +1022,13 @@ nav a.active::after {
 }
 
 @keyframes loading {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
 }
 
 /* ==================== ERROR / EMPTY STATES ==================== */
