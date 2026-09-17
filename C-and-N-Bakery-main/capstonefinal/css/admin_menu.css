@@ -23,6 +23,26 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
   gap: 18px;
+  align-content: start;
+  max-height: 78vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--beige) transparent;
+}
+#products-list::-webkit-scrollbar {
+  width: 8px;
+}
+#products-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+#products-list::-webkit-scrollbar-thumb {
+  background: var(--beige);
+  border-radius: 20px;
+}
+#products-list::-webkit-scrollbar-thumb:hover {
+  background: var(--border);
 }
 
 .product-card {
@@ -311,6 +331,7 @@
   }
   #products-list {
     grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    max-height: 65vh;
   }
 }
 
